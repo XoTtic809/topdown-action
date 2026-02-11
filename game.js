@@ -186,6 +186,8 @@ const SKINS = [
   { id: 'keegan',   name: 'Keegan',      color: '#ff6d00', price: 250,  desc: '🔶 Deep orange' },
   { id: 'evan',     name: 'Evan',        color: '#00e5ff', price: 250,  desc: '❄️ Cyan cool' },
   { id: 'elynn',    name: 'ELynn',       color: '#ff4081', price: 250,  desc: '💖 Pink perfection' },
+  { id: 'sterling', name: 'Sterling',    color: '#c0c0c0', price: 250,  desc: '✨ Silver shine' },
+  { id: 'antonio',  name: 'Antonio',     color: '#00c853', price: 250,  desc: '🍀 Emerald flash' },
   
   { id: 'amber',    name: 'Amber',       color: '#ffaa00', price: 400,  desc: 'Warm glow' },
   { id: 'crimson',  name: 'Crimson',     color: '#dc143c', price: 450,  desc: 'Blood red' },
