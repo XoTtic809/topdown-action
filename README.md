@@ -57,7 +57,7 @@
 ### GitHub Pages
 This game is hosted on GitHub Pages and can be played instantly in your browser!
 
-**👉 [Play Topdown Action Now](https://YOUR_USERNAME.github.io/topdown-action/)**
+**👉 [Play Topdown Action Now](https://ethanlynn.dev/topdown-action/)**
 
 *(Replace `YOUR_USERNAME` with your GitHub username after deploying)*
 
