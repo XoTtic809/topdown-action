@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<meta name="description" content="Fast-paced top-down shooter with boss fights, power-ups, and wave-based progression. Built with pure JavaScript!" />
+<meta name="author" content="Ethan" />
+<title>Topdown Action — Enhanced Edition</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div id="ui">
+
+  <!-- ─── GAME HUD ─── -->
+  <div id="topbar">
+    <div id="score">Score: <span id="scoreVal">0</span></div>
+    <div id="hp">HP: <span id="hpVal">100</span></div>
+    <div id="wave">Wave: <span id="waveVal">1</span></div>
+    <div id="coinsHUD">🪙 0</div>
+  </div>
+
+  <div id="abilities">
+    <div id="dashAbility" class="ability" title="Dash (SPACE)">
+      <div class="ability-icon">⚡</div>
+      <div class="ability-cooldown"></div>
+      <div class="ability-timer"></div>
+      <div class="ability-key">SPC</div>
+    </div>
+  </div>
+
+  <div id="buffsDisplay"></div>
+
+  <div id="combo" class="hidden"><span id="comboVal">0</span>x COMBO!</div>
+  <div id="scorePopups"></div>
+  <div id="waveAnnouncement" class="hidden">WAVE 1</div>
+
+  <!-- ─── CANVAS ─── -->
+  <canvas id="game"></canvas>
+
+  <!-- ─── HOME SCREEN ─── -->
+  <div id="homeScreen">
+    <div class="home-scanlines"></div>
+    <div class="home-glow"></div>
+    <div class="home-content">
+      <div class="home-title-wrap">
+        <h1 class="home-title">TOPDOWN</h1>
+        <h1 class="home-title accent">ACTION</h1>
+        <p class="home-sub">Survive · Upgrade · Dominate</p>
+      </div>
+      <div id="gameOverMsg" class="hidden game-over-banner">
+        ☠ GAME OVER &nbsp;·&nbsp; Score: <span id="finalScore">0</span>
+      </div>
+      <div class="home-btn-group">
+        <button id="startBtn" class="home-btn primary">▶ &nbsp;START GAME</button>
+        <button id="shopBtn"  class="home-btn secondary">🛒 &nbsp;SHOP</button>
+        <button id="settingsBtn" class="home-btn secondary">⚙ &nbsp;SETTINGS</button>
+      </div>
+      <div class="home-footer">
+        <div class="home-stat">🏆 Best: <strong id="homeHighVal">0</strong></div>
+        <div class="home-stat">🪙 Coins: <strong id="homeCoinsVal">0</strong></div>
+      </div>
+      <div class="home-controls">
+        <strong>Controls</strong>
+        <span>WASD / Arrows — Move</span>
+        <span>Mouse — Aim &amp; Shoot</span>
+        <span>SPACE — Dash (invincible!)</span>
+        <span>ESC — Pause</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── SETTINGS PANEL ─── -->
+  <div id="settingsPanel" class="hidden panel-overlay">
+    <div class="panel-box">
+      <h2 class="panel-title">⚙ SETTINGS</h2>
+      <div class="settings-list">
+        <div class="setting-row">
+          <div class="setting-label">
+            <span class="setting-icon">🔊</span>
+            <div><div class="setting-name">Master Sound</div><div class="setting-desc">All game audio on/off</div></div>
+          </div>
+          <label class="toggle"><input type="checkbox" id="masterSoundToggle" checked><span class="slider"></span></label>
+        </div>
+        <div class="setting-row">
+          <div class="setting-label">
+            <span class="setting-icon">🔫</span>
+            <div><div class="setting-name">Shoot Sound</div><div class="setting-desc">Player shooting sound only</div></div>
+          </div>
+          <label class="toggle"><input type="checkbox" id="shootSoundToggle" checked><span class="slider"></span></label>
+        </div>
+        <div class="setting-row">
+          <div class="setting-label">
+            <span class="setting-icon">📳</span>
+            <div><div class="setting-name">Screen Shake</div><div class="setting-desc">Camera shake on damage</div></div>
+          </div>
+          <label class="toggle"><input type="checkbox" id="screenShakeToggle" checked><span class="slider"></span></label>
+        </div>
+        <div class="setting-row">
+          <div class="setting-label">
+            <span class="setting-icon">✨</span>
+            <div><div class="setting-name">Particles</div><div class="setting-desc">Explosion effects</div></div>
+          </div>
+          <label class="toggle"><input type="checkbox" id="particlesToggle" checked><span class="slider"></span></label>
+        </div>
+        <div class="setting-row">
+          <div class="setting-label">
+            <span class="setting-icon">📊</span>
+            <div><div class="setting-name">Show FPS</div><div class="setting-desc">Frames-per-second counter</div></div>
+          </div>
+          <label class="toggle"><input type="checkbox" id="showFPSToggle"><span class="slider"></span></label>
+        </div>
+        <div class="setting-row">
+          <div class="setting-label">
+            <span class="setting-icon">🎯</span>
+            <div><div class="setting-name">Auto-Shoot</div><div class="setting-desc">Automatically fire (for trackpads)</div></div>
+          </div>
+          <label class="toggle"><input type="checkbox" id="autoShootToggle"><span class="slider"></span></label>
+        </div>
+      </div>
+      <button class="panel-back-btn" id="settingsBackBtn">← BACK</button>
+    </div>
+  </div>
+
+  <!-- ─── SHOP PANEL ─── -->
+  <div id="shopPanel" class="hidden panel-overlay">
+    <div class="panel-box shop-box">
+      <h2 class="panel-title">🛒 SHOP</h2>
+      <div class="shop-coins-bar">🪙 <span id="shopCoinsVal">0</span> coins available</div>
+      <p class="shop-hint">Earn coins by killing enemies and clearing waves</p>
+      <div id="skinGrid" class="skin-grid"></div>
+      <button class="panel-back-btn" id="shopBackBtn">← BACK</button>
+    </div>
+  </div>
+
+  <!-- ─── PAUSE OVERLAY ─── -->
+  <div id="pauseOverlay" class="hidden panel-overlay">
+    <div class="panel-box pause-box">
+      <h2 class="panel-title">⏸ PAUSED</h2>
+      <div class="pause-buttons">
+        <button class="home-btn primary"    id="resumeBtn">▶ RESUME</button>
+        <button class="home-btn secondary"  id="pauseSettingsBtn">⚙ SETTINGS</button>
+        <button class="home-btn danger"     id="menuBtn">⌂ MAIN MENU</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+<script src="game.js"></script>
+</body>
+</html>
