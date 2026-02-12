@@ -59,9 +59,6 @@ This game is hosted on GitHub Pages and can be played instantly in your browser!
 
 **👉 [Play Topdown Action Now](https://ethanlynn.dev/topdown-action/)**
 
-*(Replace `YOUR_USERNAME` with your GitHub username after deploying)*
-
----
 
 ## 🎮 Controls
 
@@ -92,76 +89,6 @@ This game is hosted on GitHub Pages and can be played instantly in your browser!
 ### Prerequisites
 - Modern web browser (Chrome, Firefox, Edge, Safari)
 - (Optional) Local web server for development
-
-### Quick Start
-
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/YOUR_USERNAME/topdown-action.git
-   cd topdown-action
-   ```
-
-2. **Open in browser**
-   - Simply open `index.html` in your browser, or
-   - Use a local server (recommended):
-   
-   ```bash
-   # Python 3
-   python -m http.server 8000
-   
-   # Python 2
-   python -m SimpleHTTPServer 8000
-   
-   # Node.js (if you have http-server installed)
-   npx http-server
-   ```
-
-3. **Play!**
-   - Navigate to `http://localhost:8000`
-   - Click "Start Game" and survive!
-
----
-
-## 📦 Deployment to GitHub Pages
-
-### Option 1: Automatic Deployment (Recommended)
-
-1. **Push code to GitHub**
-   ```bash
-   git add .
-   git commit -m "Initial commit"
-   git push origin main
-   ```
-
-2. **Enable GitHub Pages**
-   - Go to your repository on GitHub
-   - Click **Settings** → **Pages**
-   - Under **Source**, select `main` branch
-   - Click **Save**
-   - Your game will be live at `https://YOUR_USERNAME.github.io/topdown-action/`
-
-### Option 2: GitHub Actions (Automatic Updates)
-
-Create `.github/workflows/deploy.yml`:
-
-```yaml
-name: Deploy to GitHub Pages
-
-on:
-  push:
-    branches: [ main ]
-
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v3
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./
-```
 
 ---
 
@@ -309,9 +236,9 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 📧 Contact
 
-**Ethan** - [GitHub Profile](https://github.com/YOUR_USERNAME)
+**Ethan** - [GitHub Profile](https://github.com/XoTtic809)
 
-Project Link: [https://github.com/YOUR_USERNAME/topdown-action](https://github.com/YOUR_USERNAME/topdown-action)
+Project Link: [https://github.com/YOUR_USERNAME/topdown-action](https://github.com/XoTtic809/topdown-action)
 
 ---
 

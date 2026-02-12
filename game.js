@@ -166,7 +166,11 @@ function saveSettings() {
 let playerCoins = Number(localStorage.getItem('playerCoins') || 0);
 
 function saveCoins() {
-  localStorage.setItem('playerCoins', playerCoins);
+  // Save to localStorage for guests only
+  if (isGuest || !currentUser) {
+    localStorage.setItem('playerCoins', playerCoins);
+  }
+  // Firebase saving happens in saveUserDataToFirebase (called on game over)
 }
 
 const SKINS = [
@@ -175,20 +179,6 @@ const SKINS = [
   { id: 'venom',    name: 'Venom',       color: '#6bff7b', price: 200,  desc: 'Deadly green' },
   { id: 'ice',      name: 'Ice',         color: '#00d9ff', price: 300,  desc: 'Cold as ice' },
   { id: 'shadow',   name: 'Shadow',      color: '#9966ff', price: 350,  desc: 'Dark energy' },
-  
-  // 🎮 FRIENDS EDITION 🎮
-  { id: 'brody',    name: 'Brody',       color: '#ff1744', price: 250,  desc: '🔥 Red rocket' },
-  { id: 'carter',   name: 'Carter',      color: '#2979ff', price: 250,  desc: '⚡ Electric blue' },
-  { id: 'eli',      name: 'Eli',         color: '#00e676', price: 250,  desc: '🌟 Lime legend' },
-  { id: 'justin',   name: 'Justin',      color: '#ff9100', price: 250,  desc: '🧡 Orange blast' },
-  { id: 'gabe',     name: 'Gabe',        color: '#aa00ff', price: 250,  desc: '💜 Purple power' },
-  { id: 'davis',    name: 'Davis',       color: '#00bfa5', price: 250,  desc: '🌊 Teal terror' },
-  { id: 'keegan',   name: 'Keegan',      color: '#ff6d00', price: 250,  desc: '🔶 Deep orange' },
-  { id: 'evan',     name: 'Evan',        color: '#00e5ff', price: 250,  desc: '❄️ Cyan cool' },
-  { id: 'elynn',    name: 'ELynn',       color: '#ff4081', price: 250,  desc: '💖 Pink perfection' },
-  { id: 'sterling', name: 'Sterling',    color: '#c0c0c0', price: 250,  desc: '✨ Silver shine' },
-  { id: 'antonio',  name: 'Antonio',     color: '#00c853', price: 250,  desc: '🍀 Emerald flash' },
-  
   { id: 'amber',    name: 'Amber',       color: '#ffaa00', price: 400,  desc: 'Warm glow' },
   { id: 'crimson',  name: 'Crimson',     color: '#dc143c', price: 450,  desc: 'Blood red' },
   { id: 'gold',     name: 'Gold Rush',   color: '#ffd700', price: 500,  desc: 'Rich shooter' },
@@ -218,8 +208,14 @@ let ownedSkins = JSON.parse(localStorage.getItem('ownedSkins') || '["agent"]');
 let activeSkin = localStorage.getItem('activeSkin') || 'agent';
 
 function saveSkins() {
-  localStorage.setItem('ownedSkins', JSON.stringify(ownedSkins));
-  localStorage.setItem('activeSkin', activeSkin);
+  // Save to localStorage for guests only
+  if (isGuest || !currentUser) {
+    localStorage.setItem('ownedSkins', JSON.stringify(ownedSkins));
+    localStorage.setItem('activeSkin', activeSkin);
+  } else if (currentUser && typeof saveUserDataToFirebase === 'function') {
+    // Save to Firebase for logged-in users
+    saveUserDataToFirebase();
+  }
 }
 
 function getActiveSkinColor() {
@@ -1235,6 +1231,362 @@ class MegaBoss {
 }
 
 /* =======================
+   ULTRA BOSS (Wave 20)
+======================= */
+
+class UltraBoss {
+  constructor(x, y, wave) {
+    this.x = x;
+    this.y = y;
+    this.r = 90;
+    this.speed = 30;
+    this.hp = 350 + wave * 60;
+    this.maxHp = this.hp;
+    this.color = '#ffd700';       // Gold base
+    this.coreColor = '#ffffff';
+    this.isBoss = true;
+    this.isMegaBoss = false;
+    this.isUltraBoss = true;
+    this.wave = wave;
+
+    // Shoot timers
+    this.spiralCooldown  = 0;
+    this.specialCooldown = 0;
+    this.summonCooldown  = 4;
+
+    // Movement
+    this.moveTimer   = 0;
+    this.movePattern = 0;
+    this.dashTarget  = null;
+    this.dashTimer   = 0;
+
+    // Phase: 1–4
+    this.phase = 1;
+    this.lastPhase = 1;
+
+    // Dual-spiral angle offset
+    this.spiralAngle = 0;
+  }
+
+  get hpPct() { return this.hp / this.maxHp; }
+
+  update(dt) {
+    // Phase transitions at 75 / 50 / 25 % HP
+    if      (this.hpPct <= 0.25) this.phase = 4;
+    else if (this.hpPct <= 0.50) this.phase = 3;
+    else if (this.hpPct <= 0.75) this.phase = 2;
+    else                         this.phase = 1;
+
+    // Flash screen on phase change
+    if (this.phase !== this.lastPhase) {
+      this.lastPhase = this.phase;
+      if (gameSettings.screenShake) screenShakeAmt = 1.5;
+      playSound(60 + this.phase * 20, 0.6, 'sawtooth');
+    }
+
+    // Movement — gets faster and more aggressive per phase
+    this.moveTimer += dt;
+    const movePeriod = Math.max(1.5, 3 - this.phase * 0.4);
+    if (this.moveTimer > movePeriod) {
+      this.moveTimer = 0;
+      this.movePattern = (this.movePattern + 1) % (2 + this.phase);
+    }
+
+    const spd = this.speed * (1 + (this.phase - 1) * 0.25);
+    if (this.dashTimer > 0) {
+      // Active dash towards dashTarget
+      this.dashTimer -= dt;
+      if (this.dashTarget) {
+        const ang = Math.atan2(this.dashTarget.y - this.y, this.dashTarget.x - this.x);
+        this.x += Math.cos(ang) * spd * 3.5 * dt;
+        this.y += Math.sin(ang) * spd * 3.5 * dt;
+      }
+    } else if (this.movePattern === 0) {
+      // Orbit strafe
+      const ang = Math.atan2(player.y - this.y, player.x - this.x) + Math.PI / 2;
+      this.x += Math.cos(ang) * spd * dt;
+      this.y += Math.sin(ang) * spd * dt;
+    } else if (this.movePattern === 1) {
+      // Slow approach
+      const ang = Math.atan2(player.y - this.y, player.x - this.x);
+      this.x += Math.cos(ang) * spd * 0.5 * dt;
+      this.y += Math.sin(ang) * spd * 0.5 * dt;
+    } else if (this.movePattern === 2) {
+      // Charge dash — pick target once
+      if (!this.dashTarget) {
+        this.dashTarget = { x: player.x, y: player.y };
+        this.dashTimer = 0.5;
+      }
+    } else if (this.movePattern === 3) {
+      // Erratic (phase 4 only effectively)
+      this.x += (Math.random() - 0.5) * spd * 2 * dt;
+      this.y += (Math.random() - 0.5) * spd * 2 * dt;
+    }
+
+    if (this.movePattern !== 2) this.dashTarget = null;
+
+    this.x = Math.max(100, Math.min(canvas.width  - 100, this.x));
+    this.y = Math.max(100, Math.min(canvas.height - 100, this.y));
+
+    // ── Dual counter-rotating spirals (constant) ──
+    this.spiralCooldown -= dt;
+    const spiralRate = Math.max(0.35, 0.8 - this.phase * 0.1);
+    if (this.spiralCooldown <= 0) {
+      this.spiralCooldown = spiralRate;
+      this.shootDualSpiral();
+    }
+
+    // ── Phase special attacks ──
+    this.specialCooldown -= dt;
+    const specialRate = Math.max(1.5, 4 - this.phase * 0.6);
+    if (this.specialCooldown <= 0) {
+      this.specialCooldown = specialRate;
+      if      (this.phase === 1) this.shootStarBurst();
+      else if (this.phase === 2) this.shootRingWave();
+      else if (this.phase === 3) this.shootCrossLaser();
+      else                       this.shootDeathBlossom();
+    }
+
+    // ── Minion summoning (phase 2+) ──
+    if (this.phase >= 2) {
+      this.summonCooldown -= dt;
+      const summonRate = Math.max(4, 8 - this.phase * 1.5);
+      if (this.summonCooldown <= 0) {
+        this.summonCooldown = summonRate;
+        this.summonMinions();
+      }
+    }
+  }
+
+  // ── Attack patterns ──────────────────────────
+
+  shootDualSpiral() {
+    this.spiralAngle += 0.35;
+    const count = 10 + this.phase * 2;
+    const speed = 265 + this.phase * 15;
+    for (let i = 0; i < count; i++) {
+      const a1 = this.spiralAngle + (Math.PI * 2 / count) * i;
+      const a2 = -this.spiralAngle + (Math.PI * 2 / count) * i; // counter-rotate
+      for (const a of [a1, a2]) {
+        enemyBullets.push({ x: this.x, y: this.y,
+          vx: Math.cos(a) * speed, vy: Math.sin(a) * speed, r: 7 });
+      }
+    }
+    playSound(160, 0.15, 'square');
+  }
+
+  shootStarBurst() {
+    // 5-pointed star of bullet lines aimed at player
+    const base = Math.atan2(player.y - this.y, player.x - this.x);
+    const points = 5;
+    const bulletsPerPoint = 3;
+    for (let p = 0; p < points; p++) {
+      const a = base + (Math.PI * 2 / points) * p;
+      for (let b = 0; b < bulletsPerPoint; b++) {
+        const speed = 260 + b * 30;
+        enemyBullets.push({ x: this.x, y: this.y,
+          vx: Math.cos(a) * speed, vy: Math.sin(a) * speed, r: 8 });
+      }
+    }
+    if (gameSettings.screenShake) screenShakeAmt = 0.5;
+    playSound(200, 0.3, 'sawtooth');
+  }
+
+  shootRingWave() {
+    // Two expanding rings fired in quick succession
+    for (let ring = 0; ring < 2; ring++) {
+      setTimeout(() => {
+        const count = 20;
+        const speed = 230 + ring * 40;
+        const offset = (Math.PI / count) * ring; // stagger the rings
+        for (let i = 0; i < count; i++) {
+          const a = (Math.PI * 2 / count) * i + offset;
+          enemyBullets.push({ x: this.x, y: this.y,
+            vx: Math.cos(a) * speed, vy: Math.sin(a) * speed, r: 7 });
+        }
+        playSound(180, 0.2, 'square');
+      }, ring * 250);
+    }
+    if (gameSettings.screenShake) screenShakeAmt = 0.6;
+  }
+
+  shootCrossLaser() {
+    // 8 directions, 5 bullets each, with staggered timing
+    const dirs = Array.from({ length: 8 }, (_, i) => (Math.PI * 2 / 8) * i);
+    dirs.forEach((a, idx) => {
+      setTimeout(() => {
+        for (let j = 0; j < 5; j++) {
+          const speed = 280 + j * 20;
+          enemyBullets.push({ x: this.x, y: this.y,
+            vx: Math.cos(a) * speed, vy: Math.sin(a) * speed, r: 8 });
+        }
+      }, idx * 60);
+    });
+    if (gameSettings.screenShake) screenShakeAmt = 0.7;
+    playSound(220, 0.3, 'square');
+  }
+
+  shootDeathBlossom() {
+    // Phase 4 enrage: 6 rapid-fire spirals in a burst
+    for (let burst = 0; burst < 6; burst++) {
+      setTimeout(() => {
+        const count = 24;
+        const speed = 290 + Math.random() * 50;
+        const offset = (Math.PI * 2 / 6) * burst + Math.random() * 0.3;
+        for (let i = 0; i < count; i++) {
+          const a = offset + (Math.PI * 2 / count) * i;
+          enemyBullets.push({ x: this.x, y: this.y,
+            vx: Math.cos(a) * speed, vy: Math.sin(a) * speed, r: 6 });
+        }
+        playSound(250, 0.1, 'square');
+      }, burst * 130);
+    }
+    if (gameSettings.screenShake) screenShakeAmt = 1.0;
+  }
+
+  summonMinions() {
+    const count = 1 + this.phase;
+    for (let i = 0; i < count; i++) {
+      // Spawn minions in a ring around the boss
+      const a = (Math.PI * 2 / count) * i;
+      const dist = this.r + 60;
+      const mx = Math.max(20, Math.min(canvas.width  - 20, this.x + Math.cos(a) * dist));
+      const my = Math.max(20, Math.min(canvas.height - 20, this.y + Math.sin(a) * dist));
+      // Alternate between shooter and fast enemies
+      enemies.push(new Enemy(mx, my, i % 2 === 0 ? 'shooter' : 'fast'));
+    }
+    playSound(300, 0.3, 'sawtooth');
+    if (gameSettings.screenShake) screenShakeAmt = 0.4;
+  }
+
+  // ── Drawing ──────────────────────────────────
+
+  draw() {
+    const time = Date.now() / 1000;
+    const hpPct = this.hpPct;
+
+    // Phase colour palette
+    const phaseColors = ['#ffd700', '#ff9900', '#ff4400', '#cc00ff'];
+    const pColor = phaseColors[this.phase - 1];
+
+    // Intense glow
+    ctx.shadowBlur = 40 + this.phase * 8;
+    ctx.shadowColor = pColor;
+
+    // Outer rotating rings (more rings per phase)
+    ctx.lineWidth = 5;
+    for (let r = 0; r < this.phase + 1; r++) {
+      const ringR = this.r + 22 + r * 18 + Math.sin(time * 2.5 + r) * 7;
+      const alpha = 0.5 - r * 0.08;
+      ctx.strokeStyle = `rgba(${r % 2 === 0 ? '255,215,0' : '255,255,255'},${alpha})`;
+      ctx.beginPath();
+      // Rings rotate in alternate directions
+      ctx.arc(this.x, this.y, ringR, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+
+    // Orbiting gold orbs
+    const orbCount = 6 + this.phase * 2;
+    for (let i = 0; i < orbCount; i++) {
+      const dir  = i % 2 === 0 ? 1 : -1;
+      const oA   = time * dir * (1 + this.phase * 0.3) + (Math.PI * 2 / orbCount) * i;
+      const oDist = this.r + 14 + Math.sin(time * 3 + i) * 6;
+      const ox   = this.x + Math.cos(oA) * oDist;
+      const oy   = this.y + Math.sin(oA) * oDist;
+      ctx.fillStyle = pColor;
+      ctx.shadowBlur = 12;
+      ctx.shadowColor = pColor;
+      ctx.beginPath();
+      ctx.arc(ox, oy, 5, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // Core gradient body
+    const grad = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.r);
+    grad.addColorStop(0, '#ffffff');
+    grad.addColorStop(0.35, pColor);
+    grad.addColorStop(0.7, this.phase >= 3 ? '#440000' : '#1a0a00');
+    grad.addColorStop(1, '#000000');
+
+    ctx.shadowBlur = 50;
+    ctx.shadowColor = pColor;
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Spinning inner symbol
+    const symbols = ['★', '⚡', '☠', '☢'];
+    ctx.fillStyle = 'rgba(255,255,255,0.9)';
+    ctx.font = `bold 32px Arial`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.save();
+    ctx.translate(this.x, this.y);
+    ctx.rotate(time * (1.5 + this.phase * 0.5));
+    ctx.shadowBlur = 10;
+    ctx.shadowColor = '#ffffff';
+    ctx.fillText(symbols[this.phase - 1], 0, 0);
+    ctx.restore();
+
+    ctx.shadowBlur = 0;
+
+    // ── HP bar ──
+    const barW = 260;
+    const barH = 16;
+    const barX = this.x - barW / 2;
+    const barY = this.y - this.r - 48;
+
+    ctx.fillStyle = 'rgba(0,0,0,0.92)';
+    ctx.fillRect(barX - 4, barY - 4, barW + 8, barH + 8);
+
+    ctx.fillStyle = 'rgba(50,50,50,0.9)';
+    ctx.fillRect(barX, barY, barW, barH);
+
+    // HP gradient
+    const hpGrad = ctx.createLinearGradient(barX, 0, barX + barW, 0);
+    hpGrad.addColorStop(0, '#00ff88');
+    hpGrad.addColorStop(0.4, '#ffd700');
+    hpGrad.addColorStop(0.7, '#ff4400');
+    hpGrad.addColorStop(1, '#cc00ff');
+    ctx.fillStyle = hpGrad;
+    ctx.fillRect(barX, barY, barW * hpPct, barH);
+
+    // Phase markers at 75, 50, 25%
+    ctx.strokeStyle = 'rgba(255,255,255,0.4)';
+    ctx.lineWidth = 2;
+    for (const marker of [0.75, 0.50, 0.25]) {
+      ctx.beginPath();
+      ctx.moveTo(barX + barW * marker, barY);
+      ctx.lineTo(barX + barW * marker, barY + barH);
+      ctx.stroke();
+    }
+
+    // Boss title
+    ctx.font = 'bold 18px Arial';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    ctx.strokeStyle = 'black';
+    ctx.lineWidth = 4;
+    const title = '💀 OMEGA OVERLORD 💀';
+    ctx.strokeText(title, this.x, barY - 26);
+    ctx.fillStyle = pColor;
+    ctx.shadowBlur = 15;
+    ctx.shadowColor = pColor;
+    ctx.fillText(title, this.x, barY - 26);
+
+    // Phase indicator
+    ctx.shadowBlur = 0;
+    ctx.font = 'bold 11px Arial';
+    ctx.fillStyle = '#ffd700';
+    const phaseNames = ['AWAKENING', 'ASCENDING', 'ENRAGED', 'OMEGA FORM'];
+    const ptxt = `PHASE ${this.phase} — ${phaseNames[this.phase - 1]}`;
+    ctx.strokeText(ptxt, this.x, barY + barH + 5);
+    ctx.fillText(ptxt, this.x, barY + barH + 5);
+  }
+}
+
+/* =======================
    PARTICLES
 ======================= */
 
@@ -1644,8 +1996,14 @@ function initShopUI() {
 
 function showWaveAnnouncement(waveNum, isBoss = false, isMegaBoss = false) {
   const el = document.getElementById('waveAnnouncement');
+  const isUltra = (waveNum === 20);
   
-  if (isMegaBoss) {
+  if (isUltra) {
+    el.textContent = `💀 OMEGA OVERLORD 💀`;
+    el.style.color = '#ffd700';
+    el.style.textShadow = '0 0 50px rgba(255,215,0,1), 0 0 80px rgba(255,100,0,0.8), 0 0 120px rgba(200,0,255,0.5)';
+    el.style.fontSize = '58px';
+  } else if (isMegaBoss) {
     el.textContent = `⚔ MEGA BOSS WAVE ${waveNum} ⚔`;
     el.style.color = '#ff3366';
     el.style.textShadow = '0 0 40px rgba(255,51,102,1), 0 0 60px rgba(255,51,102,0.7)';
@@ -1667,7 +2025,7 @@ function showWaveAnnouncement(waveNum, isBoss = false, isMegaBoss = false) {
   setTimeout(() => {
     el.classList.remove('wave-pop');
     el.classList.add('hidden');
-  }, isMegaBoss ? 3000 : 2000); // Show MEGA BOSS longer
+  }, isUltra ? 4000 : isMegaBoss ? 3000 : 2000);
 }
 
 /* =======================
@@ -1794,16 +2152,17 @@ function loop(time) {
             createExplosion(boss.x, boss.y, '#ffffff', 40);
             if (boss.hp <= 0) {
               // Different rewards for MEGA BOSS vs regular Boss
-              const isMegaBoss = boss.isMegaBoss;
-              const pts = isMegaBoss ? (1500 + boss.wave * 250) : (600 + boss.wave * 120);
-              const coins = isMegaBoss ? (150 + boss.wave * 20) : (60 + boss.wave * 10);
-              const powerupCount = isMegaBoss ? 8 : 4;
+              const isUltraBoss = boss.isUltraBoss;
+              const isMegaBoss  = boss.isMegaBoss;
+              const pts = isUltraBoss ? (3000 + boss.wave * 400) : isMegaBoss ? (1500 + boss.wave * 250) : (600 + boss.wave * 120);
+              const coins = isUltraBoss ? (300 + boss.wave * 30) : isMegaBoss ? (150 + boss.wave * 20) : (60 + boss.wave * 10);
+              const powerupCount = isUltraBoss ? 14 : isMegaBoss ? 8 : 4;
               
               score += pts;
               playerCoins += coins;
               saveCoins();
               createScorePopup(boss.x, boss.y, pts);
-              createExplosion(boss.x, boss.y, boss.color, isMegaBoss ? 120 : 60);
+              createExplosion(boss.x, boss.y, boss.color, isUltraBoss ? 200 : isMegaBoss ? 120 : 60);
               for (let p = 0; p < powerupCount; p++) {
                 spawnPowerUp(
                   boss.x + (Math.random()-0.5)*(isMegaBoss ? 140 : 90), 
@@ -1842,23 +2201,24 @@ if (gameSettings.screenShake) screenShakeAmt = 1.2;
           
           if (boss.hp <= 0) {
             // Different rewards for MEGA BOSS vs regular Boss
-            const isMegaBoss = boss.isMegaBoss;
-            const points = isMegaBoss ? (1500 + boss.wave * 250) : (600 + boss.wave * 120);
-            const coins = isMegaBoss ? (150 + boss.wave * 20) : (60 + boss.wave * 10);
-            const powerupCount = isMegaBoss ? 8 : 4; // MegaBoss drops double powerups!
+            const isUltraBoss = boss.isUltraBoss;
+            const isMegaBoss  = boss.isMegaBoss;
+            const points = isUltraBoss ? (3000 + boss.wave * 400) : isMegaBoss ? (1500 + boss.wave * 250) : (600 + boss.wave * 120);
+            const coins = isUltraBoss ? (300 + boss.wave * 30) : isMegaBoss ? (150 + boss.wave * 20) : (60 + boss.wave * 10);
+            const powerupCount = isUltraBoss ? 14 : isMegaBoss ? 8 : 4; // UltraBoss drops the most powerups!
             
             score += points;
             playerCoins += coins;
             saveCoins();
             createScorePopup(boss.x, boss.y, points);
             sounds.hit();
-            createExplosion(boss.x, boss.y, boss.color, isMegaBoss ? 120 : 60);
+            createExplosion(boss.x, boss.y, boss.color, isUltraBoss ? 200 : isMegaBoss ? 120 : 60);
             
             // Boss drops powerups
             for (let p = 0; p < powerupCount; p++) {
               spawnPowerUp(
-                boss.x + (Math.random() - 0.5) * (isMegaBoss ? 140 : 90),
-                boss.y + (Math.random() - 0.5) * (isMegaBoss ? 140 : 90)
+                boss.x + (Math.random() - 0.5) * (isUltraBoss ? 180 : isMegaBoss ? 140 : 90),
+                boss.y + (Math.random() - 0.5) * (isUltraBoss ? 180 : isMegaBoss ? 140 : 90)
               );
             }
             
@@ -1967,8 +2327,16 @@ if (gameSettings.screenShake) screenShakeAmt = 1;
       spawnTimer = 0;
       waveEl.textContent = wave;
 
-      if ((wave - 1) % 10 === 0) {
-        // MEGA BOSS wave (every 10 waves: 10, 20, 30, etc.)
+      if ((wave - 1) === 20) {
+        // OMEGA OVERLORD — wave 20 special boss
+        boss = new UltraBoss(canvas.width / 2, 120, wave - 1);
+        sounds.bossSpawn();
+        setTimeout(() => sounds.bossSpawn(), 300);
+        setTimeout(() => sounds.bossSpawn(), 600);
+        if (gameSettings.screenShake) screenShakeAmt = 2.0;
+        showWaveAnnouncement(wave - 1, true, true);
+      } else if ((wave - 1) % 10 === 0) {
+        // MEGA BOSS wave (every 10 waves: 10, 30, etc.)
         boss = new MegaBoss(canvas.width / 2, 100, wave - 1);
         sounds.bossSpawn();
         if (gameSettings.screenShake) screenShakeAmt = 1.2;
@@ -2014,8 +2382,17 @@ if (gameSettings.screenShake) screenShakeAmt = 1;
       document.getElementById('homeCoinsVal').textContent = playerCoins;
       if (score > high) {
         high = score;
-        localStorage.setItem('highscore', score);
+        // Save to localStorage for guest, Firebase for logged-in users
+        if (isGuest || !currentUser) {
+          localStorage.setItem('highscore', score);
+        }
         document.getElementById('homeHighVal').textContent = high;
+      }
+      
+      // Submit to Firebase if logged in
+      if (currentUser && !isGuest && typeof submitScoreToLeaderboard === 'function') {
+        submitScoreToLeaderboard(score);
+        saveUserDataToFirebase();
       }
     }
 
