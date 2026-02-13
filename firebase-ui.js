@@ -179,6 +179,22 @@ document.querySelectorAll('.filter-btn').forEach(btn => {
 });
 
 // ============================================
+// UPDATE LOGS UI
+// ============================================
+
+// Update logs button
+document.getElementById('updateLogsBtn').addEventListener('click', () => {
+  document.getElementById('homeScreen').classList.add('hidden');
+  document.getElementById('updateLogsPanel').classList.remove('hidden');
+});
+
+// Update logs back button
+document.getElementById('updateLogsBackBtn').addEventListener('click', () => {
+  document.getElementById('updateLogsPanel').classList.add('hidden');
+  document.getElementById('homeScreen').classList.remove('hidden');
+});
+
+// ============================================
 // ADMIN UI
 // ============================================
 
@@ -196,10 +212,11 @@ document.querySelectorAll('.admin-tab').forEach(tab => {
     document.getElementById(`adminTab-${targetTab}`).classList.remove('hidden');
 
     // Load data for the tab
-    if (targetTab === 'ban')    displayBannedUsers();
-    if (targetTab === 'users')  displayAllUsers();
-    if (targetTab === 'scores') displayScoresAdmin();
-    if (targetTab === 'logs')   displayActivityLogs();
+    if (targetTab === 'ban')         displayBannedUsers();
+    if (targetTab === 'users')       displayAllUsers();
+    if (targetTab === 'scores')      { displayScoresAdmin(); displayCoinsScoresAdmin(); }
+    if (targetTab === 'logs')        displayActivityLogs();
+    if (targetTab === 'devconsole')  { /* static UI, no load needed */ }
   });
 });
 

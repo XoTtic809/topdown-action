@@ -33,6 +33,33 @@ window.addEventListener('resize', resize);
 resize();
 
 /* =======================
+   CUSTOM CURSOR
+======================= */
+
+// Create custom cursor elements
+const customCursor = document.createElement('div');
+customCursor.className = 'custom-cursor';
+const cursorDot = document.createElement('div');
+cursorDot.className = 'custom-cursor-dot';
+customCursor.appendChild(cursorDot);
+document.body.appendChild(customCursor);
+
+// Update cursor position
+document.addEventListener('mousemove', (e) => {
+  customCursor.style.left = e.clientX + 'px';
+  customCursor.style.top = e.clientY + 'px';
+});
+
+// Hide cursor when leaving window
+document.addEventListener('mouseleave', () => {
+  customCursor.style.opacity = '0';
+});
+
+document.addEventListener('mouseenter', () => {
+  customCursor.style.opacity = '1';
+});
+
+/* =======================
    INPUT
 ======================= */
 
@@ -40,6 +67,7 @@ const keys = {};
 const mouse = { x: canvas.width / 2, y: canvas.height / 2, down: false };
 
 window.addEventListener('keydown', (e) => {
+  if (!e.key) return; // Safety check
   keys[e.key.toLowerCase()] = true;
   if (e.key === ' ' && running && !paused) {
     e.preventDefault();
@@ -49,9 +77,15 @@ window.addEventListener('keydown', (e) => {
     e.preventDefault();
     togglePause();
   }
+  // ~ key toggles dev overlay (admin only)
+  if ((e.key === '`' || e.key === '~') && running && isAdmin) {
+    e.preventDefault();
+    devOverlayToggle();
+  }
 });
 
 window.addEventListener('keyup', (e) => {
+  if (!e.key) return; // Safety check
   keys[e.key.toLowerCase()] = false;
 });
 
@@ -202,6 +236,11 @@ const SKINS = [
   { id: 'phoenix',  name: 'Phoenix',     color: null,      price: 3000, desc: '🔥 SECRET: Fire wings' },
   { id: 'void',     name: 'Void Walker', color: null,      price: 3500, desc: '☠ SECRET: Pure darkness' },
   { id: 'diamond',  name: 'Diamond',     color: null,      price: 5000, desc: '💎 ULTRA SECRET: Ultimate flex' },
+  { id: 'quantum',  name: 'Quantum Flux', color: null,      price: 10000, desc: '⚛️ LEGENDARY: Reality bender' },
+  // EXCLUSIVE LEADERBOARD SKINS (Not purchasable - earned only)
+  { id: 'bronze-champion', name: '🥉 Bronze Champion', color: null, price: -1, leaderboardRank: 3, desc: '🏆 EXCLUSIVE: 3rd Place Global Rank' },
+  { id: 'silver-champion', name: '🥈 Silver Champion', color: null, price: -1, leaderboardRank: 2, desc: '🏆 EXCLUSIVE: 2nd Place Global Rank' },
+  { id: 'gold-champion',   name: '🥇 Gold Champion',   color: null, price: -1, leaderboardRank: 1, desc: '🏆 EXCLUSIVE: 1st Place Global Rank' },
 ];
 
 let ownedSkins = JSON.parse(localStorage.getItem('ownedSkins') || '["agent"]');
@@ -254,6 +293,46 @@ function getActiveSkinColor() {
     const saturation = 20 + Math.sin(time / 3) * 20;
     const hue = (time * 3) % 360;
     return `hsl(${hue},${saturation}%,95%)`;
+  }
+  if (activeSkin === 'quantum') {
+    // Quantum Flux - Reality-bending chromatic aberration effect
+    // Rapidly cycles through entire spectrum with glitch effects
+    const time = Date.now() / 8;
+    const hue = (time * 5) % 360;
+    const saturation = 90 + Math.sin(time / 2) * 10;
+    const brightness = 60 + Math.sin(time / 3) * 15;
+    return `hsl(${hue},${saturation}%,${brightness}%)`;
+  }
+  // EXCLUSIVE LEADERBOARD CHAMPION SKINS
+  if (activeSkin === 'gold-champion') {
+    // Gold Champion - Divine radiance with rainbow prismatic edge and white core
+    const time = Date.now() / 5;
+    const mainGold = 45 + Math.sin(time / 3) * 5; // Gold hue oscillation
+    const brightness = 85 + Math.sin(time / 2) * 12; // Pulsing brightness 73-97%
+    const chromatic = (time * 8) % 360; // Fast rainbow edge effect
+    const glitch = Math.sin(time / 1.5) * 3; // Micro-glitch
+    // Complex layering: gold base + chromatic edge + white highlights
+    return `hsl(${mainGold + glitch},100%,${brightness}%)`;
+  }
+  if (activeSkin === 'silver-champion') {
+    // Silver Champion - Liquid metal with electric blue plasma and holographic shift
+    const time = Date.now() / 6;
+    const metalBase = 200 + Math.sin(time / 4) * 20; // Silver-blue shift
+    const plasma = Math.sin(time / 2) * 30 + 70; // Plasma brightness 40-100%
+    const holographic = (time * 6) % 60; // Holographic hue shift
+    const shimmer = Math.sin(time * 3) * 5; // Fast shimmer
+    // Liquid metal effect with electric undertones
+    return `hsl(${metalBase + holographic + shimmer},25%,${plasma}%)`;
+  }
+  if (activeSkin === 'bronze-champion') {
+    // Bronze Champion - Molten metal with copper-gold gradient and lava glow
+    const time = Date.now() / 7;
+    const bronzeBase = 25 + Math.sin(time / 3) * 8; // Bronze to copper oscillation
+    const lavaGlow = 50 + Math.sin(time / 2) * 20; // Lava-like pulsing 30-70%
+    const goldShift = Math.sin(time / 4) * 10; // Gold highlights
+    const molten = Math.sin(time * 2) * 5; // Molten shimmer
+    // Molten bronze with gold veins
+    return `hsl(${bronzeBase + goldShift + molten},85%,${lavaGlow}%)`;
   }
   const skin = SKINS.find(s => s.id === activeSkin);
   return skin ? skin.color : '#9be7ff';
@@ -321,6 +400,7 @@ class Player {
     this.y = y;
     this.r = 14;
     this.speed = 250;
+    this.baseSpeed = 250; // Store base speed for percentage upgrades
     this.hp = 100;
     this.maxHp = 100;
     this.cooldown = 0;
@@ -328,6 +408,8 @@ class Player {
     this.speedBoost = 0;
     this.shield = 0;
     this.weaponLevel = 1;
+    this.maxHpLevel = 1; // Max HP upgrade level (1-3)
+    this.speedLevel = 1;  // Speed upgrade level (1-3)
     this.dashCooldown = 0;
     this.dashDuration = 0;
     this.dashDir = { x: 0, y: 0 };
@@ -343,7 +425,11 @@ class Player {
     if (keys['d'] || keys['arrowright']) dx++;
 
     const len = Math.sqrt(dx * dx + dy * dy) || 1;
-    let speed = this.speed * (this.speedBoost > 0 ? 1.5 : 1);
+    
+    // Calculate speed with permanent speed upgrades (15% per level)
+    const permanentSpeedMultiplier = 1 + (this.speedLevel - 1) * 0.15;
+    const temporarySpeedMultiplier = this.speedBoost > 0 ? 1.5 : 1;
+    let speed = this.baseSpeed * permanentSpeedMultiplier * temporarySpeedMultiplier;
     
     // Dash movement
     if (this.dashDuration > 0) {
@@ -615,6 +701,302 @@ class Player {
       ctx.fillStyle = 'rgba(255,255,255,0.9)';
       ctx.beginPath();
       ctx.arc(this.x, this.y, 4, 0, Math.PI * 2);
+      ctx.fill();
+      
+      ctx.shadowBlur = 0;
+    } else if (activeSkin === 'quantum') {
+      // Quantum Flux: Reality-bending chromatic aberration with glitch particles
+      const time = Date.now();
+      
+      // Chromatic aberration effect - 3 offset circles in RGB
+      ctx.globalAlpha = 0.6;
+      const offset = 4 + Math.sin(time / 100) * 2;
+      
+      // Red channel
+      ctx.fillStyle = `hsl(0,100%,60%)`;
+      ctx.shadowBlur = 15;
+      ctx.shadowColor = `hsl(0,100%,60%)`;
+      ctx.beginPath();
+      ctx.arc(this.x - offset, this.y, this.r, 0, Math.PI * 2);
+      ctx.fill();
+      
+      // Green channel
+      ctx.fillStyle = `hsl(120,100%,60%)`;
+      ctx.shadowColor = `hsl(120,100%,60%)`;
+      ctx.beginPath();
+      ctx.arc(this.x, this.y - offset * 0.7, this.r, 0, Math.PI * 2);
+      ctx.fill();
+      
+      // Blue channel
+      ctx.fillStyle = `hsl(240,100%,60%)`;
+      ctx.shadowColor = `hsl(240,100%,60%)`;
+      ctx.beginPath();
+      ctx.arc(this.x + offset, this.y, this.r, 0, Math.PI * 2);
+      ctx.fill();
+      
+      ctx.globalAlpha = 1;
+      
+      // Core - cycling through spectrum rapidly
+      ctx.fillStyle = skinColor;
+      ctx.shadowBlur = 20;
+      ctx.shadowColor = skinColor;
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
+      ctx.fill();
+      
+      // Orbiting quantum particles
+      const particleCount = 12;
+      for (let i = 0; i < particleCount; i++) {
+        const angle = (time / 30 + i * (360 / particleCount)) * Math.PI / 180;
+        const dist = this.r + 12 + Math.sin(time / 50 + i) * 4;
+        const particleX = this.x + Math.cos(angle) * dist;
+        const particleY = this.y + Math.sin(angle) * dist;
+        const particleHue = (time / 8 + i * 30) % 360;
+        const particleSize = 2.5 + Math.sin(time / 40 + i * 2) * 1;
+        
+        ctx.fillStyle = `hsla(${particleHue},100%,70%,0.9)`;
+        ctx.shadowBlur = 8;
+        ctx.shadowColor = `hsl(${particleHue},100%,70%)`;
+        ctx.beginPath();
+        ctx.arc(particleX, particleY, particleSize, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      
+      // Glitch lines effect
+      if (Math.random() < 0.15) { // Random glitch
+        ctx.globalAlpha = 0.7;
+        const glitchHue = Math.random() * 360;
+        ctx.strokeStyle = `hsl(${glitchHue},100%,70%)`;
+        ctx.lineWidth = 1;
+        for (let i = 0; i < 3; i++) {
+          const glitchAngle = Math.random() * Math.PI * 2;
+          const glitchDist = this.r + Math.random() * 15;
+          const gx = this.x + Math.cos(glitchAngle) * glitchDist;
+          const gy = this.y + Math.sin(glitchAngle) * glitchDist;
+          ctx.beginPath();
+          ctx.moveTo(this.x, this.y);
+          ctx.lineTo(gx, gy);
+          ctx.stroke();
+        }
+        ctx.globalAlpha = 1;
+      }
+      
+      // Pulsing ring
+      const ringRadius = this.r + 6 + Math.sin(time / 80) * 3;
+      ctx.strokeStyle = skinColor;
+      ctx.lineWidth = 2;
+      ctx.globalAlpha = 0.5;
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, ringRadius, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.globalAlpha = 1;
+      
+      ctx.shadowBlur = 0;
+    } else if (activeSkin === 'gold-champion') {
+      // GOLD CHAMPION: Divine radiance with prismatic corona and white core explosion
+      const time = Date.now();
+      
+      // Outer prismatic corona - rainbow explosion
+      ctx.globalAlpha = 0.5;
+      for (let i = 0; i < 16; i++) {
+        const angle = (time / 40 + i * 22.5) * Math.PI / 180;
+        const dist = this.r + 18 + Math.sin(time / 60 + i) * 6;
+        const coronaX = this.x + Math.cos(angle) * dist;
+        const coronaY = this.y + Math.sin(angle) * dist;
+        const coronaHue = (time / 10 + i * 22.5) % 360;
+        const coronaSize = 4 + Math.sin(time / 50 + i * 2) * 2;
+        
+        ctx.fillStyle = `hsla(${coronaHue},100%,65%,0.9)`;
+        ctx.shadowBlur = 20;
+        ctx.shadowColor = `hsl(${coronaHue},100%,65%)`;
+        ctx.beginPath();
+        ctx.arc(coronaX, coronaY, coronaSize, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+      
+      // Golden rays bursting outward
+      ctx.globalAlpha = 0.4;
+      for (let i = 0; i < 8; i++) {
+        const rayAngle = (time / 50 + i * 45) * Math.PI / 180;
+        const rayLength = this.r + 25 + Math.sin(time / 70 + i) * 8;
+        ctx.strokeStyle = `hsla(45,100%,75%,${0.7 - Math.sin(time / 60 + i) * 0.3})`;
+        ctx.lineWidth = 3;
+        ctx.shadowBlur = 15;
+        ctx.shadowColor = 'rgba(255,215,0,0.8)';
+        ctx.beginPath();
+        ctx.moveTo(this.x, this.y);
+        ctx.lineTo(this.x + Math.cos(rayAngle) * rayLength, this.y + Math.sin(rayAngle) * rayLength);
+        ctx.stroke();
+      }
+      ctx.globalAlpha = 1;
+      
+      // Rotating gold ring
+      ctx.strokeStyle = 'hsla(45,100%,60%,0.8)';
+      ctx.lineWidth = 3;
+      ctx.shadowBlur = 25;
+      ctx.shadowColor = '#ffd700';
+      const goldRing = this.r + 10 + Math.sin(time / 90) * 4;
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, goldRing, 0, Math.PI * 2);
+      ctx.stroke();
+      
+      // Core with white explosion center
+      ctx.fillStyle = skinColor;
+      ctx.shadowBlur = 35;
+      ctx.shadowColor = '#ffd700';
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
+      ctx.fill();
+      
+      // Bright white core
+      ctx.fillStyle = `rgba(255,255,255,${0.8 + Math.sin(time / 100) * 0.2})`;
+      ctx.shadowBlur = 20;
+      ctx.shadowColor = '#ffffff';
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.r * 0.5, 0, Math.PI * 2);
+      ctx.fill();
+      
+      ctx.shadowBlur = 0;
+    } else if (activeSkin === 'silver-champion') {
+      // SILVER CHAMPION: Liquid metal with electric plasma arcs and holographic shimmer
+      const time = Date.now();
+      
+      // Electric plasma arcs
+      ctx.globalAlpha = 0.6;
+      for (let i = 0; i < 6; i++) {
+        const arcAngle1 = (time / 35 + i * 60) * Math.PI / 180;
+        const arcAngle2 = (time / 35 + i * 60 + 90) * Math.PI / 180;
+        const arcDist = this.r + 15 + Math.sin(time / 55 + i) * 5;
+        const x1 = this.x + Math.cos(arcAngle1) * arcDist;
+        const y1 = this.y + Math.sin(arcAngle1) * arcDist;
+        const x2 = this.x + Math.cos(arcAngle2) * arcDist;
+        const y2 = this.y + Math.sin(arcAngle2) * arcDist;
+        
+        ctx.strokeStyle = `hsla(200,80%,75%,${0.7 + Math.sin(time / 40 + i) * 0.3})`;
+        ctx.lineWidth = 2;
+        ctx.shadowBlur = 20;
+        ctx.shadowColor = '#00bfff';
+        ctx.beginPath();
+        ctx.moveTo(x1, y1);
+        ctx.lineTo(x2, y2);
+        ctx.stroke();
+      }
+      ctx.globalAlpha = 1;
+      
+      // Holographic particle ring
+      const particleCount = 20;
+      for (let i = 0; i < particleCount; i++) {
+        const angle = (time / 25 + i * (360 / particleCount)) * Math.PI / 180;
+        const dist = this.r + 14 + Math.sin(time / 45 + i * 2) * 6;
+        const particleX = this.x + Math.cos(angle) * dist;
+        const particleY = this.y + Math.sin(angle) * dist;
+        const holoHue = 180 + (time / 15 + i * 18) % 60;
+        const particleSize = 3 + Math.sin(time / 35 + i * 3) * 1.5;
+        
+        ctx.fillStyle = `hsla(${holoHue},70%,70%,0.85)`;
+        ctx.shadowBlur = 12;
+        ctx.shadowColor = `hsl(${holoHue},70%,70%)`;
+        ctx.beginPath();
+        ctx.arc(particleX, particleY, particleSize, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      
+      // Liquid metal shimmer rings
+      for (let ring = 0; ring < 3; ring++) {
+        const ringRadius = this.r + 8 + ring * 4 + Math.sin(time / 80 + ring) * 3;
+        ctx.strokeStyle = `hsla(200,40%,${70 + ring * 10}%,${0.4 - ring * 0.1})`;
+        ctx.lineWidth = 2;
+        ctx.shadowBlur = 15;
+        ctx.shadowColor = '#c0c0c0';
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, ringRadius, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+      
+      // Core
+      ctx.fillStyle = skinColor;
+      ctx.shadowBlur = 30;
+      ctx.shadowColor = '#00bfff';
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
+      ctx.fill();
+      
+      // Bright electric center
+      ctx.fillStyle = `rgba(200,240,255,${0.7 + Math.sin(time / 90) * 0.3})`;
+      ctx.shadowBlur = 18;
+      ctx.shadowColor = '#00ffff';
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.r * 0.5, 0, Math.PI * 2);
+      ctx.fill();
+      
+      ctx.shadowBlur = 0;
+    } else if (activeSkin === 'bronze-champion') {
+      // BRONZE CHAMPION: Molten metal with lava veins and copper-gold eruption
+      const time = Date.now();
+      
+      // Lava eruption particles
+      ctx.globalAlpha = 0.7;
+      for (let i = 0; i < 10; i++) {
+        const eruptAngle = (time / 40 + i * 36) * Math.PI / 180;
+        const eruptDist = this.r + 16 + Math.sin(time / 55 + i * 1.5) * 7;
+        const eruptX = this.x + Math.cos(eruptAngle) * eruptDist;
+        const eruptY = this.y + Math.sin(eruptAngle) * eruptDist;
+        const lavaHue = 15 + Math.sin(time / 60 + i) * 15;
+        const eruptSize = 3.5 + Math.sin(time / 45 + i * 2) * 1.5;
+        
+        ctx.fillStyle = `hsla(${lavaHue},90%,55%,${0.85 - Math.sin(time / 50 + i) * 0.2})`;
+        ctx.shadowBlur = 18;
+        ctx.shadowColor = '#ff4500';
+        ctx.beginPath();
+        ctx.arc(eruptX, eruptY, eruptSize, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+      
+      // Molten veins
+      for (let i = 0; i < 8; i++) {
+        const veinAngle = (time / 60 + i * 45) * Math.PI / 180;
+        const veinDist = this.r + 12 + Math.sin(time / 70 + i) * 4;
+        const veinX = this.x + Math.cos(veinAngle) * veinDist;
+        const veinY = this.y + Math.sin(veinAngle) * veinDist;
+        
+        ctx.strokeStyle = `hsla(35,100%,60%,${0.6 + Math.sin(time / 50 + i) * 0.3})`;
+        ctx.lineWidth = 2.5;
+        ctx.shadowBlur = 15;
+        ctx.shadowColor = '#ffa500';
+        ctx.beginPath();
+        ctx.moveTo(this.x, this.y);
+        ctx.lineTo(veinX, veinY);
+        ctx.stroke();
+      }
+      
+      // Bronze heat waves
+      for (let wave = 0; wave < 3; wave++) {
+        const waveRadius = this.r + 7 + wave * 5 + Math.sin(time / 75 + wave * 1.5) * 4;
+        ctx.strokeStyle = `hsla(25,85%,${55 + wave * 5}%,${0.5 - wave * 0.12})`;
+        ctx.lineWidth = 2;
+        ctx.shadowBlur = 12;
+        ctx.shadowColor = '#cd7f32';
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, waveRadius, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+      
+      // Core
+      ctx.fillStyle = skinColor;
+      ctx.shadowBlur = 28;
+      ctx.shadowColor = '#ff6347';
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
+      ctx.fill();
+      
+      // Glowing copper-gold center
+      ctx.fillStyle = `hsla(35,100%,65%,${0.75 + Math.sin(time / 85) * 0.25})`;
+      ctx.shadowBlur = 20;
+      ctx.shadowColor = '#ffa500';
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.r * 0.55, 0, Math.PI * 2);
       ctx.fill();
       
       ctx.shadowBlur = 0;
@@ -1587,6 +1969,443 @@ class UltraBoss {
 }
 
 /* =======================
+   LEGENDARY BOSS (0.1% Random Spawn - INSANE)
+======================= */
+
+class LegendaryBoss {
+  constructor(x, y, wave) {
+    this.x = x;
+    this.y = y;
+    this.r = 110;
+    this.speed = 28;
+    this.hp = 650 + wave * 110; // Increased from 500 + wave * 80 (now ~1.85x UltraBoss HP)
+    this.maxHp = this.hp;
+    this.color = '#ff0066';  // Hot pink/red
+    this.coreColor = '#ffffff';
+    this.isBoss = true;
+    this.isMegaBoss = false;
+    this.isUltraBoss = false;
+    this.isLegendaryBoss = true;
+    this.wave = wave;
+
+    // Attack timers - increased cooldowns for more breathing room
+    this.spiralCooldown = 0;
+    this.specialCooldown = 0;
+    this.summonCooldown = 4; // Increased from 3
+    this.laserCooldown = 0;
+
+    // Movement
+    this.moveTimer = 0;
+    this.movePattern = 0;
+    this.dashTarget = null;
+    this.dashTimer = 0;
+
+    // 5 Phases for legendary difficulty
+    this.phase = 1;
+    this.lastPhase = 1;
+
+    // Visual effects
+    this.spiralAngle = 0;
+    this.pulseTime = 0;
+  }
+
+  get hpPct() { return this.hp / this.maxHp; }
+
+  update(dt) {
+    this.pulseTime += dt;
+    
+    // Phase transitions at 80 / 60 / 40 / 20 % HP (5 phases!)
+    if      (this.hpPct <= 0.20) this.phase = 5;
+    else if (this.hpPct <= 0.40) this.phase = 4;
+    else if (this.hpPct <= 0.60) this.phase = 3;
+    else if (this.hpPct <= 0.80) this.phase = 2;
+    else                         this.phase = 1;
+
+    // Massive screen shake on phase change
+    if (this.phase !== this.lastPhase) {
+      this.lastPhase = this.phase;
+      if (gameSettings.screenShake) screenShakeAmt = 2.5;
+      playSound(40 + this.phase * 15, 0.8, 'sawtooth');
+      setTimeout(() => playSound(80 + this.phase * 20, 0.6, 'sawtooth'), 150);
+    }
+
+    // Movement - gets insanely aggressive in later phases
+    this.moveTimer += dt;
+    const movePeriod = Math.max(1.2, 2.8 - this.phase * 0.3); // Slightly slower pattern changes
+    if (this.moveTimer > movePeriod) {
+      this.moveTimer = 0;
+      this.movePattern = (this.movePattern + 1) % (3 + this.phase);
+    }
+
+    const spd = this.speed * (1 + (this.phase - 1) * 0.25); // Reduced from 0.3
+    if (this.dashTimer > 0) {
+      this.dashTimer -= dt;
+      if (this.dashTarget) {
+        const ang = Math.atan2(this.dashTarget.y - this.y, this.dashTarget.x - this.x);
+        this.x += Math.cos(ang) * spd * 4.0 * dt; // Reduced from 4.5
+        this.y += Math.sin(ang) * spd * 4.0 * dt;
+      }
+    } else if (this.movePattern === 0) {
+      const ang = Math.atan2(player.y - this.y, player.x - this.x) + Math.PI / 2;
+      this.x += Math.cos(ang) * spd * dt;
+      this.y += Math.sin(ang) * spd * dt;
+    } else if (this.movePattern === 1) {
+      const ang = Math.atan2(player.y - this.y, player.x - this.x);
+      this.x += Math.cos(ang) * spd * 0.4 * dt;
+      this.y += Math.sin(ang) * spd * 0.4 * dt;
+    } else if (this.movePattern === 2) {
+      this.dashTarget = { x: player.x, y: player.y };
+      this.dashTimer = 0.8;
+    } else {
+      this.x += (Math.random() - 0.5) * spd * 2 * dt;
+      this.y += (Math.random() - 0.5) * spd * 2 * dt;
+    }
+
+    this.x = Math.max(100, Math.min(canvas.width - 100, this.x));
+    this.y = Math.max(100, Math.min(canvas.height - 100, this.y));
+
+    // Constant spiral attack - slower
+    this.spiralCooldown -= dt;
+    if (this.spiralCooldown <= 0) {
+      this.spiralCooldown = Math.max(0.6, 1.2 - this.phase * 0.1); // Increased from 0.4/0.9
+      this.shootDualSpiral();
+    }
+
+    // Special attacks based on phase - more time between attacks
+    this.specialCooldown -= dt;
+    if (this.specialCooldown <= 0) {
+      if (this.phase === 1) {
+        this.specialCooldown = 4.5; // Increased from 3.5
+        this.shootRing();
+      } else if (this.phase === 2) {
+        this.specialCooldown = 4.0; // Increased from 3.0
+        this.shootCross();
+      } else if (this.phase === 3) {
+        this.specialCooldown = 3.5; // Increased from 2.5
+        this.shootHexagon();
+      } else if (this.phase === 4) {
+        this.specialCooldown = 3.0; // Increased from 2.0
+        this.shootChaosStorm();
+      } else {
+        this.specialCooldown = 2.5; // Increased from 1.5
+        this.shootApocalypse();
+      }
+    }
+
+    // Laser attack (phase 3+) - less frequent
+    if (this.phase >= 3) {
+      this.laserCooldown -= dt;
+      if (this.laserCooldown <= 0) {
+        this.laserCooldown = 7; // Increased from 5
+        this.shootLaserBeam();
+      }
+    }
+
+    // Summon mini enemies (phase 4+) - less frequent
+    if (this.phase >= 4) {
+      this.summonCooldown -= dt;
+      if (this.summonCooldown <= 0) {
+        this.summonCooldown = 8; // Increased from 6
+        this.summonMinions();
+      }
+    }
+  }
+
+  shootDualSpiral() {
+    this.spiralAngle += 0.4;
+    const numShots = 12; // Reduced from 16
+    for (let i = 0; i < numShots; i++) {
+      const angle = (Math.PI * 2 / numShots) * i + this.spiralAngle;
+      const speed = 280; // Reduced from 300
+      enemyBullets.push({
+        x: this.x,
+        y: this.y,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed,
+        r: 8 // Reduced from 9
+      });
+    }
+    playSound(160, 0.2, 'square');
+  }
+
+  shootRing() {
+    const numShots = 20; // Reduced from 24
+    for (let i = 0; i < numShots; i++) {
+      const angle = (Math.PI * 2 / numShots) * i;
+      const speed = 250; // Reduced from 260
+      enemyBullets.push({
+        x: this.x,
+        y: this.y,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed,
+        r: 7 // Reduced from 8
+      });
+    }
+    playSound(180, 0.35, 'sawtooth');
+    if (gameSettings.screenShake) screenShakeAmt = 0.6;
+  }
+
+  shootCross() {
+    const patterns = [];
+    for (let i = 0; i < 12; i++) { // Reduced from 16
+      patterns.push(i * Math.PI / 6); // Adjusted angle
+    }
+    for (const angle of patterns) {
+      for (let j = 0; j < 3; j++) { // Reduced from 4
+        setTimeout(() => {
+          const speed = 300; // Reduced from 320
+          enemyBullets.push({
+            x: this.x,
+            y: this.y,
+            vx: Math.cos(angle) * speed,
+            vy: Math.sin(angle) * speed,
+            r: 8 // Reduced from 9
+          });
+        }, j * 100); // Increased from 80
+      }
+    }
+    playSound(200, 0.3, 'square');
+    if (gameSettings.screenShake) screenShakeAmt = 0.7;
+  }
+
+  shootHexagon() {
+    for (let layer = 0; layer < 2; layer++) { // Reduced from 3 layers
+      setTimeout(() => {
+        const numShots = 14; // Reduced from 18
+        for (let i = 0; i < numShots; i++) {
+          const angle = (Math.PI * 2 / numShots) * i + layer * 0.3;
+          const speed = 270 + layer * 15; // Reduced speed
+          enemyBullets.push({
+            x: this.x,
+            y: this.y,
+            vx: Math.cos(angle) * speed,
+            vy: Math.sin(angle) * speed,
+            r: 7 // Reduced from 8
+          });
+        }
+      }, layer * 250); // Increased from 200
+    }
+    playSound(220, 0.35, 'sawtooth');
+    if (gameSettings.screenShake) screenShakeAmt = 0.8;
+  }
+
+  shootChaosStorm() {
+    const numBursts = 5; // Reduced from 8
+    for (let burst = 0; burst < numBursts; burst++) {
+      setTimeout(() => {
+        const numShots = 18; // Reduced from 25
+        for (let i = 0; i < numShots; i++) {
+          const angle = (Math.PI * 2 / numShots) * i + Math.random() * 0.3; // Reduced randomness from 0.4
+          const speed = 260 + Math.random() * 30; // Reduced from 60
+          enemyBullets.push({
+            x: this.x,
+            y: this.y,
+            vx: Math.cos(angle) * speed,
+            vy: Math.sin(angle) * speed,
+            r: 6 // Reduced from 7
+          });
+        }
+        playSound(240, 0.12, 'square');
+      }, burst * 150); // Increased from 120
+    }
+    if (gameSettings.screenShake) screenShakeAmt = 1.0;
+  }
+
+  shootApocalypse() {
+    // Final phase - still intense but more dodgeable
+    for (let wave = 0; wave < 4; wave++) { // Reduced from 5
+      setTimeout(() => {
+        // Spiral
+        const spiral = 20; // Reduced from 30
+        for (let i = 0; i < spiral; i++) {
+          const angle = (Math.PI * 2 / spiral) * i + wave * 1.2;
+          const speed = 280; // Reduced from 290
+          enemyBullets.push({
+            x: this.x,
+            y: this.y,
+            vx: Math.cos(angle) * speed,
+            vy: Math.sin(angle) * speed,
+            r: 7 // Reduced from 8
+          });
+        }
+        // Plus targeted shots - reduced spread
+        const angleToPlayer = Math.atan2(player.y - this.y, player.x - this.x);
+        for (let j = -1; j <= 1; j++) { // Reduced from -2 to 2
+          enemyBullets.push({
+            x: this.x,
+            y: this.y,
+            vx: Math.cos(angleToPlayer + j * 0.4) * 330, // Reduced from 350 and increased spread
+            vy: Math.sin(angleToPlayer + j * 0.4) * 330,
+            r: 9 // Reduced from 10
+          });
+        }
+        playSound(260, 0.15, 'sawtooth');
+      }, wave * 200); // Increased from 180
+    }
+    if (gameSettings.screenShake) screenShakeAmt = 1.5;
+  }
+
+  shootLaserBeam() {
+    const angleToPlayer = Math.atan2(player.y - this.y, player.x - this.x);
+    for (let i = 0; i < 10; i++) { // Reduced from 12
+      setTimeout(() => {
+        for (let j = 0; j < 2; j++) { // Reduced from 3
+          enemyBullets.push({
+            x: this.x,
+            y: this.y,
+            vx: Math.cos(angleToPlayer + (j - 0.5) * 0.08) * 420, // Reduced from 450 and adjusted spread
+            vy: Math.sin(angleToPlayer + (j - 0.5) * 0.08) * 420,
+            r: 6
+          });
+        }
+      }, i * 60); // Increased from 50
+    }
+    playSound(400, 0.5, 'sine');
+    if (gameSettings.screenShake) screenShakeAmt = 1.2;
+  }
+
+  summonMinions() {
+    for (let i = 0; i < 2; i++) { // Reduced from 3
+      const angle = (Math.PI * 2 / 2) * i;
+      const dist = 150;
+      const x = this.x + Math.cos(angle) * dist;
+      const y = this.y + Math.sin(angle) * dist;
+      enemies.push(new Enemy(x, y, 'shooter')); // Changed from miniboss to shooter
+    }
+    playSound(120, 0.4, 'sawtooth');
+    if (gameSettings.screenShake) screenShakeAmt = 0.9;
+  }
+
+  draw() {
+    const time = this.pulseTime;
+    
+    // Ultra glow based on phase
+    const glowIntensity = 30 + this.phase * 15;
+    ctx.shadowBlur = glowIntensity;
+    ctx.shadowColor = this.color;
+    
+    // Rotating energy rings (more rings = higher phase)
+    ctx.strokeStyle = this.color;
+    ctx.lineWidth = 8;
+    
+    for (let i = 0; i < this.phase; i++) {
+      const offset = i * 18;
+      const rotation = time * (2 + i * 0.5);
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.r + 25 + offset + Math.sin(time * 4 + i) * 12, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+    
+    // Outer pulsing ring
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 4;
+    const pulseRadius = this.r + 35 + Math.sin(time * 5) * 15;
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, pulseRadius, 0, Math.PI * 2);
+    ctx.stroke();
+    
+    // Core with intense gradient
+    const gradient = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.r);
+    if (this.phase === 5) {
+      gradient.addColorStop(0, '#ffffff');
+      gradient.addColorStop(0.3, this.color);
+      gradient.addColorStop(0.6, '#ff0000');
+      gradient.addColorStop(1, '#000000');
+    } else {
+      gradient.addColorStop(0, this.coreColor);
+      gradient.addColorStop(0.4, this.color);
+      gradient.addColorStop(1, '#220011');
+    }
+    
+    ctx.fillStyle = gradient;
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
+    ctx.fill();
+    
+    // Rotating symbols
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+    ctx.font = 'bold 32px Arial';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    const symbols = ['☠', '⚡', '💀', '🔥', '💥'];
+    const symbol = symbols[this.phase - 1];
+    ctx.save();
+    ctx.translate(this.x, this.y);
+    ctx.rotate(time * 3);
+    ctx.fillText(symbol, 0, 0);
+    ctx.restore();
+    
+    ctx.shadowBlur = 0;
+    
+    // Epic HP bar
+    const barW = 250;
+    const barH = 18;
+    const barX = this.x - barW / 2;
+    const barY = this.y - this.r - 45;
+    
+    // Background
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.95)';
+    ctx.fillRect(barX - 4, barY - 4, barW + 8, barH + 8);
+    
+    // Empty bar
+    ctx.fillStyle = 'rgba(50, 50, 50, 0.8)';
+    ctx.fillRect(barX, barY, barW, barH);
+    
+    // HP bar with phase coloring
+    const hpPercent = this.hpPct;
+    const phaseColors = ['#ff0066', '#ff0044', '#ff0022', '#ff0000', '#ffffff'];
+    const barColor = phaseColors[this.phase - 1];
+    
+    const hpGradient = ctx.createLinearGradient(barX, 0, barX + barW * hpPercent, 0);
+    hpGradient.addColorStop(0, barColor);
+    hpGradient.addColorStop(1, '#660000');
+    ctx.fillStyle = hpGradient;
+    ctx.fillRect(barX, barY, barW * hpPercent, barH);
+    
+    // Phase markers
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+    ctx.lineWidth = 2;
+    for (let i = 1; i < 5; i++) {
+      const markX = barX + barW * (i * 0.2);
+      ctx.beginPath();
+      ctx.moveTo(markX, barY);
+      ctx.lineTo(markX, barY + barH);
+      ctx.stroke();
+    }
+    
+    // Glowing border
+    ctx.strokeStyle = barColor;
+    ctx.lineWidth = 3;
+    ctx.shadowBlur = 10;
+    ctx.shadowColor = barColor;
+    ctx.strokeRect(barX - 1, barY - 1, barW + 2, barH + 2);
+    ctx.shadowBlur = 0;
+    
+    // Boss title
+    ctx.font = 'bold 22px Arial';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    ctx.strokeStyle = 'black';
+    ctx.lineWidth = 5;
+    const title = '⚠️ LEGENDARY DESTROYER ⚠️';
+    ctx.strokeText(title, this.x, barY - 32);
+    ctx.fillStyle = this.color;
+    ctx.shadowBlur = 20;
+    ctx.shadowColor = this.color;
+    ctx.fillText(title, this.x, barY - 32);
+    
+    // Phase indicator
+    ctx.shadowBlur = 0;
+    ctx.font = 'bold 12px Arial';
+    ctx.fillStyle = '#ffd700';
+    const phaseNames = ['AWAKENING', 'RAMPAGE', 'CHAOS', 'APOCALYPSE', 'DESTROYER MODE'];
+    const ptxt = `PHASE ${this.phase} — ${phaseNames[this.phase - 1]}`;
+    ctx.strokeText(ptxt, this.x, barY + barH + 6);
+    ctx.fillText(ptxt, this.x, barY + barH + 6);
+  }
+}
+
+/* =======================
    PARTICLES
 ======================= */
 
@@ -1652,6 +2471,8 @@ class PowerUp {
       speed: { color: '#9be7ff', symbol: '»' },
       shield: { color: '#b693ff', symbol: '◈' },
       weapon: { color: '#ffd700', symbol: '★' },
+      maxhp: { color: '#ff69b4', symbol: '♥' },
+      speedup: { color: '#00ffff', symbol: '⟫' },
       nuke: { color: '#ff6b35', symbol: '💣' }
     };
     
@@ -1692,8 +2513,19 @@ class PowerUp {
 function spawnPowerUp(x, y) {
   const types = ['health', 'rapidfire', 'speed', 'shield'];
   
+  // Weapon upgrade (12% chance, max 3 levels)
   if (Math.random() < 0.12 && player.weaponLevel < 3) {
     types.push('weapon');
+  }
+  
+  // Max HP upgrade (12% chance, max 3 levels)
+  if (Math.random() < 0.12 && player.maxHpLevel < 3) {
+    types.push('maxhp');
+  }
+  
+  // Speed upgrade (12% chance, max 3 levels)
+  if (Math.random() < 0.12 && player.speedLevel < 3) {
+    types.push('speedup');
   }
   
   // Rare nuke drop (8% chance, only after wave 2)
@@ -1781,6 +2613,28 @@ function updateBuffsDisplay() {
       time: -1, 
       maxTime: -1, 
       color: wlColor 
+    });
+  }
+  if (player.maxHpLevel > 1) {
+    const hpColor = ['','','#ff69b4','#ff1493','#c71585'][player.maxHpLevel] || '#ff69b4';
+    buffs.push({ 
+      key: 'maxHpLevel',
+      icon: '♥', 
+      name: `Max HP Lv.${player.maxHpLevel}`, 
+      time: -1, 
+      maxTime: -1, 
+      color: hpColor 
+    });
+  }
+  if (player.speedLevel > 1) {
+    const spdColor = ['','','#00ffff','#00ccff','#0099ff'][player.speedLevel] || '#00ffff';
+    buffs.push({ 
+      key: 'speedLevel',
+      icon: '⟫', 
+      name: `Speed Lv.${player.speedLevel}`, 
+      time: -1, 
+      maxTime: -1, 
+      color: spdColor 
     });
   }
 
@@ -1923,6 +2777,7 @@ function initShopUI() {
   for (const skin of SKINS) {
     const owned = ownedSkins.includes(skin.id);
     const active = activeSkin === skin.id;
+    const isChampion = skin.price === -1; // Champion skins have price -1
 
     const card = document.createElement('div');
     card.className = 'skin-card' + (active ? ' active' : '') + (owned ? ' owned' : '');
@@ -1946,6 +2801,18 @@ function initShopUI() {
     } else if (skin.id === 'diamond') {
       preview.style.background = 'linear-gradient(45deg, #ffffff 0%, #e0f7ff 25%, #ffe0ff 50%, #ffffcc 75%, #ffffff 100%)';
       preview.style.boxShadow = '0 0 25px rgba(255,255,255,0.8), inset 0 0 20px rgba(255,255,255,0.5)';
+    } else if (skin.id === 'gold-champion') {
+      preview.style.background = 'radial-gradient(circle, #ffd700 0%, #ffed4e 40%, #ffffff 60%, #ffd700 100%)';
+      preview.style.boxShadow = '0 0 30px #ffd700, inset 0 0 25px rgba(255,255,255,0.8)';
+      preview.style.animation = 'championPulse 2s ease-in-out infinite';
+    } else if (skin.id === 'silver-champion') {
+      preview.style.background = 'radial-gradient(circle, #c0c0c0 0%, #e8e8e8 40%, #ffffff 60%, #c0c0c0 100%)';
+      preview.style.boxShadow = '0 0 30px #c0c0c0, inset 0 0 25px rgba(255,255,255,0.8)';
+      preview.style.animation = 'championPulse 2.2s ease-in-out infinite';
+    } else if (skin.id === 'bronze-champion') {
+      preview.style.background = 'radial-gradient(circle, #cd7f32 0%, #e8a87c 40%, #f5d0a9 60%, #cd7f32 100%)';
+      preview.style.boxShadow = '0 0 30px #cd7f32, inset 0 0 25px rgba(255,200,150,0.8)';
+      preview.style.animation = 'championPulse 2.4s ease-in-out infinite';
     } else {
       preview.style.background = skin.color;
       preview.style.boxShadow = `0 0 14px ${skin.color}`;
@@ -1967,6 +2834,13 @@ function initShopUI() {
     } else if (owned) {
       btn.textContent = 'Equip';
       btn.onclick = () => { activeSkin = skin.id; saveSkins(); initShopUI(); };
+    } else if (isChampion) {
+      // Champion skins - not purchasable
+      btn.textContent = '🏆 LEADERBOARD EXCLUSIVE';
+      btn.disabled = true;
+      btn.style.fontSize = '11px';
+      btn.style.background = 'rgba(255,215,0,0.2)';
+      btn.style.border = '2px solid rgba(255,215,0,0.5)';
     } else {
       btn.textContent = `🪙 ${skin.price}`;
       btn.disabled = playerCoins < skin.price;
@@ -2133,6 +3007,16 @@ function loop(time) {
         } else if (pu.type === 'weapon') {
           player.weaponLevel = Math.min(3, player.weaponLevel + 1);
           score += 150;
+        } else if (pu.type === 'maxhp') {
+          // Permanent max HP upgrade (+20 HP per level)
+          player.maxHpLevel = Math.min(3, player.maxHpLevel + 1);
+          player.maxHp = 100 + (player.maxHpLevel - 1) * 20;
+          player.hp = Math.min(player.maxHp, player.hp + 20); // Also heal 20 HP
+          score += 150;
+        } else if (pu.type === 'speedup') {
+          // Permanent speed upgrade (15% per level)
+          player.speedLevel = Math.min(3, player.speedLevel + 1);
+          score += 150;
         } else if (pu.type === 'nuke') {
           // Nuke: instantly kill all on-screen enemies and the boss loses 30 HP
           for (let n = enemies.length - 1; n >= 0; n--) {
@@ -2151,22 +3035,23 @@ function loop(time) {
             boss.hp -= 30;
             createExplosion(boss.x, boss.y, '#ffffff', 40);
             if (boss.hp <= 0) {
-              // Different rewards for MEGA BOSS vs regular Boss
+              // Different rewards for each boss type
+              const isLegendaryBoss = boss.isLegendaryBoss;
               const isUltraBoss = boss.isUltraBoss;
               const isMegaBoss  = boss.isMegaBoss;
-              const pts = isUltraBoss ? (3000 + boss.wave * 400) : isMegaBoss ? (1500 + boss.wave * 250) : (600 + boss.wave * 120);
-              const coins = isUltraBoss ? (300 + boss.wave * 30) : isMegaBoss ? (150 + boss.wave * 20) : (60 + boss.wave * 10);
-              const powerupCount = isUltraBoss ? 14 : isMegaBoss ? 8 : 4;
+              const pts = isLegendaryBoss ? (5500 + boss.wave * 700) : isUltraBoss ? (3000 + boss.wave * 400) : isMegaBoss ? (1500 + boss.wave * 250) : (600 + boss.wave * 120);
+              const coins = isLegendaryBoss ? (550 + boss.wave * 55) : isUltraBoss ? (300 + boss.wave * 30) : isMegaBoss ? (150 + boss.wave * 20) : (60 + boss.wave * 10);
+              const powerupCount = isLegendaryBoss ? 24 : isUltraBoss ? 14 : isMegaBoss ? 8 : 4;
               
               score += pts;
               playerCoins += coins;
               saveCoins();
               createScorePopup(boss.x, boss.y, pts);
-              createExplosion(boss.x, boss.y, boss.color, isUltraBoss ? 200 : isMegaBoss ? 120 : 60);
+              createExplosion(boss.x, boss.y, boss.color, isLegendaryBoss ? 280 : isUltraBoss ? 200 : isMegaBoss ? 120 : 60);
               for (let p = 0; p < powerupCount; p++) {
                 spawnPowerUp(
-                  boss.x + (Math.random()-0.5)*(isMegaBoss ? 140 : 90), 
-                  boss.y + (Math.random()-0.5)*(isMegaBoss ? 140 : 90)
+                  boss.x + (Math.random()-0.5)*(isLegendaryBoss ? 230 : isMegaBoss ? 140 : 90), 
+                  boss.y + (Math.random()-0.5)*(isLegendaryBoss ? 230 : isMegaBoss ? 140 : 90)
                 );
               }
               boss = null;
@@ -2200,25 +3085,26 @@ if (gameSettings.screenShake) screenShakeAmt = 1.2;
           boss.hp--;
           
           if (boss.hp <= 0) {
-            // Different rewards for MEGA BOSS vs regular Boss
+            // Different rewards for each boss type
+            const isLegendaryBoss = boss.isLegendaryBoss;
             const isUltraBoss = boss.isUltraBoss;
             const isMegaBoss  = boss.isMegaBoss;
-            const points = isUltraBoss ? (3000 + boss.wave * 400) : isMegaBoss ? (1500 + boss.wave * 250) : (600 + boss.wave * 120);
-            const coins = isUltraBoss ? (300 + boss.wave * 30) : isMegaBoss ? (150 + boss.wave * 20) : (60 + boss.wave * 10);
-            const powerupCount = isUltraBoss ? 14 : isMegaBoss ? 8 : 4; // UltraBoss drops the most powerups!
+            const points = isLegendaryBoss ? (5500 + boss.wave * 700) : isUltraBoss ? (3000 + boss.wave * 400) : isMegaBoss ? (1500 + boss.wave * 250) : (600 + boss.wave * 120);
+            const coins = isLegendaryBoss ? (550 + boss.wave * 55) : isUltraBoss ? (300 + boss.wave * 30) : isMegaBoss ? (150 + boss.wave * 20) : (60 + boss.wave * 10);
+            const powerupCount = isLegendaryBoss ? 24 : isUltraBoss ? 14 : isMegaBoss ? 8 : 4;
             
             score += points;
             playerCoins += coins;
             saveCoins();
             createScorePopup(boss.x, boss.y, points);
             sounds.hit();
-            createExplosion(boss.x, boss.y, boss.color, isUltraBoss ? 200 : isMegaBoss ? 120 : 60);
+            createExplosion(boss.x, boss.y, boss.color, isLegendaryBoss ? 280 : isUltraBoss ? 200 : isMegaBoss ? 120 : 60);
             
             // Boss drops powerups
             for (let p = 0; p < powerupCount; p++) {
               spawnPowerUp(
-                boss.x + (Math.random() - 0.5) * (isUltraBoss ? 180 : isMegaBoss ? 140 : 90),
-                boss.y + (Math.random() - 0.5) * (isUltraBoss ? 180 : isMegaBoss ? 140 : 90)
+                boss.x + (Math.random() - 0.5) * (isLegendaryBoss ? 230 : isUltraBoss ? 180 : isMegaBoss ? 140 : 90),
+                boss.y + (Math.random() - 0.5) * (isLegendaryBoss ? 230 : isUltraBoss ? 180 : isMegaBoss ? 140 : 90)
               );
             }
             
@@ -2327,7 +3213,19 @@ if (gameSettings.screenShake) screenShakeAmt = 1;
       spawnTimer = 0;
       waveEl.textContent = wave;
 
-      if ((wave - 1) === 20) {
+      // 0.1% chance for LEGENDARY BOSS on any wave (after wave 3)
+      const legendaryRoll = Math.random();
+      if (wave > 3 && legendaryRoll < 0.001) {
+        // LEGENDARY DESTROYER — ultra rare spawn!
+        boss = new LegendaryBoss(canvas.width / 2, 140, wave - 1);
+        sounds.bossSpawn();
+        setTimeout(() => sounds.bossSpawn(), 200);
+        setTimeout(() => sounds.bossSpawn(), 400);
+        setTimeout(() => sounds.bossSpawn(), 600);
+        setTimeout(() => sounds.bossSpawn(), 800);
+        if (gameSettings.screenShake) screenShakeAmt = 3.0;
+        showWaveAnnouncement(wave - 1, true, true);
+      } else if ((wave - 1) % 20 === 0) {
         // OMEGA OVERLORD — wave 20 special boss
         boss = new UltraBoss(canvas.width / 2, 120, wave - 1);
         sounds.bossSpawn();
@@ -2423,17 +3321,52 @@ if (gameSettings.screenShake) screenShakeAmt = 1;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
 
-      // Background pill
-      ctx.fillStyle = 'rgba(11,16,32,0.75)';
-      ctx.fillRect(canvas.width / 2 - 160, canvas.height / 2 - 36, 320, 72);
+      // Improved background with rounded corners
+      const boxWidth = 340;
+      const boxHeight = 90;
+      const boxX = canvas.width / 2 - boxWidth / 2;
+      const boxY = canvas.height / 2 - boxHeight / 2;
+      const radius = 16;
+      
+      // Draw rounded rectangle background
+      ctx.fillStyle = 'rgba(8,12,24,0.92)';
+      ctx.beginPath();
+      ctx.moveTo(boxX + radius, boxY);
+      ctx.lineTo(boxX + boxWidth - radius, boxY);
+      ctx.quadraticCurveTo(boxX + boxWidth, boxY, boxX + boxWidth, boxY + radius);
+      ctx.lineTo(boxX + boxWidth, boxY + boxHeight - radius);
+      ctx.quadraticCurveTo(boxX + boxWidth, boxY + boxHeight, boxX + boxWidth - radius, boxY + boxHeight);
+      ctx.lineTo(boxX + radius, boxY + boxHeight);
+      ctx.quadraticCurveTo(boxX, boxY + boxHeight, boxX, boxY + boxHeight - radius);
+      ctx.lineTo(boxX, boxY + radius);
+      ctx.quadraticCurveTo(boxX, boxY, boxX + radius, boxY);
+      ctx.closePath();
+      ctx.fill();
+      
+      // Subtle border
+      ctx.strokeStyle = 'rgba(107,255,123,0.3)';
+      ctx.lineWidth = 2;
+      ctx.stroke();
 
+      // "WAVE CLEAR!" text with glow
+      ctx.shadowBlur = 12;
+      ctx.shadowColor = '#6bff7b';
       ctx.fillStyle = '#6bff7b';
-      ctx.font = 'bold 20px system-ui';
-      ctx.fillText('WAVE CLEAR!  Next wave in…', canvas.width / 2, canvas.height / 2 - 10);
+      ctx.font = 'bold 22px system-ui';
+      ctx.fillText('WAVE CLEAR!', canvas.width / 2, canvas.height / 2 - 16);
+      
+      // "Next wave in" text
+      ctx.shadowBlur = 0;
+      ctx.fillStyle = 'rgba(255,255,255,0.7)';
+      ctx.font = '16px system-ui';
+      ctx.fillText('Next wave in', canvas.width / 2, canvas.height / 2 + 10);
 
-      ctx.font = 'bold 36px system-ui';
+      // Countdown number with glow
+      ctx.shadowBlur = 18;
+      ctx.shadowColor = '#ffd93d';
+      ctx.font = 'bold 40px system-ui';
       ctx.fillStyle = '#ffd93d';
-      ctx.fillText(Math.ceil(waveClearTimer), canvas.width / 2, canvas.height / 2 + 20);
+      ctx.fillText(Math.ceil(waveClearTimer), canvas.width / 2, canvas.height / 2 + 38);
       ctx.restore();
     }
 
@@ -2621,3 +3554,195 @@ document.getElementById('menuBtn').addEventListener('click', () => {
 console.log('🎬 Starting animation loop...');
 requestAnimationFrame(loop);
 console.log('✅ Game initialized!');
+
+// ============================================
+// DEV CONSOLE (admin only)
+// ============================================
+
+let devGodMode = false;
+
+function devOverlayToggle() {
+  if (!isAdmin) return;
+  const el = document.getElementById('devOverlay');
+  el.classList.toggle('hidden');
+  if (!el.classList.contains('hidden')) {
+    // Sync current values into overlay inputs
+    document.getElementById('ovWaveInput').value = wave;
+    document.getElementById('ovHpInput').value = Math.round(player.hp);
+    document.getElementById('ovScoreInput').value = score;
+    document.getElementById('ovCoinsInput').value = 100;
+    _devSyncGodStatus();
+  }
+}
+
+function devOverlayClose() {
+  document.getElementById('devOverlay').classList.add('hidden');
+}
+
+function _devSyncGodStatus() {
+  const statuses = ['godModeStatus', 'ovGodStatus'];
+  statuses.forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.textContent = devGodMode ? 'ON' : 'OFF';
+    el.className = 'dev-status ' + (devGodMode ? 'on' : 'off');
+    // overlay uses dev-ov-status class
+    if (id === 'ovGodStatus') {
+      el.className = 'dev-ov-status ' + (devGodMode ? 'on' : 'off');
+    }
+  });
+}
+
+// Set Wave — jumps straight to that wave number
+function devSetWave(fromOverlay = false) {
+  if (!isAdmin) return;
+  const input = fromOverlay ? 'ovWaveInput' : 'devWaveInput';
+  const val = parseInt(document.getElementById(input).value);
+  if (isNaN(val) || val < 1) return;
+
+  wave = val;
+  // Clear enemies and boss so the new wave can start clean
+  enemies.length = 0;
+  enemyBullets.length = 0;
+  boss = null;
+  waveClearTimer = 0;
+
+  document.getElementById('waveVal').textContent = wave;
+  document.getElementById('waveAnnouncement').textContent = `WAVE ${wave}`;
+  document.getElementById('waveAnnouncement').classList.remove('hidden');
+  setTimeout(() => document.getElementById('waveAnnouncement').classList.add('hidden'), 2000);
+  console.log(`[DEV] Wave set to ${wave}`);
+}
+
+// Set HP
+function devSetHp(fromOverlay = false) {
+  if (!isAdmin || !running) return;
+  const input = fromOverlay ? 'ovHpInput' : 'devHpInput';
+  const val = parseInt(document.getElementById(input).value);
+  if (isNaN(val) || val < 1) return;
+
+  player.hp = val;
+  player.maxHp = Math.max(player.maxHp, val);
+  document.getElementById('hpVal').textContent = Math.round(player.hp);
+  console.log(`[DEV] HP set to ${val}`);
+}
+
+// Set Score
+function devSetScore(fromOverlay = false) {
+  if (!isAdmin) return;
+  const input = fromOverlay ? 'ovScoreInput' : 'devScoreInput';
+  const val = parseInt(document.getElementById(input).value);
+  if (isNaN(val) || val < 0) return;
+
+  score = val;
+  document.getElementById('scoreVal').textContent = score;
+  console.log(`[DEV] Score set to ${val}`);
+}
+
+// Set Coins (exact amount, not adding)
+function devSetCoins(fromOverlay = false) {
+  if (!isAdmin) return;
+  const input = fromOverlay ? 'ovCoinsInput' : 'devCoinsInput';
+  const val = parseInt(document.getElementById(input).value);
+  if (isNaN(val) || val < 0) return;
+
+  playerCoins = val; // SET instead of ADD
+  const coinsHUD = document.getElementById('coinsHUD');
+  if (coinsHUD) coinsHUD.textContent = `🪙 ${playerCoins}`;
+  document.getElementById('homeCoinsVal').textContent = playerCoins;
+  saveCoins(); // Save to Firebase
+  console.log(`[DEV] Coins set to ${val}`);
+}
+
+// Set Weapon Level
+function devSetWeapon(level) {
+  if (!isAdmin || !running) return;
+  player.weaponLevel = Math.max(1, Math.min(3, level));
+  console.log(`[DEV] Weapon level set to ${player.weaponLevel}`);
+}
+
+// Set Max HP Level
+function devSetMaxHp(level) {
+  if (!isAdmin || !running) return;
+  player.maxHpLevel = Math.max(1, Math.min(3, level));
+  player.maxHp = 100 + (player.maxHpLevel - 1) * 20;
+  player.hp = Math.min(player.hp, player.maxHp); // Cap current HP to new max
+  console.log(`[DEV] Max HP level set to ${player.maxHpLevel} (${player.maxHp} HP)`);
+}
+
+// Set Speed Level
+function devSetSpeed(level) {
+  if (!isAdmin || !running) return;
+  player.speedLevel = Math.max(1, Math.min(3, level));
+  console.log(`[DEV] Speed level set to ${player.speedLevel}`);
+}
+
+// Toggle God Mode (player takes no damage)
+function devToggleGodMode() {
+  if (!isAdmin) return;
+  devGodMode = !devGodMode;
+  _devSyncGodStatus();
+  console.log(`[DEV] God mode ${devGodMode ? 'ON' : 'OFF'}`);
+}
+
+// Kill all enemies and clear bullets
+function devKillAll() {
+  if (!isAdmin) return;
+  // Award coins/score for each kill silently
+  enemies.forEach(e => { score += e.score || 10; });
+  enemies.length = 0;
+  enemyBullets.length = 0;
+  if (boss) {
+    boss.hp = 0; // Let normal death logic handle it next frame
+  }
+  document.getElementById('scoreVal').textContent = score;
+  console.log('[DEV] All enemies killed');
+}
+
+// Skip current wave (clears enemies, sets wave clear timer)
+function devSkipWave() {
+  if (!isAdmin) return;
+  enemies.length = 0;
+  enemyBullets.length = 0;
+  boss = null;
+  wave++;
+  waveClearTimer = 0;
+  document.getElementById('waveVal').textContent = wave;
+  document.getElementById('waveAnnouncement').textContent = `WAVE ${wave}`;
+  document.getElementById('waveAnnouncement').classList.remove('hidden');
+  setTimeout(() => document.getElementById('waveAnnouncement').classList.add('hidden'), 2000);
+  console.log(`[DEV] Skipped to wave ${wave}`);
+}
+
+// Spawn a specific boss type immediately
+function devSpawnBoss(type) {
+  if (!isAdmin || !running) return;
+  enemies.length = 0;
+  enemyBullets.length = 0;
+  boss = null;
+
+  const cx = canvas.width / 2;
+  const cy = 120;
+  if (type === 4)      boss = new LegendaryBoss(cx, cy, wave);
+  else if (type === 3) boss = new UltraBoss(cx, cy, wave);
+  else if (type === 2) boss = new MegaBoss(cx, cy, wave);
+  else                 boss = new Boss(cx, cy, wave);
+
+  sounds.bossSpawn();
+  console.log(`[DEV] Spawned boss type ${type}`);
+}
+
+// Full heal player
+function devFullHeal() {
+  if (!isAdmin || !running) return;
+  player.hp = player.maxHp;
+  document.getElementById('hpVal').textContent = Math.round(player.hp);
+  console.log('[DEV] Full heal applied');
+}
+
+// Patch player.takeDamage to respect god mode
+const _origTakeDamage = Player.prototype.takeDamage;
+Player.prototype.takeDamage = function(amount) {
+  if (devGodMode) return;
+  _origTakeDamage.call(this, amount);
+};

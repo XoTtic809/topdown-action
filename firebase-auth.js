@@ -124,6 +124,22 @@ auth.onAuthStateChanged(async (user) => {
     
     // Load user data from Firestore
     await loadUserDataFromFirebase(user.uid);
+    
+    // Auto-grant all champion skins to admin for testing
+    if (isAdmin) {
+      const championSkins = ['gold-champion', 'silver-champion', 'bronze-champion'];
+      let skinsAdded = false;
+      championSkins.forEach(skin => {
+        if (!ownedSkins.includes(skin)) {
+          ownedSkins.push(skin);
+          skinsAdded = true;
+        }
+      });
+      if (skinsAdded) {
+        console.log('🏆 Admin champion skins granted for testing');
+        await saveUserDataToFirebase();
+      }
+    }
   } else {
     currentUser = null;
     isAdmin = false;
@@ -153,26 +169,47 @@ async function submitScoreToLeaderboard(score) {
         date: new Date().toISOString()
       });
       console.log('📊 Score submitted to leaderboard:', score);
+      
+      // Check and update champion skins after score submission
+      await updateChampionSkins();
     }
   } catch (error) {
     console.error('Error submitting score:', error);
   }
 }
 
+// Submit coins to leaderboard
+async function submitCoinsToLeaderboard(coins) {
+  if (!currentUser || isGuest) return;
+  
+  try {
+    const userDoc = db.collection('coinsLeaderboard').doc(currentUser.uid);
+    const userData = await userDoc.get();
+    
+    // Always update with current total coins
+    await userDoc.set({
+      userId: currentUser.uid,
+      username: currentUser.displayName || 'Anonymous',
+      coins: coins,
+      timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    console.log('🪙 Coins submitted to leaderboard:', coins);
+  } catch (error) {
+    console.error('Error submitting coins:', error);
+  }
+}
+
 // Fetch leaderboard data
 async function fetchLeaderboard(filter = 'allTime') {
   try {
-    let query = db.collection('leaderboard').orderBy('score', 'desc').limit(100);
+    let query;
     
-    // Apply time filter
-    if (filter === 'today') {
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      query = query.where('timestamp', '>=', firebase.firestore.Timestamp.fromDate(today));
-    } else if (filter === 'week') {
-      const weekAgo = new Date();
-      weekAgo.setDate(weekAgo.getDate() - 7);
-      query = query.where('timestamp', '>=', firebase.firestore.Timestamp.fromDate(weekAgo));
+    // Handle coins leaderboard separately
+    if (filter === 'coins') {
+      query = db.collection('coinsLeaderboard').orderBy('coins', 'desc').limit(100);
+    } else {
+      // Score leaderboard (allTime only now)
+      query = db.collection('leaderboard').orderBy('score', 'desc').limit(100);
     }
     
     const snapshot = await query.get();
@@ -204,6 +241,8 @@ async function displayLeaderboard(filter = 'allTime') {
     return;
   }
   
+  const isCoinsLeaderboard = filter === 'coins';
+  
   listEl.innerHTML = '';
   leaderboard.forEach((entry, index) => {
     const rank = index + 1;
@@ -212,10 +251,15 @@ async function displayLeaderboard(filter = 'allTime') {
     
     const isCurrentUser = currentUser && entry.userId === currentUser.uid;
     
+    // Display coins or score based on filter
+    const displayValue = isCoinsLeaderboard ? 
+      `🪙 ${(entry.coins || 0).toLocaleString()}` : 
+      `${(entry.score || 0).toLocaleString()}`;
+    
     entryEl.innerHTML = `
       <div class="rank">${rank <= 3 ? ['🥇', '🥈', '🥉'][rank - 1] : rank}</div>
       <div class="player-name">${entry.username}${isCurrentUser ? ' (You)' : ''}</div>
-      <div class="player-score">${entry.score.toLocaleString()}</div>
+      <div class="player-score">${displayValue}</div>
     `;
     
     if (isCurrentUser) {
@@ -225,6 +269,66 @@ async function displayLeaderboard(filter = 'allTime') {
     
     listEl.appendChild(entryEl);
   });
+}
+
+// ============================================
+// LEADERBOARD CHAMPION SKINS
+// ============================================
+
+// Check and update champion skins based on leaderboard position
+async function updateChampionSkins() {
+  if (!currentUser || isGuest) return;
+  
+  try {
+    // Fetch current leaderboard
+    const leaderboard = await fetchLeaderboard('allTime');
+    
+    // Find current user's rank
+    let userRank = -1;
+    for (let i = 0; i < leaderboard.length; i++) {
+      if (leaderboard[i].userId === currentUser.uid) {
+        userRank = i + 1; // Rank is 1-indexed
+        break;
+      }
+    }
+    
+    // Champion skin IDs
+    const championSkins = ['gold-champion', 'silver-champion', 'bronze-champion'];
+    
+    // Remove all champion skins first
+    ownedSkins = ownedSkins.filter(skin => !championSkins.includes(skin));
+    
+    // Grant appropriate champion skin based on rank
+    if (userRank === 1 && !ownedSkins.includes('gold-champion')) {
+      ownedSkins.push('gold-champion');
+      console.log('🥇 GOLD CHAMPION skin granted!');
+    } else if (userRank === 2 && !ownedSkins.includes('silver-champion')) {
+      ownedSkins.push('silver-champion');
+      console.log('🥈 SILVER CHAMPION skin granted!');
+    } else if (userRank === 3 && !ownedSkins.includes('bronze-champion')) {
+      ownedSkins.push('bronze-champion');
+      console.log('🥉 BRONZE CHAMPION skin granted!');
+    }
+    
+    // If active skin was a champion skin they no longer have, switch to agent
+    if (championSkins.includes(activeSkin) && !ownedSkins.includes(activeSkin)) {
+      activeSkin = 'agent';
+    }
+    
+    // Save to Firebase
+    await saveUserDataToFirebase();
+    
+    // Update shop UI if open
+    if (typeof initShopUI === 'function') {
+      const shopPanel = document.getElementById('shopPanel');
+      if (shopPanel && !shopPanel.classList.contains('hidden')) {
+        initShopUI();
+      }
+    }
+    
+  } catch (error) {
+    console.error('Error updating champion skins:', error);
+  }
 }
 
 // ============================================
@@ -243,6 +347,10 @@ async function saveUserDataToFirebase() {
       activeSkin: activeSkin,
       lastPlayed: firebase.firestore.FieldValue.serverTimestamp()
     });
+    
+    // Also update coins leaderboard
+    await submitCoinsToLeaderboard(playerCoins);
+    
     console.log('💾 User data saved to Firebase');
   } catch (error) {
     console.error('Error saving user data:', error);
@@ -266,6 +374,9 @@ async function loadUserDataFromFirebase(userId) {
       document.getElementById('homeCoinsVal').textContent = playerCoins;
       
       console.log('📥 User data loaded from Firebase');
+      
+      // Check and update champion skins based on current leaderboard position
+      await updateChampionSkins();
     } else {
       console.log('📄 No existing data, using defaults');
     }
@@ -428,6 +539,20 @@ async function deleteLeaderboardScore(userId, username) {
   }
 }
 
+// Delete a user's coins leaderboard entry (admin only)
+async function deleteCoinsLeaderboardScore(userId, username) {
+  if (!isAdmin) return { success: false, error: 'Not authorized' };
+  try {
+    await db.collection('coinsLeaderboard').doc(userId).delete();
+    await logAdminAction('delete_coins_score', { targetUserId: userId, targetUsername: username });
+    console.log('🗑️ Coins leaderboard entry deleted for:', userId);
+    return { success: true };
+  } catch (error) {
+    console.error('Error deleting coins entry:', error);
+    return { success: false, error: error.message };
+  }
+}
+
 // Reset a user's high score (admin only)
 async function resetUserHighScore(userId, username) {
   if (!isAdmin) return { success: false, error: 'Not authorized' };
@@ -575,6 +700,42 @@ async function quickDeleteScore(userId, username) {
   const result = await deleteLeaderboardScore(userId, username);
   showAdminMessage(result.success ? `Score deleted` : 'Error: ' + result.error, !result.success);
   if (result.success) { displayScoresAdmin(); displayActivityLogs(); }
+}
+
+async function quickDeleteCoinsScore(userId, username) {
+  if (!confirm(`Delete coins leaderboard entry for ${username}?`)) return;
+  const result = await deleteCoinsLeaderboardScore(userId, username);
+  showAdminMessage(result.success ? `Coins entry deleted` : 'Error: ' + result.error, !result.success);
+  if (result.success) { displayCoinsScoresAdmin(); displayActivityLogs(); }
+}
+
+// Display coins leaderboard with delete buttons (admin only)
+async function displayCoinsScoresAdmin() {
+  const listEl = document.getElementById('coinsAdminList');
+  if (!listEl) return;
+  listEl.innerHTML = '<div class="loading-spinner">Loading...</div>';
+
+  const leaderboard = await fetchLeaderboard('coins');
+
+  if (leaderboard.length === 0) {
+    listEl.innerHTML = '<div class="loading-spinner">No entries yet</div>';
+    return;
+  }
+
+  listEl.innerHTML = '';
+  leaderboard.forEach((entry, index) => {
+    const el = document.createElement('div');
+    el.className = 'admin-score-entry';
+    el.innerHTML = `
+      <div class="admin-score-rank">${index + 1}</div>
+      <div class="admin-score-info">
+        <div class="admin-score-name">${entry.username}</div>
+        <div class="admin-score-val">🪙 ${(entry.coins || 0).toLocaleString()}</div>
+      </div>
+      <button class="admin-action-btn delete" onclick="quickDeleteCoinsScore('${entry.userId}', '${(entry.username||'').replace(/'/g,"\\'")}')">🗑️ Delete</button>
+    `;
+    listEl.appendChild(el);
+  });
 }
 
 // Show admin message
