@@ -65,7 +65,6 @@
         <button id="shopBtn"  class="home-btn secondary">🛒 &nbsp;SHOP</button>
         <button id="leaderboardBtn" class="home-btn secondary hidden">🏆 &nbsp;LEADERBOARD</button>
         <button id="updateLogsBtn" class="home-btn secondary">📋 &nbsp;UPDATE LOGS</button>
-        <button id="duosBtn" class="home-btn secondary">⚔️ &nbsp;DUOS</button>
         <button id="settingsBtn" class="home-btn secondary">⚙ &nbsp;SETTINGS</button>
       </div>
       <div id="userStatus" class="user-status hidden">
@@ -1523,11 +1522,6 @@
   </div>
 
 </div>
-<!-- Firebase SDK -->
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-<script src="firebase-config.js"></script>
 <script src="anticheat.js"></script>
 <!-- Load systems that game.js depends on first -->
 <script src="crate-system.js"></script>
@@ -1538,12 +1532,12 @@
 <script src="marketplace.js"></script>
 <script src="marketplace-ui.js"></script>
 <!-- Then firebase modules that depend on game.js variables -->
-<script src="firebase-auth.js"></script>
+<script src="api-auth.js"></script>
 <script src="admin_skins.js"></script>
 <script src="firebase-ui.js"></script>
-<script src="firebase_announcements.js"></script>
+<script src="api-announcements.js"></script>
 
-  <!-- ── ANNOUNCEMENT MODAL (used by firebase_announcements.js) ── -->
+  <!-- ── ANNOUNCEMENT MODAL (used by api-announcements.js) ── -->
   <div id="announcementModal" class="hidden" style="
     position:fixed;inset:0;background:rgba(0,0,0,0.7);
     display:none;align-items:center;justify-content:center;z-index:10000;
@@ -1688,63 +1682,8 @@
     }, 300);
   }
   </script>
-
-
-  <script>
-  // ── Multiplayer UI wiring ──────────────────────────────────────
-  document.addEventListener('DOMContentLoaded', () => {
-
-    // Open lobby
-    document.getElementById('duosBtn')?.addEventListener('click', () => {
-      if (!currentUser || isGuest) { alert('You must be logged in to play multiplayer!'); return; }
-      document.getElementById('homeScreen').classList.add('hidden');
-      document.getElementById('mpLobbyPanel').classList.remove('hidden');
-      document.getElementById('mpJoinCreate').style.display = 'flex';
-      document.getElementById('mpRoomInfo').classList.add('hidden');
-      mpConnect();
-    });
-
-    // Create room
-    document.getElementById('mpCreateBtn')?.addEventListener('click', () => {
-      mpCreateRoom();
-      document.getElementById('mpJoinCreate').style.display = 'none';
-      document.getElementById('mpRoomInfo').classList.remove('hidden');
-    });
-
-    // Join room
-    document.getElementById('mpJoinBtn')?.addEventListener('click', () => {
-      const code = document.getElementById('mpJoinCodeInput').value.trim();
-      mpJoinRoom(code);
-      document.getElementById('mpJoinCreate').style.display = 'none';
-      document.getElementById('mpRoomInfo').classList.remove('hidden');
-    });
-
-    // Allow Enter key on join input
-    document.getElementById('mpJoinCodeInput')?.addEventListener('keydown', e => {
-      if (e.key === 'Enter') document.getElementById('mpJoinBtn').click();
-    });
-
-    // Back button
-    document.getElementById('mpLobbyBackBtn')?.addEventListener('click', () => {
-      mpDisconnect();
-      document.getElementById('mpLobbyPanel').classList.add('hidden');
-      document.getElementById('homeScreen').classList.remove('hidden');
-    });
-
-    // Game over buttons
-    document.getElementById('mpGoMenuBtn')?.addEventListener('click', () => {
-      mpReturnToMenu();
-    });
-
-    document.getElementById('mpPlayAgainBtn')?.addEventListener('click', () => {
-      mpDisconnect();
-      document.getElementById('mpGameOverPanel').classList.add('hidden');
-      document.getElementById('mpLobbyPanel').classList.remove('hidden');
-      document.getElementById('mpJoinCreate').style.display = 'flex';
-      document.getElementById('mpRoomInfo').classList.add('hidden');
-      mpConnect();
-    });
-  });
-  </script>
+<script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+<script src="multiplayer.js"></script>
+<script src="maintenance.js"></script>
 </body>
 </html>
