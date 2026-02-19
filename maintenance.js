@@ -8,7 +8,7 @@ const MAINTENANCE_MODE = true;
 const MAINTENANCE_CONFIG = {
   title:       '⚠️ DATABASE MIGRATION IN PROGRESS',
   subtitle:    'Estimated downtime: 2-3 days',
-  message:     `I am currently switching from Firebase to my new self-hosted database.\n\nAll player data, skins, coins, scores, and marketplace listings will not be transferred.\n\nI apologize for the inconvenience. Please check back shortly.`,
+  message:     `I am currently switching from Firebase to my new self-hosted database.\n\nAll player data, skins, coins, scores, and marketplace listings are not going to be transferred.\n\nI apologize for the inconvenience. Please check back shortly.`,
   startedAt:   'February 19, 2026',
   statusItems: [
     { label: 'Auth & Login',         done: true  },
@@ -18,7 +18,7 @@ const MAINTENANCE_CONFIG = {
     { label: 'Announcements',        done: false },
     { label: 'Full Firebase Removal',done: false },
   ],
-  discordUrl:  null,   
+  discordUrl:  null,   // optional: 'https://discord.gg/yourserver'
 };
 
 (function() {
@@ -37,6 +37,16 @@ const MAINTENANCE_CONFIG = {
       justify-content: center;
       font-family: 'Segoe UI', sans-serif;
       overflow-y: auto;
+      cursor: default !important;
+    }
+    #maintenanceOverlay * {
+      cursor: default !important;
+    }
+    #adminBypassBtn {
+      cursor: pointer !important;
+    }
+    #adminBypassEmail, #adminBypassPass {
+      cursor: text !important;
     }
     #maintenanceBox {
       max-width: 520px;
