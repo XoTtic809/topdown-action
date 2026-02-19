@@ -1524,23 +1524,22 @@
 
 </div>
 <!-- Firebase SDK -->
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-<script src="firebase-config.js"></script>
 <script src="anticheat.js"></script>
 <!-- Load systems that game.js depends on first -->
 <script src="crate-system.js"></script>
 <script src="battlepass-system.js"></script>
-<!-- Then game.js which defines variables needed by firebase-auth -->
+<!-- Then game.js which defines variables needed by api-auth -->
 <script src="game.js"></script>
 <!-- Marketplace system (depends on game.js SKINS + crate-system SKIN_RARITIES) -->
 <script src="marketplace.js"></script>
 <script src="marketplace-ui.js"></script>
-<!-- Then firebase modules that depend on game.js variables -->
-<script src="firebase-auth.js"></script>
+<!-- Auth and UI modules -->
+<script src="api-auth.js"></script>
 <script src="admin_skins.js"></script>
-<script src="firebase_announcements.js"></script>
+<script src="api-announcements.js"></script>
+<script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+<script src="multiplayer.js"></script>
+<script src="maintenance.js"></script>
 
   <!-- ── ANNOUNCEMENT MODAL (used by firebase_announcements.js) ── -->
   <div id="announcementModal" class="hidden" style="
