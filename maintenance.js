@@ -3,7 +3,7 @@
 // Admins can bypass by clicking the version text 3 times and entering their credentials.
 // To disable maintenance: set MAINTENANCE_MODE = false and push.
 
-const MAINTENANCE_MODE = true;
+const MAINTENANCE_MODE = false;
 
 const MAINTENANCE_CONFIG = {
   title:       '⚠️ DATABASE MIGRATION IN PROGRESS',

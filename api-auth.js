@@ -217,7 +217,7 @@ window.addEventListener('load', async () => {
 
   const token = getToken();
   if (!token) {
-    setTimeout(() => { if (!currentUser && !isGuest) showAuthModal(); }, 500);
+    setTimeout(() => { if (!currentUser && !isGuest) { const m = document.getElementById('authModal'); if(m) m.classList.remove('hidden'); } }, 500);
     return;
   }
 
