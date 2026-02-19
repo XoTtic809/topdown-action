@@ -7,8 +7,8 @@ const MAINTENANCE_MODE = true;
 
 const MAINTENANCE_CONFIG = {
   title:       '⚠️ DATABASE MIGRATION IN PROGRESS',
-  subtitle:    'Estimated downtime: 1–2 hours',
-  message:     `We are currently switching from Firebase to our new self-hosted database.\n\nAll player data, skins, coins, scores, and marketplace listings are being safely transferred.\n\nWe apologize for the inconvenience. Please check back shortly.`,
+  subtitle:    'Estimated downtime: 2-3 days',
+  message:     `I am currently switching from Firebase to my new self-hosted database.\n\nAll player data, skins, coins, scores, and marketplace listings will not be transferred.\n\nI apologize for the inconvenience. Please check back shortly.`,
   startedAt:   'February 19, 2026',
   statusItems: [
     { label: 'Auth & Login',         done: true  },
