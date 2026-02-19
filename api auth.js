@@ -803,4 +803,9 @@ function showAdminMessage(message, isError = false) {
   setTimeout(() => el.classList.add('hidden'), 3000);
 }
 
-console.log('✅ api-auth.js v2 loaded — fully self-hosted');
+// Keep Railway server awake — ping every 4 minutes
+setInterval(() => {
+  fetch(API_BASE + '/health').catch(() => {});
+}, 4 * 60 * 1000);
+
+console.log('✅ api-auth.js loaded — Railway backend active');
