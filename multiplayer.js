@@ -135,11 +135,13 @@ function mpJoinRoom(code) {
 // ─── Send input to server every frame ─────────────────────────
 function mpSendInput(keys, mouseX, mouseY, shooting) {
   if (!mpSocket?.connected || !mpGameActive) return;
+  // keys can be a plain object {w:true} or a Set — handle both
+  const has = k => keys instanceof Set ? keys.has(k) : !!keys[k];
   mpSocket.emit('input', {
-    up:       keys.has('w') || keys.has('arrowup'),
-    down:     keys.has('s') || keys.has('arrowdown'),
-    left:     keys.has('a') || keys.has('arrowleft'),
-    right:    keys.has('d') || keys.has('arrowright'),
+    up:       has('w') || has('arrowup'),
+    down:     has('s') || has('arrowdown'),
+    left:     has('a') || has('arrowleft'),
+    right:    has('d') || has('arrowright'),
     shooting,
     mouseX,
     mouseY,
