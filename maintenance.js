@@ -8,7 +8,7 @@ const MAINTENANCE_MODE = true;
 const MAINTENANCE_CONFIG = {
   title:       '⚠️ DATABASE MIGRATION IN PROGRESS',
   subtitle:    'Estimated downtime: 2-3 days',
-  message:     `I am currently switching from Firebase to my new self-hosted database.\n\nAll player data, skins, coins, scores, and marketplace listings are not going to be transferred.\n\nI apologize for the inconvenience. Please check back shortly.`,
+  message:     `I am currently switching from Firebase to my new self-hosted database.\n\nAll player data, skins, coins, scores, and marketplace listings will not be transferred.\n\nI apologize for the inconvenience. Please check back shortly.`,
   startedAt:   'February 19, 2026',
   statusItems: [
     { label: 'Auth & Login',         done: true  },
@@ -231,6 +231,22 @@ const MAINTENANCE_CONFIG = {
   `;
 
   document.body.appendChild(overlay);
+
+  // Force system cursor visible — game sets cursor:none on body
+  document.body.style.cursor = 'default';
+  document.documentElement.style.cursor = 'default';
+
+  // Also hide any custom cursor DOM elements the game creates
+  const customCursors = document.querySelectorAll('#customCursor, .custom-cursor, #cursor, .cursor');
+  customCursors.forEach(el => el.style.display = 'none');
+
+  // Watch for custom cursor elements added after this script runs
+  const cursorObserver = new MutationObserver(() => {
+    document.body.style.cursor = 'default';
+    document.querySelectorAll('#customCursor, .custom-cursor, #cursor, .cursor')
+      .forEach(el => el.style.display = 'none');
+  });
+  cursorObserver.observe(document.body, { childList: true, subtree: true });
 
   // ── Secret admin bypass: click footer 3 times ──
   let footerClicks = 0;
