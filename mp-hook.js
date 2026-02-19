@@ -98,6 +98,19 @@
       ctx.fill(); ctx.shadowBlur = 0;
     });
 
+    // Powerups
+    s.powerups?.forEach(pu => {
+      const bob = Math.sin(Date.now() / 150) * 2;
+      ctx.shadowBlur = 18; ctx.shadowColor = pu.color;
+      ctx.beginPath(); ctx.arc(pu.x, pu.y + bob, pu.r, 0, Math.PI*2);
+      ctx.fillStyle = pu.color; ctx.fill();
+      ctx.shadowBlur = 0;
+      ctx.fillStyle = '#fff'; ctx.font = 'bold 14px Arial';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText(pu.symbol, pu.x, pu.y + bob);
+      ctx.textBaseline = 'alphabetic'; ctx.textAlign = 'left';
+    });
+
     // Enemies
     s.enemies?.forEach(e => {
       ctx.shadowBlur = 12; ctx.shadowColor = e.color || '#e74c3c';
@@ -126,6 +139,13 @@
         }
         return;
       }
+      // Shield ring
+      if (p.shield) {
+        ctx.beginPath(); ctx.arc(p.x, p.y, 24, 0, Math.PI*2);
+        ctx.strokeStyle = 'rgba(182,147,255,0.7)'; ctx.lineWidth = 3;
+        ctx.shadowBlur = 12; ctx.shadowColor = '#b693ff'; ctx.stroke();
+        ctx.shadowBlur = 0;
+      }
       ctx.shadowBlur=18; ctx.shadowColor=color;
       ctx.beginPath(); ctx.arc(p.x,p.y,18,0,Math.PI*2);
       ctx.fillStyle=color; ctx.fill();
@@ -138,6 +158,13 @@
       // Label
       ctx.fillStyle=color; ctx.font='bold 11px Arial'; ctx.textAlign='center';
       ctx.fillText(isMe?'YOU':p.username, p.x, p.y-26); ctx.textAlign='left';
+      // Weapon level dots
+      if (p.weaponLevel > 1) {
+        for (let i = 0; i < p.weaponLevel; i++) {
+          ctx.beginPath(); ctx.arc(p.x - 8 + i * 8, p.y + 32, 3, 0, Math.PI*2);
+          ctx.fillStyle = '#ffd700'; ctx.fill();
+        }
+      }
       // HP bar
       const pct=p.hp/p.maxHp;
       const bx=p.x-18, by=p.y+22;

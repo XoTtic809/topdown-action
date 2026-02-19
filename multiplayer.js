@@ -97,6 +97,21 @@ function mpConnect() {
     showMpNotification(`Wave ${wave}!`, 'info');
   });
 
+  mpSocket.on('powerup_collected', ({ username, type }) => {
+    const labels = {
+      health:'❤️ Health', rapidfire:'⚡ Rapid Fire', speed:'💙 Speed',
+      shield:'💜 Shield', weapon:'★ Weapon Up', maxhp:'♥ Max HP',
+      speedup:'⟫ Speed Up', nuke:'💣 NUKE!'
+    };
+    const isMe = username === (mpSocket._user?.username);
+    const who  = isMe ? 'You' : username;
+    showMpNotification(`${who} got ${labels[type] || type}!`, isMe ? 'success' : 'info');
+  });
+
+  mpSocket.on('nuke', ({ username }) => {
+    showMpNotification(`💣 ${username} used NUKE — all enemies cleared!`, 'warning');
+  });
+
   mpSocket.on('game_over', (data) => {
     mpGameActive = false;
     showMpGameOver(data);
