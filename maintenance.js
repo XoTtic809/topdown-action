@@ -232,21 +232,9 @@ const MAINTENANCE_CONFIG = {
 
   document.body.appendChild(overlay);
 
-  // Force system cursor visible — game sets cursor:none on body
+  // Force system cursor visible while maintenance screen is showing
   document.body.style.cursor = 'default';
   document.documentElement.style.cursor = 'default';
-
-  // Also hide any custom cursor DOM elements the game creates
-  const customCursors = document.querySelectorAll('#customCursor, .custom-cursor, #cursor, .cursor');
-  customCursors.forEach(el => el.style.display = 'none');
-
-  // Watch for custom cursor elements added after this script runs
-  const cursorObserver = new MutationObserver(() => {
-    document.body.style.cursor = 'default';
-    document.querySelectorAll('#customCursor, .custom-cursor, #cursor, .cursor')
-      .forEach(el => el.style.display = 'none');
-  });
-  cursorObserver.observe(document.body, { childList: true, subtree: true });
 
   // ── Secret admin bypass: click footer 3 times ──
   let footerClicks = 0;
@@ -303,7 +291,12 @@ const MAINTENANCE_CONFIG = {
       localStorage.setItem('topdown_token', data.token);
       overlay.style.transition = 'opacity 0.4s';
       overlay.style.opacity    = '0';
-      setTimeout(() => overlay.remove(), 400);
+      setTimeout(() => {
+        overlay.remove();
+        // Restore cursor to none so game custom cursor works
+        document.body.style.cursor = '';
+        document.documentElement.style.cursor = '';
+      }, 400);
 
     } catch (err) {
       errorEl.textContent   = 'Connection failed. Try again.';
