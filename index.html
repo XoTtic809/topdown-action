@@ -1524,6 +1524,67 @@
 
 </div>
 <!-- Firebase SDK -->
+
+  <!-- ─── MULTIPLAYER LOBBY PANEL ─── -->
+  <div id="mpLobbyPanel" class="hidden panel-overlay">
+    <div class="panel-box" style="max-width:460px;">
+      <h2 class="panel-title">⚔️ DUOS</h2>
+      <div id="mpError" class="hidden" style="background:rgba(255,71,87,0.15);border:1px solid rgba(255,71,87,0.4);color:#ff6b7a;padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:12px;"></div>
+      <div id="mpJoinCreate" style="display:flex;flex-direction:column;gap:12px;margin-bottom:20px;">
+        <button id="mpCreateBtn" class="home-btn primary" style="font-size:15px;">➕ CREATE ROOM</button>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div style="flex:1;height:1px;background:rgba(255,255,255,0.1);"></div>
+          <span style="font-size:11px;color:var(--muted);letter-spacing:1px;">OR</span>
+          <div style="flex:1;height:1px;background:rgba(255,255,255,0.1);"></div>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <input id="mpJoinCodeInput" type="text" placeholder="Enter room code" maxlength="6"
+            class="auth-input" style="flex:1;text-transform:uppercase;letter-spacing:3px;font-size:16px;text-align:center;font-weight:700;">
+          <button id="mpJoinBtn" class="home-btn secondary" style="padding:0 20px;">JOIN</button>
+        </div>
+      </div>
+      <div id="mpRoomInfo" class="hidden">
+        <div style="text-align:center;margin-bottom:16px;">
+          <div style="font-size:11px;color:var(--muted);letter-spacing:2px;margin-bottom:6px;">ROOM CODE</div>
+          <div id="mpRoomCode" style="font-size:36px;font-weight:900;letter-spacing:8px;color:#58a6ff;font-family:monospace;"></div>
+          <div style="font-size:11px;color:var(--muted);margin-top:6px;">Share this code with your partner</div>
+        </div>
+        <div style="margin-bottom:16px;">
+          <div style="font-size:11px;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:8px;">Players</div>
+          <div id="mpPlayerList" style="display:flex;flex-direction:column;gap:8px;"></div>
+        </div>
+        <div id="mpLobbyStatus" style="text-align:center;font-size:13px;color:var(--muted);margin-bottom:16px;">Waiting for a partner...</div>
+        <div id="mpCountdown" class="hidden" style="text-align:center;font-size:64px;font-weight:900;color:#6bff7b;margin-bottom:8px;text-shadow:0 0 30px rgba(107,255,123,0.5);"></div>
+      </div>
+      <button class="panel-back-btn" id="mpLobbyBackBtn">← BACK</button>
+    </div>
+  </div>
+
+  <!-- ─── MULTIPLAYER GAME OVER PANEL ─── -->
+  <div id="mpGameOverPanel" class="hidden panel-overlay">
+    <div class="panel-box" style="max-width:440px;text-align:center;">
+      <h2 class="panel-title">💀 GAME OVER</h2>
+      <div id="mpGoWave" style="font-size:18px;font-weight:700;color:#ffcc00;margin-bottom:4px;"></div>
+      <div id="mpGoScore" style="font-size:15px;color:var(--muted);margin-bottom:20px;"></div>
+      <div id="mpGoResults" style="display:flex;flex-direction:column;gap:10px;margin-bottom:24px;"></div>
+      <div style="display:flex;gap:10px;">
+        <button id="mpPlayAgainBtn" class="home-btn primary" style="flex:1;">🔄 PLAY AGAIN</button>
+        <button id="mpGoMenuBtn" class="home-btn secondary" style="flex:1;">⌂ MENU</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── PARTNER HP BAR ─── -->
+  <div id="partnerHpBar" class="hidden" style="
+    position:fixed;top:50px;left:50%;transform:translateX(-50%);
+    background:rgba(0,0,0,0.6);border:1px solid rgba(255,159,67,0.3);
+    border-radius:8px;padding:6px 14px;z-index:999;min-width:180px;text-align:center;">
+    <div style="font-size:10px;color:rgba(255,159,67,0.8);letter-spacing:1px;margin-bottom:4px;">PARTNER HP</div>
+    <div style="background:rgba(0,0,0,0.4);border-radius:4px;height:8px;overflow:hidden;">
+      <div id="partnerHp" style="height:100%;width:100%;background:#6bff7b;border-radius:4px;transition:width 0.3s,background 0.3s;"></div>
+    </div>
+  </div>
+
 <script src="anticheat.js"></script>
 <!-- Load systems that game.js depends on first -->
 <script src="crate-system.js"></script>
