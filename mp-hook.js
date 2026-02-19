@@ -52,19 +52,33 @@
     };
   }
 
+  const SERVER_W = 900;
+  const SERVER_H = 600;
+
   // ── Render ─────────────────────────────────────────────────
   function mpRenderFrame() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+    // Scale server coords (900x600) to fill the actual canvas
+    const scaleX = canvas.width  / SERVER_W;
+    const scaleY = canvas.height / SERVER_H;
+    const scale  = Math.min(scaleX, scaleY);
+    const offsetX = (canvas.width  - SERVER_W * scale) / 2;
+    const offsetY = (canvas.height - SERVER_H * scale) / 2;
+
+    ctx.save();
+    ctx.translate(offsetX, offsetY);
+    ctx.scale(scale, scale);
+
     // Background
     ctx.fillStyle = '#0a0a14';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillRect(0, 0, SERVER_W, SERVER_H);
 
     // Grid
     ctx.strokeStyle = 'rgba(255,255,255,0.03)';
     ctx.lineWidth = 1;
-    for (let x = 0; x < canvas.width; x += 60) { ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,canvas.height); ctx.stroke(); }
-    for (let y = 0; y < canvas.height; y += 60) { ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(canvas.width,y); ctx.stroke(); }
+    for (let x = 0; x < SERVER_W; x += 60) { ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,SERVER_H); ctx.stroke(); }
+    for (let y = 0; y < SERVER_H; y += 60) { ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(SERVER_W,y); ctx.stroke(); }
 
     const s = getInterpolated();
     if (!s) {
@@ -139,6 +153,8 @@
       ctx.textAlign='left';
     }
 
+    ctx.restore(); // end scale transform
+
     // HUD update
     if (typeof mpUpdateHUD === 'function') mpUpdateHUD();
   }
@@ -203,10 +219,17 @@
   // ── Mouse tracking ─────────────────────────────────────────
   canvas?.addEventListener('mousemove', e => {
     if (!mpGameActive) return;
-    const rect = canvas.getBoundingClientRect();
+    const rect   = canvas.getBoundingClientRect();
+    const scaleX = canvas.width  / SERVER_W;
+    const scaleY = canvas.height / SERVER_H;
+    const scale  = Math.min(scaleX, scaleY);
+    const offsetX = (canvas.width  - SERVER_W * scale) / 2;
+    const offsetY = (canvas.height - SERVER_H * scale) / 2;
+    const rawX   = (e.clientX - rect.left) * (canvas.width  / rect.width);
+    const rawY   = (e.clientY - rect.top)  * (canvas.height / rect.height);
     if (typeof mouse !== 'undefined') {
-      mouse.x = (e.clientX - rect.left) * (canvas.width  / rect.width);
-      mouse.y = (e.clientY - rect.top)  * (canvas.height / rect.height);
+      mouse.x = (rawX - offsetX) / scale;
+      mouse.y = (rawY - offsetY) / scale;
     }
   });
 
