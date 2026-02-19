@@ -1,0 +1,89 @@
+<!-- ═══════════════════════════════════════════════════════════
+     MARKETPLACE BUY CONFIRMATION MODAL
+     Add this inside <body> alongside your other modals.
+     Replaces window.confirm() — non-blocking, styled, mobile-safe.
+     ═══════════════════════════════════════════════════════════ -->
+
+<div id="mpBuyModal" class="mp-sell-modal hidden">
+  <div class="mp-sell-box" style="max-width:320px;">
+
+    <div class="mp-sell-title">CONFIRM PURCHASE</div>
+
+    <!-- Skin preview + name -->
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px;">
+      <div id="mpBuyModalPreview" style="flex-shrink:0;"></div>
+      <div>
+        <div id="mpBuyModalSkinName"
+             style="font-family:var(--font-title);font-size:15px;font-weight:700;color:#dbe7ff;"></div>
+        <div id="mpBuyModalRarity"
+             style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-top:3px;"></div>
+        <div style="font-size:11px;color:var(--muted);margin-top:2px;">
+          Sold by <span id="mpBuyModalSeller"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Price breakdown -->
+    <div style="background:rgba(0,0,0,0.3);border:1px solid rgba(88,166,255,0.15);
+                border-radius:8px;padding:12px;margin-bottom:16px;">
+      <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px;">
+        <span style="color:var(--muted);">Price</span>
+        <span style="color:var(--gold);font-weight:700;">🪙 <span id="mpBuyModalPrice"></span></span>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:6px;">
+        <span style="color:var(--muted);">Marketplace tax (10%)</span>
+        <span style="color:var(--danger);">−<span id="mpBuyModalTax"></span></span>
+      </div>
+      <div style="height:1px;background:rgba(255,255,255,0.07);margin:8px 0;"></div>
+      <div style="display:flex;justify-content:space-between;font-size:12px;">
+        <span style="color:var(--muted);">Your balance after</span>
+        <span style="font-weight:700;color:#dbe7ff;">🪙 <span id="mpBuyModalAfter"></span></span>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="mp-sell-actions">
+      <button id="mpBuyConfirmBtn"  class="mp-sell-confirm-btn" style="color:#6bff7b;border-color:rgba(107,255,123,0.35);">
+        ✓ BUY NOW
+      </button>
+      <button id="mpBuyModalCancelBtn" class="mp-sell-cancel-btn">CANCEL</button>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════
+     MARKETPLACE SELL MODAL
+     (If not already in your index.html — add alongside the buy modal)
+     ═══════════════════════════════════════════════════════════ -->
+
+<div id="mpSellModal" class="mp-sell-modal hidden">
+  <div class="mp-sell-box">
+
+    <div class="mp-sell-title">LIST SKIN FOR SALE</div>
+
+    <div class="mp-sell-field">
+      <label class="mp-sell-label" for="mpSellSkinSelect">Skin</label>
+      <select id="mpSellSkinSelect" class="mp-sell-select">
+        <option value="">— Select a skin —</option>
+      </select>
+    </div>
+
+    <div class="mp-sell-field">
+      <label class="mp-sell-label" for="mpSellPrice">Price (coins)</label>
+      <input id="mpSellPrice" class="mp-sell-input" type="number" min="100" placeholder="Enter price" />
+      <div id="mpSellPriceHint" class="mp-sell-hint">Select a skin first</div>
+    </div>
+
+    <div id="mpSellTax" class="mp-sell-tax"></div>
+
+    <div id="mpSellError" class="mp-sell-error hidden"></div>
+
+    <div class="mp-sell-actions">
+      <button id="mpSellConfirmBtn" class="mp-sell-confirm-btn">LIST FOR SALE</button>
+      <button id="mpSellModalClose" class="mp-sell-cancel-btn">CANCEL</button>
+    </div>
+
+  </div>
+</div>
