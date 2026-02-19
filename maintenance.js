@@ -18,7 +18,7 @@ const MAINTENANCE_CONFIG = {
     { label: 'Announcements',        done: false },
     { label: 'Full Firebase Removal',done: false },
   ],
-  discordUrl:  null,   // optional: 'https://discord.gg/yourserver'
+  discordUrl:  null,   
 };
 
 (function() {
