@@ -77,6 +77,7 @@ function mpConnect() {
 
   mpSocket.on('state', (state) => {
     mpState = state;
+    if (typeof mpOnStateReceived === 'function') mpOnStateReceived(state);
   });
 
   mpSocket.on('player_died', ({ username }) => {
