@@ -1,4 +1,4 @@
-const MAINTENANCE_MODE = false;
+const MAINTENANCE_MODE = true;
 
 const MAINTENANCE_CONFIG = {
   title:       '⚠️ DATABASE MIGRATION IN PROGRESS',
