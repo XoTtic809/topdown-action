@@ -164,10 +164,70 @@ function mpSendInput(keys, mouseX, mouseY, shooting) {
   });
 }
 
+// ─── Draw the arena background (dark grid) ───────────────────
+function mpDrawArena(ctx, w, h) {
+  // Dark background fill
+  ctx.fillStyle = '#0a0f1a';
+  ctx.fillRect(0, 0, w, h);
+
+  // Subtle grid lines
+  ctx.strokeStyle = 'rgba(88,166,255,0.06)';
+  ctx.lineWidth = 1;
+  const GRID = 60;
+  for (let x = 0; x < w; x += GRID) {
+    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke();
+  }
+  for (let y = 0; y < h; y += GRID) {
+    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke();
+  }
+
+  // Arena boundary glow
+  ctx.strokeStyle = 'rgba(88,166,255,0.18)';
+  ctx.lineWidth = 3;
+  ctx.strokeRect(2, 2, w - 4, h - 4);
+}
+
 // ─── Render multiplayer game state ────────────────────────────
 // Called from your main draw loop when mpGameActive is true
 function mpRender(ctx, mySocketId) {
   if (!mpState) return;
+
+  // Draw powerups
+  for (const pu of (mpState.powerups || [])) {
+    const cfg = {
+      health:    { color: '#6bff7b', symbol: '+' },
+      rapidfire: { color: '#ffd93d', symbol: '⚡' },
+      speed:     { color: '#9be7ff', symbol: '»' },
+      shield:    { color: '#b693ff', symbol: '◈' },
+      weapon:    { color: '#ffd700', symbol: '★' },
+      maxhp:     { color: '#ff69b4', symbol: '♥' },
+      speedup:   { color: '#00ffff', symbol: '⟫' },
+      nuke:      { color: '#ff6b35', symbol: '💣' },
+    }[pu.type] || { color: '#fff', symbol: '?' };
+
+    // Pulsing outer ring
+    ctx.beginPath();
+    ctx.arc(pu.x, pu.y, pu.r + 5, 0, Math.PI * 2);
+    ctx.fillStyle = cfg.color + '22';
+    ctx.fill();
+
+    // Core circle
+    ctx.beginPath();
+    ctx.arc(pu.x, pu.y, pu.r, 0, Math.PI * 2);
+    ctx.fillStyle = cfg.color + '44';
+    ctx.fill();
+    ctx.strokeStyle = cfg.color;
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Symbol
+    ctx.fillStyle = cfg.color;
+    ctx.font = 'bold 11px Arial';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(cfg.symbol, pu.x, pu.y);
+  }
+  ctx.textBaseline = 'alphabetic';
 
   // Draw bullets
   for (const b of mpState.bullets) {
@@ -274,6 +334,45 @@ function mpUpdateHUD() {
   const me = mpState.players.find(p => p.socketId === mpMySocketId);
   const hpEl = document.getElementById('hpVal');
   if (hpEl && me) hpEl.textContent = Math.ceil(me.hp);
+
+  // Enemies remaining counter — reuse or create a floating element
+  let enemyCountEl = document.getElementById('mpEnemyCount');
+  if (!enemyCountEl) {
+    enemyCountEl = document.createElement('div');
+    enemyCountEl.id = 'mpEnemyCount';
+    enemyCountEl.style.cssText = `
+      position:fixed; bottom:16px; left:16px;
+      background:rgba(13,21,37,0.88); border:1.5px solid rgba(88,166,255,0.25);
+      border-radius:10px; padding:6px 14px;
+      display:flex; align-items:center; gap:8px;
+      font-family:Inter,system-ui; font-size:13px; color:rgba(255,255,255,0.7);
+      pointer-events:none; z-index:100;
+    `;
+    document.body.appendChild(enemyCountEl);
+  }
+
+  if (mpState.waveClearTimer > 0) {
+    const secs = Math.ceil(mpState.waveClearTimer);
+    enemyCountEl.innerHTML = `<span style="color:#6bff7b;font-weight:700;">Wave Clear!</span> <span style="color:#ffd93d;">Next wave in ${secs}s</span>`;
+    enemyCountEl.style.display = 'flex';
+  } else if (mpGameActive) {
+    const killed  = mpState.enemiesKilledThisWave || 0;
+    const needed  = mpState.enemiesNeeded || 1;
+    const remaining = Math.max(0, needed - killed);
+    const color = remaining <= 5 ? '#6bff7b' : remaining <= 10 ? '#ffd93d' : '#9be7ff';
+    enemyCountEl.innerHTML = `
+      <span style="width:10px;height:10px;border-radius:50%;background:#ff4757;display:inline-block;box-shadow:0 0 6px #ff4757;"></span>
+      <span>Enemies</span>
+      <span style="color:${color};font-weight:700;font-size:15px;">${remaining}</span>`;
+    enemyCountEl.style.display = 'flex';
+  } else {
+    enemyCountEl.style.display = 'none';
+  }
+}
+
+// ─── Clean up MP HUD elements on game end ────────────────────
+function mpCleanupHUD() {
+  document.getElementById('mpEnemyCount')?.remove();
 }
 
 // ─── UI helpers ───────────────────────────────────────────────
@@ -357,6 +456,7 @@ function mpReturnToMenu() {
   mpGameActive = false;
   mpRoom       = null;
   mpState      = null;
+  mpCleanupHUD();
 }
 
 function showMpError(message) {

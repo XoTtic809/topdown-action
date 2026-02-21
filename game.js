@@ -6872,6 +6872,19 @@ function loop(time) {
 
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+  // ── Multiplayer (Duos) mode ──────────────────────────────────
+  // When mpGameActive is true the server owns all game logic;
+  // we just send input and render the authoritative state.
+  if (typeof mpGameActive !== 'undefined' && mpGameActive) {
+    if (typeof mpDrawArena === 'function') mpDrawArena(ctx, canvas.width, canvas.height);
+    if (typeof mpSendInput === 'function') mpSendInput(keys, mouse.x, mouse.y, mouse.down);
+    if (typeof mpRender    === 'function') mpRender(ctx, mpMySocketId);
+    if (typeof mpUpdateHUD === 'function') mpUpdateHUD();
+    requestAnimationFrame(loop);
+    return;
+  }
+  // ─────────────────────────────────────────────────────────────
+
   if (running && !paused) {
  // FPS calculation
     fpsSamples.push(dt > 0 ? 1 / dt : 60);
@@ -7798,6 +7811,74 @@ function startGame() {
 }
 
 document.getElementById('startBtn').addEventListener('click', startGame);
+
+// ── Multiplayer / Duos UI wiring ─────────────────────────────
+// "Play Duos" button on the home screen opens the MP panel
+const mpDuosBtn = document.getElementById('duosBtn');
+if (mpDuosBtn) {
+  mpDuosBtn.addEventListener('click', () => {
+    document.getElementById('homeScreen')?.classList.add('hidden');
+    const mpPanel = document.getElementById('mpMenuPanel');
+    if (mpPanel) mpPanel.classList.remove('hidden');
+    if (typeof mpConnect === 'function') mpConnect();
+  });
+}
+
+// Create room
+const mpCreateBtn = document.getElementById('mpCreateBtn');
+if (mpCreateBtn) {
+  mpCreateBtn.addEventListener('click', () => {
+    if (typeof mpCreateRoom === 'function') mpCreateRoom();
+  });
+}
+
+// Join room
+const mpJoinBtn = document.getElementById('mpJoinBtn');
+if (mpJoinBtn) {
+  mpJoinBtn.addEventListener('click', () => {
+    const code = document.getElementById('mpJoinInput')?.value?.trim();
+    if (typeof mpJoinRoom === 'function') mpJoinRoom(code);
+  });
+}
+// Also allow Enter key on join input
+const mpJoinInput = document.getElementById('mpJoinInput');
+if (mpJoinInput) {
+  mpJoinInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      const code = mpJoinInput.value.trim();
+      if (typeof mpJoinRoom === 'function') mpJoinRoom(code);
+    }
+  });
+}
+
+// Back from MP menu
+const mpMenuBackBtn = document.getElementById('mpMenuBackBtn');
+if (mpMenuBackBtn) {
+  mpMenuBackBtn.addEventListener('click', () => {
+    document.getElementById('mpMenuPanel')?.classList.add('hidden');
+    document.getElementById('homeScreen')?.classList.remove('hidden');
+    if (typeof mpDisconnect === 'function') mpDisconnect();
+  });
+}
+
+// Back from lobby (leave room)
+const mpLobbyBackBtn = document.getElementById('mpLobbyBackBtn');
+if (mpLobbyBackBtn) {
+  mpLobbyBackBtn.addEventListener('click', () => {
+    if (typeof mpReturnToMenu === 'function') mpReturnToMenu();
+    document.getElementById('homeScreen')?.classList.remove('hidden');
+    if (typeof mpDisconnect === 'function') mpDisconnect();
+  });
+}
+
+// Game over — play again
+const mpGoPlayAgainBtn = document.getElementById('mpGoPlayAgainBtn');
+if (mpGoPlayAgainBtn) {
+  mpGoPlayAgainBtn.addEventListener('click', () => {
+    if (typeof mpReturnToMenu === 'function') mpReturnToMenu();
+  });
+}
+// ─────────────────────────────────────────────────────────────
 
 document.getElementById('settingsBtn').addEventListener('click', () => {
   document.getElementById('homeScreen').classList.add('hidden');

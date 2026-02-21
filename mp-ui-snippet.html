@@ -1,0 +1,212 @@
+<!--
+  ════════════════════════════════════════════════════════
+  MULTIPLAYER / DUOS UI — paste these blocks into your
+  index.html. Load multiplayer.js BEFORE game.js.
+  ════════════════════════════════════════════════════════
+-->
+
+<!-- ① Add "Play Duos" button to your home screen alongside the
+     existing "Play" button. Example placement: -->
+<!--
+<button id="duosBtn" class="btn btn-secondary">⚔ Play Duos</button>
+-->
+
+<!-- ════════════════════════════════════════════════════ -->
+<!-- ② Multiplayer entry panel (create / join)          -->
+<!-- ════════════════════════════════════════════════════ -->
+<div id="mpMenuPanel" class="hidden" style="
+  position:fixed; inset:0; display:flex; align-items:center;
+  justify-content:center; background:rgba(7,12,26,0.96);
+  z-index:1000; font-family:Inter,system-ui;">
+
+  <div style="
+    background:rgba(13,21,37,0.98);
+    border:1.5px solid rgba(88,166,255,0.25);
+    border-radius:18px; padding:40px 48px;
+    width:340px; text-align:center;
+    box-shadow:0 0 60px rgba(88,166,255,0.12);">
+
+    <div style="font-size:28px; font-weight:800; color:#fff; margin-bottom:6px;">⚔ Duos</div>
+    <div style="font-size:13px; color:rgba(255,255,255,0.45); margin-bottom:32px;">2-player co-op — survive together</div>
+
+    <!-- Create -->
+    <button id="mpCreateBtn" style="
+      width:100%; padding:14px; margin-bottom:12px;
+      background:linear-gradient(135deg,#1a4bff,#0d2db3);
+      border:none; border-radius:10px; color:#fff;
+      font-size:15px; font-weight:700; cursor:pointer;
+      transition:opacity .15s;">
+      🏠 Create Room
+    </button>
+
+    <!-- Join -->
+    <div style="display:flex; gap:8px; margin-bottom:24px;">
+      <input id="mpJoinInput" type="text" placeholder="Room code"
+        maxlength="6" autocomplete="off"
+        style="
+          flex:1; padding:12px 14px; background:rgba(255,255,255,0.07);
+          border:1.5px solid rgba(88,166,255,0.2); border-radius:10px;
+          color:#fff; font-size:14px; outline:none; text-transform:uppercase;
+          letter-spacing:2px; text-align:center;">
+      <button id="mpJoinBtn" style="
+        padding:12px 18px; background:rgba(88,166,255,0.15);
+        border:1.5px solid rgba(88,166,255,0.3); border-radius:10px;
+        color:#58a6ff; font-size:14px; font-weight:700; cursor:pointer;">
+        Join
+      </button>
+    </div>
+
+    <!-- Error -->
+    <div id="mpError" class="hidden" style="
+      padding:10px; background:rgba(255,71,87,0.15);
+      border:1px solid #ff4757; border-radius:8px;
+      color:#ff6b7a; font-size:13px; margin-bottom:16px;"></div>
+
+    <button id="mpMenuBackBtn" style="
+      background:none; border:none; color:rgba(255,255,255,0.35);
+      font-size:13px; cursor:pointer; padding:4px 0;">
+      ← Back to menu
+    </button>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════ -->
+<!-- ③ Lobby panel (waiting for partner)                -->
+<!-- ════════════════════════════════════════════════════ -->
+<div id="mpLobbyPanel" class="hidden" style="
+  position:fixed; inset:0; display:flex; align-items:center;
+  justify-content:center; background:rgba(7,12,26,0.96);
+  z-index:1000; font-family:Inter,system-ui;">
+
+  <div style="
+    background:rgba(13,21,37,0.98);
+    border:1.5px solid rgba(88,166,255,0.25);
+    border-radius:18px; padding:40px 48px;
+    width:360px; text-align:center;
+    box-shadow:0 0 60px rgba(88,166,255,0.12);">
+
+    <div style="font-size:22px; font-weight:800; color:#fff; margin-bottom:6px;">Waiting for Partner</div>
+
+    <!-- Room code display -->
+    <div style="margin:20px 0;">
+      <div style="font-size:12px; color:rgba(255,255,255,0.4); margin-bottom:8px; letter-spacing:1px;">ROOM CODE</div>
+      <div id="mpRoomCode" style="
+        font-size:36px; font-weight:900; letter-spacing:8px;
+        color:#58a6ff; text-shadow:0 0 20px rgba(88,166,255,0.5);"></div>
+      <div style="font-size:12px; color:rgba(255,255,255,0.3); margin-top:6px;">Share this with your partner</div>
+    </div>
+
+    <!-- Status -->
+    <div id="mpLobbyStatus" style="
+      font-size:14px; color:rgba(255,255,255,0.55); margin:16px 0;"></div>
+
+    <!-- Player list -->
+    <div id="mpPlayerList" style="margin:16px 0;"></div>
+
+    <!-- Countdown -->
+    <div id="mpCountdown" class="hidden" style="
+      font-size:72px; font-weight:900; color:#6bff7b;
+      text-shadow:0 0 30px rgba(107,255,123,0.6);
+      line-height:1; margin:16px 0;"></div>
+
+    <button id="mpLobbyBackBtn" style="
+      background:none; border:none; color:rgba(255,255,255,0.35);
+      font-size:13px; cursor:pointer; padding:4px 0; margin-top:8px;">
+      ← Leave room
+    </button>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════ -->
+<!-- ④ Partner HP bar (shown during MP game in the HUD) -->
+<!--    Place near your existing HP bar in the HUD      -->
+<!-- ════════════════════════════════════════════════════ -->
+<!--
+<div id="partnerHpBar" style="display:none;">
+  <span style="font-size:11px;color:#ff9f43;">Partner</span>
+  <div style="width:80px;height:6px;background:rgba(255,255,255,0.1);border-radius:3px;overflow:hidden;">
+    <div id="partnerHp" style="height:100%;width:100%;background:#6bff7b;transition:width .2s;border-radius:3px;"></div>
+  </div>
+</div>
+-->
+
+<!-- ════════════════════════════════════════════════════ -->
+<!-- ⑤ MP Game Over panel                               -->
+<!-- ════════════════════════════════════════════════════ -->
+<div id="mpGameOverPanel" class="hidden" style="
+  position:fixed; inset:0; display:flex; align-items:center;
+  justify-content:center; background:rgba(7,12,26,0.93);
+  z-index:1000; font-family:Inter,system-ui;">
+
+  <div style="
+    background:rgba(13,21,37,0.99);
+    border:1.5px solid rgba(255,71,87,0.3);
+    border-radius:18px; padding:40px 48px;
+    width:380px; text-align:center;
+    box-shadow:0 0 60px rgba(255,71,87,0.1);">
+
+    <div style="font-size:32px; margin-bottom:6px;">💀</div>
+    <div style="font-size:24px; font-weight:800; color:#fff; margin-bottom:4px;">Game Over</div>
+    <div id="mpGoWave" style="font-size:15px; color:rgba(255,255,255,0.5); margin-bottom:4px;"></div>
+    <div id="mpGoScore" style="font-size:22px; font-weight:700; color:#ffd93d; margin-bottom:24px;"></div>
+
+    <!-- Per-player results -->
+    <div id="mpGoResults" style="margin-bottom:24px;"></div>
+
+    <button id="mpGoPlayAgainBtn" style="
+      width:100%; padding:14px;
+      background:linear-gradient(135deg,#1a4bff,#0d2db3);
+      border:none; border-radius:10px; color:#fff;
+      font-size:15px; font-weight:700; cursor:pointer;">
+      🏠 Back to Menu
+    </button>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════ -->
+<!-- CSS — paste into your <style> block or .css file   -->
+<!-- ════════════════════════════════════════════════════ -->
+<style>
+/* Player entry in lobby */
+.mp-player-entry {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 14px;
+  background: rgba(88,166,255,0.07);
+  border: 1px solid rgba(88,166,255,0.15);
+  border-radius: 8px;
+  margin-bottom: 8px;
+}
+.mp-player-name {
+  color: #fff;
+  font-weight: 700;
+  font-size: 14px;
+}
+.mp-player-status {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* Result row in game over */
+.mp-result-entry {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 14px;
+  background: rgba(255,255,255,0.04);
+  border-radius: 8px;
+  margin-bottom: 8px;
+  color: rgba(255,255,255,0.75);
+  font-size: 13px;
+}
+
+/* Fade-in animation for notifications */
+@keyframes fadeInDown {
+  from { opacity:0; transform:translateX(-50%) translateY(-12px); }
+  to   { opacity:1; transform:translateX(-50%) translateY(0); }
+}
+
+/* Make sure .hidden works */
+.hidden { display: none !important; }
+</style>
