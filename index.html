@@ -1627,29 +1627,29 @@
     </div>
   </div>
 
-  <!-- ── SHOP UPDATE POPUP (shows once per page load / refresh) ── -->
+  <!-- ── FAREWELL ANNOUNCEMENT POPUP (shows every page load) ── -->
   <div id="shopUpdatePopup" style="
     display:none;position:fixed;inset:0;z-index:9999;
-    background:rgba(0,0,0,0.75);backdrop-filter:blur(6px);
+    background:rgba(0,0,0,0.80);backdrop-filter:blur(6px);
     align-items:center;justify-content:center;padding:16px;">
     <div style="
-      max-width:480px;width:100%;position:relative;
+      max-width:500px;width:100%;position:relative;
       background:linear-gradient(145deg,#0c0c18 0%,#121228 50%,#0a0a14 100%);
       border-radius:20px;overflow:hidden;
-      box-shadow:0 0 0 1px rgba(168,139,250,0.25),0 0 80px rgba(120,80,255,0.2),0 32px 80px rgba(0,0,0,0.8);">
+      box-shadow:0 0 0 1px rgba(100,140,250,0.25),0 0 80px rgba(80,100,255,0.15),0 32px 80px rgba(0,0,0,0.8);">
 
       <!-- Decorative top bar -->
-      <div style="height:4px;background:linear-gradient(90deg,#ff6b35,#a855f7,#06b6d4,#a855f7,#ff6b35);"></div>
+      <div style="height:4px;background:linear-gradient(90deg,#4a90e2,#74b9ff,#a0c4ff,#74b9ff,#4a90e2);"></div>
 
       <div style="padding:28px 28px 24px;">
         <!-- Header -->
         <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:18px;">
           <div>
-            <div style="font-size:11px;letter-spacing:2.5px;text-transform:uppercase;color:#a855f7;font-weight:600;margin-bottom:4px;">
-              🆕 &nbsp; v4.1.0 Update
+            <div style="font-size:11px;letter-spacing:2.5px;text-transform:uppercase;color:#74b9ff;font-weight:600;margin-bottom:4px;">
+              📋 &nbsp; Final Update
             </div>
             <div style="font-size:22px;font-weight:800;letter-spacing:-0.5px;color:#fff;line-height:1.2;">
-              Shop Revamp &amp;<br>Economy Update
+              The Last Update
             </div>
           </div>
           <button onclick="closeShopUpdatePopup()" style="
@@ -1660,69 +1660,39 @@
             onmouseout="this.style.background='rgba(255,255,255,0.06)'">×</button>
         </div>
 
-        <!-- Feature highlights -->
-        <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px;">
-
-          <div style="display:flex;align-items:flex-start;gap:12px;padding:12px 14px;background:rgba(255,215,0,0.05);border:1px solid rgba(255,215,0,0.15);border-radius:10px;">
-            <span style="font-size:22px;flex-shrink:0;">🏆</span>
-            <div>
-              <div style="font-size:13px;font-weight:700;color:#ffd700;margin-bottom:2px;">Champion Skins Section</div>
-              <div style="font-size:11px;color:rgba(255,255,255,0.55);line-height:1.4;">Gold, Silver &amp; Bronze Champion skins now have their own dedicated shop section — permanently protected from trading.</div>
-            </div>
-          </div>
-
-          <div style="display:flex;align-items:flex-start;gap:12px;padding:12px 14px;background:rgba(6,182,212,0.05);border:1px solid rgba(6,182,212,0.15);border-radius:10px;">
-            <span style="font-size:22px;flex-shrink:0;">💰</span>
-            <div>
-              <div style="font-size:13px;font-weight:700;color:#06b6d4;margin-bottom:2px;">Economy Rebalance</div>
-              <div style="font-size:11px;color:rgba(255,255,255,0.55);line-height:1.4;">Better coin rewards for kills and waves, improved Battle Pass XP rates, and fair Marketplace pricing across all rarity tiers.</div>
-            </div>
-          </div>
-
-          <div style="display:flex;align-items:flex-start;gap:12px;padding:12px 14px;background:rgba(168,85,247,0.05);border:1px solid rgba(168,85,247,0.15);border-radius:10px;">
-            <span style="font-size:22px;flex-shrink:0;">🌑</span>
-            <div>
-              <div style="font-size:13px;font-weight:700;color:#a855f7;margin-bottom:2px;">Oblivion Crate Fixed</div>
-              <div style="font-size:11px;color:rgba(255,255,255,0.55);line-height:1.4;">All 10 Oblivion skins now display correctly. Crate price updated to 15,000 coins. Dark gradient previews working.</div>
-            </div>
-          </div>
-
-          <div style="display:flex;align-items:flex-start;gap:12px;padding:12px 14px;background:rgba(99,102,241,0.05);border:1px solid rgba(99,102,241,0.15);border-radius:10px;">
-            <span style="font-size:22px;flex-shrink:0;">🛒</span>
-            <div>
-              <div style="font-size:13px;font-weight:700;color:#818cf8;margin-bottom:2px;">Legacy Account Access</div>
-              <div style="font-size:11px;color:rgba(255,255,255,0.55);line-height:1.4;">Existing accounts now have immediate Marketplace access. New accounts still wait 7 days.</div>
-            </div>
-          </div>
+        <!-- Message body -->
+        <div style="
+          font-size:13px;line-height:1.75;color:rgba(255,255,255,0.75);
+          max-height:340px;overflow-y:auto;margin-bottom:20px;
+          padding-right:4px;
+          scrollbar-width:thin;scrollbar-color:rgba(100,140,255,0.3) transparent;">
+          <p style="margin:0 0 12px;">When I first started Topdown Action, it was just something I was building because I loved making games. Watching it grow, seeing more and more people play it, and adding new features was honestly an awesome experience. I never expected it to get as big as it did.</p>
+          <p style="margin:0 0 12px;">Over time, though, the project grew way beyond what I can realistically handle as a solo developer. The game is now around 30,000 lines of code, and keeping up with updates, fixes, balancing, and new ideas has become really stressful. What started as something I enjoyed almost every day slowly turned into something I felt pressure about. I still enjoy parts of it, but a lot of it has become overwhelming.</p>
+          <p style="margin:0 0 12px;">Because of that, I've decided I'm going to stop active development. There won't be any more updates.</p>
+          <p style="margin:0 0 12px;padding:12px 14px;background:rgba(255,100,80,0.07);border:1px solid rgba(255,100,80,0.2);border-radius:10px;color:rgba(255,200,190,0.85);">
+            ⚠️ The game will stay up and playable until <strong style="color:#ff8f7a;">3/7/26</strong>. After that date, the servers will go offline. That said, if a good amount of people really want me to leave it up a little longer, I might consider extending it.
+          </p>
+          <p style="margin:0 0 12px;">I just want to say thank you to everyone who played, supported the game, shared ideas, or just enjoyed it. Seeing people actually care about something I built means more than you probably realize.</p>
+          <p style="margin:0;">This isn't the end of me making games. I definitely plan on creating more projects in the future — just on a scale that I can actually manage and actually enjoy again. Topdown Action taught me a lot, and I'm proud of what it became.</p>
         </div>
 
-        <!-- CTA buttons -->
-        <div style="display:flex;gap:10px;">
-          <button onclick="openShopFromPopup()" style="
-            flex:1;padding:12px;border-radius:10px;font-size:13px;font-weight:700;
-            letter-spacing:0.5px;cursor:pointer;
-            background:linear-gradient(135deg,#7c3aed,#a855f7);
-            border:none;color:#fff;
-            box-shadow:0 4px 20px rgba(168,85,247,0.35);
-            transition:all 0.2s;" onmouseover="this.style.transform='translateY(-1px)';this.style.boxShadow='0 6px 24px rgba(168,85,247,0.5)'"
-            onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 4px 20px rgba(168,85,247,0.35)'">
-            🛍️ &nbsp; Check Out the Shop
-          </button>
-          <button onclick="closeShopUpdatePopup()" style="
-            padding:12px 18px;border-radius:10px;font-size:13px;font-weight:600;
-            cursor:pointer;background:rgba(255,255,255,0.05);
-            border:1px solid rgba(255,255,255,0.12);color:rgba(255,255,255,0.5);
-            transition:all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.1)'"
-            onmouseout="this.style.background='rgba(255,255,255,0.05)'">
-            Dismiss
-          </button>
-        </div>
+        <!-- Dismiss button -->
+        <button onclick="closeShopUpdatePopup()" style="
+          width:100%;padding:12px;border-radius:10px;font-size:13px;font-weight:700;
+          letter-spacing:0.5px;cursor:pointer;
+          background:linear-gradient(135deg,#1e3a5f,#2a5298);
+          border:1px solid rgba(100,160,255,0.35);color:#a8d0ff;
+          box-shadow:0 4px 20px rgba(40,80,200,0.25);
+          transition:all 0.2s;" onmouseover="this.style.filter='brightness(1.15)'"
+          onmouseout="this.style.filter='brightness(1)'">
+          I Understand — Close
+        </button>
       </div>
     </div>
   </div>
 
   <script>
-  // ── Shop Update Popup Logic ────────────────────────────────────────────
+  // ── Farewell Announcement Popup Logic ─────────────────────────────────
   // Shows every time the page is opened/refreshed.
   (function() {
     const popup = document.getElementById('shopUpdatePopup');
@@ -1738,15 +1708,6 @@
       popup.style.transition = 'opacity 0.25s';
       setTimeout(() => { popup.style.display = 'none'; popup.style.opacity = '1'; }, 250);
     }
-  }
-
-  function openShopFromPopup() {
-    closeShopUpdatePopup();
-    // Open the shop after the popup closes
-    setTimeout(() => {
-      const shopBtn = document.getElementById('shopBtn');
-      if (shopBtn) shopBtn.click();
-    }, 300);
   }
   </script>
 
