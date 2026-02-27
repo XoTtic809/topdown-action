@@ -1,18 +1,6 @@
-// api-auth.js
-// Drop-in replacement for firebase-auth.js
-// Uses Railway backend instead of Firebase/Firestore.
-// All function names and global variables are kept identical
-// so firebase-ui.js and game.js require no changes.
-
-// ─────────────────────────────────────────────────────────────
-// CONFIG — your Railway backend URL
-// ─────────────────────────────────────────────────────────────
 const API_BASE = 'https://web-production-144da.up.railway.app/api';
 const TOKEN_KEY = 'topdown_token';
 
-// ─────────────────────────────────────────────────────────────
-// GLOBALS (same names as firebase-auth.js)
-// ─────────────────────────────────────────────────────────────
 let currentUser = null;
 let isGuest     = false;
 let isAdmin     = false;
@@ -31,9 +19,6 @@ const SAVE_CONFIG = {
 
 let lastSubmittedData = { highScore: 0, coins: 0, xp: 0, level: 0 };
 
-// ─────────────────────────────────────────────────────────────
-// TOKEN HELPERS
-// ─────────────────────────────────────────────────────────────
 function getToken()          { return localStorage.getItem(TOKEN_KEY); }
 function setToken(token)     { localStorage.setItem(TOKEN_KEY, token); }
 function clearToken()        { localStorage.removeItem(TOKEN_KEY); }
@@ -69,10 +54,6 @@ async function apiDelete(path) {
   return res.json();
 }
 
-// ─────────────────────────────────────────────────────────────
-// BATTLE PASS — stored in localStorage since Railway doesn't
-// have battle pass tables yet. Works identically to before.
-// ─────────────────────────────────────────────────────────────
 const BP_KEY = 'topdown_battlepass';
 
 function saveBattlePassLocally() {
@@ -91,9 +72,6 @@ function loadBattlePassLocally(uid) {
   } catch (e) { return null; }
 }
 
-// ─────────────────────────────────────────────────────────────
-// AUTH FUNCTIONS
-// ─────────────────────────────────────────────────────────────
 async function handleLogin(email, password) {
   try {
     const data = await apiPost('/auth/login', { email, password });
@@ -141,9 +119,6 @@ async function handleLogout() {
   return { success: true };
 }
 
-// ─────────────────────────────────────────────────────────────
-// INTERNAL HELPERS
-// ─────────────────────────────────────────────────────────────
 function _applyUserData(data) {
   // Build a currentUser object that matches Firebase's shape
   currentUser = {
@@ -209,9 +184,6 @@ async function _postLoginSetup() {
   }
 }
 
-// ─────────────────────────────────────────────────────────────
-// AUTO-LOGIN on page load (replaces onAuthStateChanged)
-// ─────────────────────────────────────────────────────────────
 window.addEventListener('load', async () => {
   if (typeof resetMarketplaceState === 'function') resetMarketplaceState();
 
@@ -247,9 +219,6 @@ window.addEventListener('beforeunload', () => {
   }
 });
 
-// ─────────────────────────────────────────────────────────────
-// SAVE — replaces saveUserDataToFirebase / executeSave
-// ─────────────────────────────────────────────────────────────
 function scheduleSave(priority = 'normal') {
   if (!currentUser || isGuest) return;
 
@@ -330,20 +299,16 @@ async function saveUserDataToFirebase(priority = 'normal') {
   scheduleSave(priority);
 }
 
-// ─────────────────────────────────────────────────────────────
-// LEADERBOARD
-// ─────────────────────────────────────────────────────────────
 async function submitScoreToLeaderboard(score) {
-  // Progress is saved via executeSave — this is a no-op
-  // (Railway leaderboard is built from the users table automatically)
+  
 }
 
 async function submitCoinsToLeaderboard(coins) {
-  // no-op — coins saved in executeSave
+  
 }
 
 async function submitLevelToLeaderboard(xp, level) {
-  // no-op — XP saved in executeSave
+  
 }
 
 async function fetchLeaderboard(type = 'allTime') {
@@ -365,8 +330,7 @@ async function fetchLeaderboard(type = 'allTime') {
           ? calculateTrueLevel(r.current_xp) : 0,
       }));
     } else {
-      // allTime, daily, weekly — Railway doesn't filter by date yet,
-      // so all return the same top 100 scores
+      
       const rows = await apiGet('/leaderboard/scores?limit=100');
       return rows.map(r => ({
         userId:   r.uid,
@@ -461,12 +425,10 @@ async function loadUserDataFromFirebase(userId) {
 
 // updateLeaderboardsIfNeeded — kept for compatibility
 async function updateLeaderboardsIfNeeded() {
-  // Railway leaderboard auto-updates from users table — nothing to do
+ 
 }
 
-// ─────────────────────────────────────────────────────────────
-// ADMIN FUNCTIONS
-// ─────────────────────────────────────────────────────────────
+
 async function banUser(userId, reason = '') {
   if (!isAdmin) return { success: false, error: 'Not authorized' };
   try {
@@ -782,7 +744,7 @@ async function displayPlatformStats() {
   }
 }
 
-// ── Admin Skins Management ──
+// Admin Skins Management
 
 function adminInitSkinGiveDropdown() {
   const select = document.getElementById('skinGiveSelect');
@@ -847,7 +809,6 @@ async function adminLoadUserSkinsForRemoval() {
   return adminLookupUserSkins();
 }
 
-// ── Quick action buttons ──
 
 async function quickBanUser(userId, username) {
   if (!confirm(`Ban ${username}?`)) return;
@@ -878,8 +839,6 @@ async function quickDeleteLevelScore(userId, username) {
   showAdminMessage('Level entries are live from the database — no deletion needed');
 }
 
-// ── Features that existed in Firebase but not in Railway yet ──
-// These are graceful no-ops so the rest of the UI doesn't break.
 
 async function displayFlaggedScores() {
   const listEl = document.getElementById('flaggedScoresList');
@@ -985,7 +944,5 @@ function showAdminMessage(message, isError = false) {
   setTimeout(() => el.classList.add('hidden'), 3000);
 }
 
-// Note: checkForNewAnnouncements() is defined in firebase_announcements.js
-// and is called from _postLoginSetup above. No stub needed here.
 
 console.log('✅ api-auth.js loaded — Railway backend active');
