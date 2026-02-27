@@ -1,5 +1,3 @@
-// anticheat.js — username filter + score validation
-// Load after firebase-config.js, before firebase-auth.js
 
 const BAD_WORDS = [
   // slurs & hate speech
