@@ -1,18 +1,14 @@
-// battlepass-system.js
-
 const BP_XP_CONFIG = {
-  perKill:         6,    // 6 XP per enemy kill (was 5) — small buff for engagement
-  perWave:         26,   // 26 XP per wave survived (was 22) — rewards consistent play
-  matchCompletion: 50,   // 50 XP for any match end (was 35) — makes dying less punishing
+  perKill:         6,    
+  perWave:         26,   
+  matchCompletion: 50,   
 
-  // Kill multipliers — bosses and elites feel meaningfully rewarding
-  bossKill:      2.5,   // 2.5x for full bosses = 15 XP (was 2.0)
-  minibossKill:  2.0,   // 2.0x for minibosses = 12 XP (was 1.5)
-  enforcerKill:  1.5,   // 1.5x for enforcers = 9 XP (was 1.2)
+  bossKill:      2.5,   
+  minibossKill:  2.0,   
+  enforcerKill:  1.5,   
 };
 
 const BATTLE_PASS_TIERS = [
-  // Tier 1-5 (150 XP each) — Early tiers: fast to unlock, gives quick coin boosts
   { tier: 1, xpRequired: 150, freeReward: { type: 'coins', value: 30 },  premiumReward: { type: 'coins', value: 75 } },
   { tier: 2, xpRequired: 150, freeReward: { type: 'coins', value: 40 },  premiumReward: { type: 'coins', value: 100 } },
   { tier: 3, xpRequired: 150, freeReward: { type: 'coins', value: 50 },  premiumReward: { type: 'coins', value: 125 } },
