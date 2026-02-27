@@ -1,11 +1,6 @@
-// api-auth.js — v2
-// Full replacement for firebase-auth.js
-// Uses Railway backend for ALL data — no Firebase needed.
-
 const API_BASE  = 'https://web-production-144da.up.railway.app/api';
 const TOKEN_KEY = 'topdown_token';
 
-// ─── Globals (same names as firebase-auth.js) ─────────────────
 let currentUser = null;
 let isGuest     = false;
 let isAdmin     = false;
@@ -23,7 +18,6 @@ const SAVE_CONFIG = {
 
 let lastSubmittedData = { highScore: 0, coins: 0, xp: 0, level: 0 };
 
-// ─── Token helpers ────────────────────────────────────────────
 function getToken()      { return localStorage.getItem(TOKEN_KEY); }
 function setToken(t)     { localStorage.setItem(TOKEN_KEY, t); }
 function clearToken()    { localStorage.removeItem(TOKEN_KEY); }
@@ -47,7 +41,6 @@ async function apiDelete(path) {
   return res.json();
 }
 
-// ─── Auth ─────────────────────────────────────────────────────
 async function handleLogin(email, password) {
   try {
     const data = await apiPost('/auth/login', { email, password });
@@ -94,7 +87,6 @@ async function handleLogout() {
   return { success: true };
 }
 
-// ─── Apply server data to game state ─────────────────────────
 function _applyUserData(data) {
   currentUser = {
     uid:         data.uid,
@@ -174,7 +166,6 @@ async function _postLoginSetup() {
   }
 }
 
-// ─── Auto-login on page load ──────────────────────────────────
 window.addEventListener('load', async () => {
   if (typeof resetMarketplaceState    === 'function') resetMarketplaceState();
   if (typeof resetAnnouncementSession === 'function') resetAnnouncementSession();
@@ -210,7 +201,6 @@ window.addEventListener('beforeunload', () => {
   if (currentUser && !isGuest) { executeSave(); _saveBattlePass(); }
 });
 
-// ─── Save battle pass to server ───────────────────────────────
 async function _saveBattlePass() {
   if (!currentUser || isGuest || typeof battlePassData === 'undefined') return;
   try {
@@ -235,7 +225,6 @@ async function _saveBattlePass() {
   } catch (e) { console.warn('[BP] Save failed:', e.message); }
 }
 
-// ─── Progress / Score save ────────────────────────────────────
 function scheduleSave(priority = 'normal') {
   if (!currentUser || isGuest) return;
   if (priority === 'critical') {
@@ -299,7 +288,6 @@ async function executeSave() {
 
 async function saveUserDataToFirebase(priority = 'normal') { scheduleSave(priority); }
 
-// ─── Leaderboard ──────────────────────────────────────────────
 async function submitScoreToLeaderboard()  { /* auto via progress */ }
 async function submitCoinsToLeaderboard()  { /* auto via progress */ }
 async function submitLevelToLeaderboard()  { /* auto via progress */ }
@@ -389,7 +377,6 @@ async function loadUserDataFromFirebase() {
   } catch (e) { /* ignore */ }
 }
 
-// ─── Admin ────────────────────────────────────────────────────
 async function banUser(userId, reason = '') {
   if (!isAdmin) return { success: false, error: 'Not authorized' };
   const data = await apiPost('/users/admin/ban', { targetUid: userId, reason });
@@ -785,7 +772,6 @@ async function quickDeleteScore(userId, username) {
 async function quickDeleteCoinsScore() { showAdminMessage('Coins are live — no deletion needed'); }
 async function quickDeleteLevelScore()  { showAdminMessage('Levels are live — no deletion needed'); }
 
-// ── Flagged scores (not in Railway — graceful stub) ──
 async function displayFlaggedScores() {
   const listEl = document.getElementById('flaggedScoresList');
   if (listEl) listEl.innerHTML = '<div class="loading-spinner">Flagged scores not available in self-hosted mode.</div>';
