@@ -1,7 +1,3 @@
-// api-announcements.js
-// Full replacement for firebase_announcements.js
-// Uses Railway backend — no Firebase needed.
-
 let seenAnnouncements = [];
 let _seenLoaded = false;
 
@@ -10,7 +6,6 @@ function resetAnnouncementSession() {
   seenAnnouncements = [];
 }
 
-// ─── Public: fetch active announcements ───────────────────────
 async function fetchActiveAnnouncements() {
   try {
     const res = await fetch('https://web-production-144da.up.railway.app/api/announcements/active');
@@ -21,7 +16,6 @@ async function fetchActiveAnnouncements() {
   }
 }
 
-// ─── Admin: fetch all announcements ───────────────────────────
 async function fetchRecentAnnouncements(limit = 10) {
   if (!isAdmin) return [];
   try {
@@ -50,7 +44,6 @@ async function fetchRecentAnnouncements(limit = 10) {
   }
 }
 
-// ─── Admin: send announcement ─────────────────────────────────
 async function sendAnnouncement(title, message, type = 'info', options = {}) {
   if (!isAdmin) return { success: false, error: 'Not authorized' };
   if (!title || !message) return { success: false, error: 'Title and message are required' };
@@ -77,7 +70,6 @@ async function sendAnnouncement(title, message, type = 'info', options = {}) {
   }
 }
 
-// ─── Admin: toggle active ─────────────────────────────────────
 async function toggleAnnouncementStatus(announcementId, newStatus, btnEl) {
   if (!isAdmin) return;
 
@@ -108,7 +100,6 @@ async function toggleAnnouncementStatus(announcementId, newStatus, btnEl) {
   }
 }
 
-// ─── Admin: delete announcement ───────────────────────────────
 async function deleteAnnouncement(announcementId, title) {
   if (!isAdmin) return;
   if (!confirm(`Delete announcement: "${title}"?`)) return;
@@ -130,7 +121,6 @@ async function deleteAnnouncement(announcementId, title) {
   }
 }
 
-// ─── Admin: render list ───────────────────────────────────────
 async function displayRecentAnnouncements() {
   const listEl = document.getElementById('recentAnnouncements');
   if (!listEl) return;
@@ -193,7 +183,6 @@ async function displayRecentAnnouncements() {
   });
 }
 
-// ─── Public: show modal to user ───────────────────────────────
 function showAnnouncementToUser(announcement) {
   const isPreview = announcement.id === 'preview';
   if (!isPreview && seenAnnouncements.includes(announcement.id)) return;
@@ -247,7 +236,6 @@ function showAnnouncementToUser(announcement) {
   }
 }
 
-// ─── Public: check + show unseen announcements ────────────────
 async function checkForNewAnnouncements() {
   try {
     if (!_seenLoaded) {
@@ -285,7 +273,6 @@ async function checkForNewAnnouncements() {
   }
 }
 
-// ─── DOM ready: bind admin panel controls ─────────────────────
 document.addEventListener('DOMContentLoaded', () => {
   const titleInput     = document.getElementById('announceTitle');
   const messageInput   = document.getElementById('announceMessage');
