@@ -1,12 +1,5 @@
-// admin-skins.js — Admin panel: Skins tab functionality
-// Provides: skin price editor, crate price editor, give/remove skin,
-//           lookup user skins, and trade restriction management.
 
 console.log('🎨 Admin skins module loaded');
-
-// ════════════════════════════════════════════════════
-// HELPERS
-// ════════════════════════════════════════════════════
 
 function _adminLog(action, details = {}) {
   if (!currentUser) return;
@@ -19,9 +12,6 @@ function _adminLog(action, details = {}) {
   }).catch(() => {});
 }
 
-// ════════════════════════════════════════════════════
-// SKIN PRICE EDITOR
-// ════════════════════════════════════════════════════
 
 let _skinPriceDropdownInited = false;
 
@@ -94,9 +84,6 @@ async function adminSaveSkinPrice() {
   showAdminMessage(`✅ ${skin.name} price updated to 🪙 ${newPrice.toLocaleString()} (session only — redeploy to persist)`);
 }
 
-// ════════════════════════════════════════════════════
-// CRATE PRICE EDITOR
-// ════════════════════════════════════════════════════
 
 let _cratePriceDropdownInited = false;
 
@@ -165,9 +152,6 @@ async function adminSaveCratePrice() {
   showAdminMessage(`✅ ${crate.name} price updated to 🪙 ${newPrice.toLocaleString()} (session only — redeploy to persist)`);
 }
 
-// ════════════════════════════════════════════════════
-// LOOKUP USER SKINS
-// ════════════════════════════════════════════════════
 
 async function adminLookupUserSkins() {
   if (!isAdmin) return;
@@ -211,9 +195,6 @@ async function adminLookupUserSkins() {
   }
 }
 
-// ════════════════════════════════════════════════════
-// GIVE SKIN TO USER
-// ════════════════════════════════════════════════════
 
 function adminInitSkinGiveDropdown() {
   const sel = document.getElementById('skinGiveSelect');
@@ -264,9 +245,6 @@ async function adminGiveSkin() {
   }
 }
 
-// ════════════════════════════════════════════════════
-// REMOVE SKIN FROM USER
-// ════════════════════════════════════════════════════
 
 async function adminLoadUserSkinsForRemoval() {
   if (!isAdmin) return;
@@ -354,9 +332,6 @@ async function adminRemoveSkin() {
   }
 }
 
-// ════════════════════════════════════════════════════
-// TRADE RESTRICTIONS
-// ════════════════════════════════════════════════════
 
 async function adminBlockSkinTrade() {
   if (!isAdmin) return;
