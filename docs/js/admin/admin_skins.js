@@ -148,6 +148,125 @@ async function adminSaveCratePrice() {
 }
 
 // ════════════════════════════════════════════════════
+// MUTATION ADMIN TOOLS
+// ════════════════════════════════════════════════════
+
+function adminInitMutationSection() {
+  if (typeof MUTATION_CONFIG === 'undefined') return;
+
+  // Build reference table
+  const table = document.getElementById('adminMutationTable');
+  if (table && table.children.length === 0) {
+    // Header row
+    ['TYPE', 'CHANCE', 'PRICE MULT', 'TOTAL %'].forEach(h => {
+      const cell = document.createElement('div');
+      cell.style.cssText = 'font-weight:800;letter-spacing:1px;color:var(--muted);padding:4px 2px;border-bottom:1px solid rgba(255,255,255,0.08)';
+      cell.textContent = h;
+      table.appendChild(cell);
+    });
+    // Data rows
+    for (const [type, mc] of Object.entries(MUTATION_CONFIG)) {
+      const pct = (mc.chance * 100).toFixed(1);
+      [mc.label, `1 in ${Math.round(1/mc.chance)}`, `×${mc.priceMultiplier}`, `${pct}%`].forEach((val, i) => {
+        const cell = document.createElement('div');
+        cell.style.cssText = `padding:5px 2px;color:${i === 0 ? mc.color : 'rgba(255,255,255,0.75)'};font-weight:${i === 0 ? '700' : '400'}`;
+        cell.textContent = val;
+        table.appendChild(cell);
+      });
+    }
+  }
+
+  // Populate base skin dropdown
+  const skinSel = document.getElementById('mutGiveSkinSelect');
+  if (skinSel && skinSel.options.length <= 1 && typeof SKINS !== 'undefined') {
+    SKINS.filter(s => !s.iconSkin && s.id !== 'icon_the_creator').forEach(skin => {
+      const opt = document.createElement('option');
+      opt.value = skin.id;
+      opt.textContent = `${skin.name} (${skin.id})`;
+      skinSel.appendChild(opt);
+    });
+  }
+
+  // Populate mutation dropdown
+  const mutSel = document.getElementById('mutGiveMutSelect');
+  if (mutSel && mutSel.options.length <= 1) {
+    for (const [type, mc] of Object.entries(MUTATION_CONFIG)) {
+      const opt = document.createElement('option');
+      opt.value = type;
+      opt.textContent = mc.label;
+      mutSel.appendChild(opt);
+    }
+  }
+
+  // Live preview of the resulting skin ID
+  const updatePreview = () => {
+    const base = document.getElementById('mutGiveSkinSelect')?.value;
+    const mut  = document.getElementById('mutGiveMutSelect')?.value;
+    const prev = document.getElementById('mutGivePreview');
+    if (!prev) return;
+    if (base && mut) {
+      const mc = MUTATION_CONFIG[mut];
+      prev.innerHTML = `Skin ID: <strong style="color:${mc.color}">${base}__${mut}</strong>`;
+    } else {
+      prev.textContent = '';
+    }
+  };
+  document.getElementById('mutGiveSkinSelect')?.addEventListener('change', updatePreview);
+  document.getElementById('mutGiveMutSelect')?.addEventListener('change', updatePreview);
+}
+
+async function adminGiveMutatedSkin() {
+  if (!isAdmin) return;
+  const userId   = document.getElementById('mutGiveUserId')?.value.trim();
+  const baseSkin = document.getElementById('mutGiveSkinSelect')?.value;
+  const mutation = document.getElementById('mutGiveMutSelect')?.value;
+  if (!userId)   { showAdminMessage('Enter a User ID', true); return; }
+  if (!baseSkin) { showAdminMessage('Select a base skin', true); return; }
+  if (!mutation) { showAdminMessage('Select a mutation type', true); return; }
+
+  const skinId = `${baseSkin}__${mutation}`;
+  try {
+    const data = await apiPost('/users/admin/grant-skin', { targetUid: userId, skinId });
+    if (data.error) { showAdminMessage('Error: ' + data.error, true); return; }
+    const mc = typeof MUTATION_CONFIG !== 'undefined' ? MUTATION_CONFIG[mutation] : null;
+    const skinInfo = typeof SKINS !== 'undefined' ? SKINS.find(s => s.id === baseSkin) : null;
+    const label = mc ? mc.label : mutation.toUpperCase();
+    showAdminMessage(`✦ Gave "${skinInfo?.name || baseSkin} [${label}]" (${skinId}) to user`);
+  } catch (err) { showAdminMessage('Error: ' + err.message, true); }
+}
+
+async function adminLookupMutatedSkins() {
+  if (!isAdmin) return;
+  const userId   = document.getElementById('mutLookupUserId')?.value.trim();
+  const resultEl = document.getElementById('mutLookupResult');
+  if (!userId) { showAdminMessage('Enter a User ID', true); return; }
+  resultEl.innerHTML = '<div class="loading-spinner">Loading...</div>';
+  try {
+    const data = await apiGet(`/users/${userId}/profile`);
+    if (data.error) { resultEl.innerHTML = `<div style="color:#ff6b7a;padding:12px;">${data.error}</div>`; return; }
+    const mutated = (data.owned_skins || []).filter(s => s.includes('__'));
+    if (mutated.length === 0) {
+      resultEl.innerHTML = '<div style="color:var(--muted);font-size:12px;padding:12px;">No mutated skins found.</div>';
+      return;
+    }
+    resultEl.innerHTML = mutated.map(sid => {
+      const [base, mut] = sid.split('__');
+      const mc = typeof MUTATION_CONFIG !== 'undefined' && MUTATION_CONFIG[mut] ? MUTATION_CONFIG[mut] : null;
+      const skinInfo = typeof SKINS !== 'undefined' ? SKINS.find(s => s.id === base) : null;
+      const color = mc ? mc.color : '#fff';
+      const label = mc ? mc.label : (mut || '').toUpperCase();
+      return `<div style="padding:6px 10px;border-bottom:1px solid rgba(255,255,255,0.06);font-size:12px;">
+        <span style="color:${color};font-weight:700">[${label}]</span>
+        <span style="margin-left:6px;">${skinInfo?.name || base}</span>
+        <span style="color:var(--muted);font-size:10px;margin-left:6px;">${sid}</span>
+      </div>`;
+    }).join('');
+  } catch (err) {
+    resultEl.innerHTML = `<div style="color:#ff6b7a;padding:12px;">Error: ${err.message}</div>`;
+  }
+}
+
+// ════════════════════════════════════════════════════
 // AUTO-LOAD ON TAB OPEN
 // ════════════════════════════════════════════════════
 
@@ -155,6 +274,7 @@ async function adminSaveCratePrice() {
   document.querySelectorAll('.admin-tab[data-tab="skins"]').forEach(tab => {
     tab.addEventListener('click', () => {
       adminInitSkinGiveDropdown();
+      adminInitMutationSection();
       if (typeof adminLoadTradeRestrictions === 'function') adminLoadTradeRestrictions();
     });
   });

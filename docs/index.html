@@ -1406,6 +1406,47 @@
           <button class="admin-action-btn ban" onclick="adminRemoveSkin()" style="padding: 8px 14px;">🗑️ REMOVE SKIN</button>
         </div>
 
+        <!-- ── Mutations ── -->
+        <div class="admin-section">
+          <h3 class="admin-subtitle">✦ Mutations</h3>
+
+          <!-- Reference table -->
+          <div style="margin-bottom:14px;">
+            <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:6px;">Mutation Types</label>
+            <div id="adminMutationTable" style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:6px;font-size:11px;text-align:center;">
+              <!-- populated by JS -->
+            </div>
+          </div>
+
+          <!-- Give mutated skin -->
+          <div style="margin-bottom:12px;">
+            <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px;">Give Mutated Skin to User</label>
+            <input type="text" id="mutGiveUserId" placeholder="User ID" class="auth-input" style="padding:8px 12px;font-size:12px;margin-bottom:6px;">
+            <div style="display:flex;gap:6px;margin-bottom:6px;flex-wrap:wrap;">
+              <select id="mutGiveSkinSelect" class="auth-input" style="flex:2;padding:8px 10px;font-size:12px;min-width:140px;">
+                <option value="">— Select base skin —</option>
+              </select>
+              <select id="mutGiveMutSelect" class="auth-input" style="flex:1;padding:8px 10px;font-size:12px;min-width:110px;">
+                <option value="">— Mutation —</option>
+              </select>
+            </div>
+            <div id="mutGivePreview" style="font-size:11px;color:var(--muted);margin-bottom:6px;min-height:16px;"></div>
+            <button class="admin-action-btn success" onclick="adminGiveMutatedSkin()" style="padding:8px 14px;">✦ GIVE MUTATED SKIN</button>
+          </div>
+
+          <!-- Lookup user's mutated skins -->
+          <div>
+            <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px;">Lookup User's Mutated Skins</label>
+            <div style="display:flex;gap:6px;margin-bottom:6px;">
+              <input type="text" id="mutLookupUserId" placeholder="User ID" class="auth-input" style="flex:1;padding:8px 12px;font-size:12px;">
+              <button class="admin-action-btn reset" onclick="adminLookupMutatedSkins()" style="padding:8px 14px;">🔍 LOOKUP</button>
+            </div>
+            <div id="mutLookupResult" class="admin-scroll-list" style="max-height:160px;">
+              <div style="color:var(--muted);font-size:12px;padding:12px;">Enter a User ID and click Lookup.</div>
+            </div>
+          </div>
+        </div>
+
       </div>
 
       <!-- ── DEV CONSOLE TAB ── -->
