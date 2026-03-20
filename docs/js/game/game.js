@@ -467,6 +467,55 @@ const SKINS = [
 let ownedSkins = JSON.parse(localStorage.getItem('ownedSkins') || '["agent"]');
 let activeSkin = localStorage.getItem('activeSkin') || 'agent';
 
+// ── Mutation system ──────────────────────────────────────────
+// Skins from crates have a small chance to be "mutated" — a rare
+// cosmetic variant stored as baseSkinId__mutationType.
+const MUTATION_CONFIG = {
+  corrupted: {
+    label: 'CORRUPTED', color: '#ff3333',
+    chance: 0.008,           // 0.8% per pull (1 in 125)
+    priceMultiplier: 1.5,
+    cssFilter: 'hue-rotate(180deg) saturate(2.2) brightness(0.8)',
+    glowColor: 'rgba(255,50,50,0.75)',
+    cssClass: 'mutation-corrupted',
+  },
+  gilded: {
+    label: 'GILDED', color: '#ffd700',
+    chance: 0.006,           // 0.6% per pull (1 in 167)
+    priceMultiplier: 2.0,
+    cssFilter: 'sepia(0.8) saturate(2.5) brightness(1.2) hue-rotate(5deg)',
+    glowColor: 'rgba(255,215,0,0.8)',
+    cssClass: 'mutation-gilded',
+  },
+  void: {
+    label: 'VOID', color: '#9933ff',
+    chance: 0.004,           // 0.4% per pull (1 in 250)
+    priceMultiplier: 3.0,
+    cssFilter: 'hue-rotate(265deg) saturate(3) brightness(0.65)',
+    glowColor: 'rgba(153,0,255,0.8)',
+    cssClass: 'mutation-void',
+  },
+  prismatic: {
+    label: 'PRISMATIC', color: '#ff69ff',
+    chance: 0.002,           // 0.2% per pull (1 in 500)
+    priceMultiplier: 5.0,
+    cssFilter: null,         // handled by CSS keyframe animation
+    glowColor: 'rgba(255,255,255,0.9)',
+    cssClass: 'mutation-prismatic',
+  },
+};
+
+// Splits "phantom__corrupted" → { baseSkinId: "phantom", mutation: "corrupted" }
+function parseMutatedSkinId(skinId) {
+  const sep = (skinId || '').indexOf('__');
+  if (sep === -1) return { baseSkinId: skinId, mutation: null };
+  return { baseSkinId: skinId.slice(0, sep), mutation: skinId.slice(sep + 2) };
+}
+
+function getMutationConfig(mutation) {
+  return (mutation && MUTATION_CONFIG[mutation]) || null;
+}
+
 function saveSkins() {
   if (typeof achOnSkinsChanged === 'function') achOnSkinsChanged();
   if (isGuest || !currentUser) {
