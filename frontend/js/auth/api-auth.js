@@ -11,7 +11,7 @@
 var API_BASE = (
   window.location.hostname === 'localhost' ||
   window.location.hostname === '127.0.0.1'
-) ? 'http://localhost:3001/api' : 'https://web-production-144da.up.railway.app/api';
+) ? 'http://localhost:3001/api' : 'https://topdown-action-production.up.railway.app/api';
 
 const TOKEN_KEY = 'topdown_token';
 
