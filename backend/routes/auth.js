@@ -9,6 +9,7 @@ const jwt     = require('jsonwebtoken');
 const { query } = require('../config/db');
 const { requireAuth } = require('../middleware/auth');
 const { updateProgress, isWhitelisted } = require('../models/user');
+const { syncSkins } = require('../models/inventory');
 
 const SALT_ROUNDS = 12;
 
@@ -174,7 +175,7 @@ router.get('/me', requireAuth, async (req, res) => {
 // Body: { highScore, totalCoins, currentXp }
 router.post('/progress', requireAuth, async (req, res) => {
   try {
-    const { highScore = 0, totalCoins = 0, currentXp = 0 } = req.body;
+    const { highScore = 0, totalCoins = 0, currentXp = 0, ownedSkins } = req.body;
 
     if (highScore < 0 || highScore > 9_999_999)     return res.status(400).json({ error: 'Invalid score' });
     if (totalCoins < 0 || totalCoins > 10_000_000)  return res.status(400).json({ error: 'Invalid coins' });
@@ -187,6 +188,14 @@ router.post('/progress', requireAuth, async (req, res) => {
     });
 
     if (!updated) return res.status(404).json({ error: 'User not found' });
+
+    // Sync client-side skins (crate opens, shop purchases) to the DB.
+    // Only appends — never removes — so marketplace/admin grants are never lost.
+    if (Array.isArray(ownedSkins) && ownedSkins.length > 0) {
+      const valid = ownedSkins.filter(s => typeof s === 'string' && s.length > 0 && s.length <= 120);
+      if (valid.length > 0) await syncSkins(req.user.uid, valid);
+    }
+
     return res.json(updated);
   } catch (err) {
     console.error('[Auth] /progress error:', err.message);

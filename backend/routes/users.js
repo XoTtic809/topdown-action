@@ -4,7 +4,7 @@ const express = require('express');
 const router  = express.Router();
 const { requireAuth, requireAdmin } = require('../middleware/auth');
 const { getUserById, getPublicProfile, equipSkin, isWhitelisted } = require('../models/user');
-const { getOwnedSkins, addSkin } = require('../models/inventory');
+const { getOwnedSkins, addSkin, removeSkin } = require('../models/inventory');
 const { query, withTransaction } = require('../config/db');
 
 // ─── POST /api/users/equip  (auth required)
@@ -88,9 +88,6 @@ router.post('/admin/grant-skin', requireAuth, requireAdmin, async (req, res) => 
   try {
     const user = await getUserById(targetUid);
     if (!user) return res.status(404).json({ error: 'User not found' });
-    if (user.owned_skins.includes(skinId)) {
-      return res.status(409).json({ error: 'User already owns this skin' });
-    }
     await addSkin(targetUid, skinId);
     await query(`
       INSERT INTO activity_logs (admin_id, admin_name, action, target_uid, details)
@@ -112,13 +109,14 @@ router.post('/admin/remove-skin', requireAuth, requireAdmin, async (req, res) =>
     const user = await getUserById(targetUid);
     if (!user) return res.status(404).json({ error: 'User not found' });
     if (!user.owned_skins.includes(skinId)) return res.status(409).json({ error: 'User does not own this skin' });
+    // Use a transaction client so removeSkin (which removes one copy) can run properly
     await query(`
       UPDATE users
-      SET owned_skins = array_remove(owned_skins, $2),
-          active_skin = CASE WHEN active_skin = $2 THEN 'agent' ELSE active_skin END,
+      SET active_skin = CASE WHEN active_skin = $2 THEN 'agent' ELSE active_skin END,
           updated_at  = NOW()
       WHERE uid = $1
     `, [targetUid, skinId]);
+    await removeSkin(targetUid, skinId, { query: (...args) => query(...args) });
     await query(`
       INSERT INTO activity_logs (admin_id, admin_name, action, target_uid, details)
       VALUES ($1, $2, 'REMOVE_SKIN', $3, $4)

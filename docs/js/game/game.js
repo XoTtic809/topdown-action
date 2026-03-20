@@ -6465,7 +6465,8 @@ function initShopUI() {
     .sort((a, b) => a.price - b.price);
 
   for (const skin of regularSkinsOrdered) {
-    const owned = ownedSkins.includes(skin.id);
+    const copyCount = ownedSkins.filter(s => s === skin.id).length;
+    const owned = copyCount > 0;
     const active = activeSkin === skin.id;
     const isChampion = false; // Champions filtered out above (price === -1)
 
@@ -6554,10 +6555,10 @@ function initShopUI() {
     const btn = document.createElement('button');
     btn.className = 'skin-btn';
     if (active) {
-      btn.textContent = '✓ Equipped';
+      btn.textContent = copyCount > 1 ? `✓ Equipped (×${copyCount})` : '✓ Equipped';
       btn.disabled = true;
     } else if (owned) {
-      btn.textContent = 'Equip';
+      btn.textContent = copyCount > 1 ? `Equip (×${copyCount})` : 'Equip';
       btn.onclick = () => { activeSkin = skin.id; saveSkins(); initShopUI(); };
     } else if (isChampion) {
  // Champion skins - not purchasable
@@ -6581,10 +6582,27 @@ function initShopUI() {
       };
     }
 
+    // Buy-another button shown when already owned (for stacking copies to resell)
+    const buyMore = document.createElement('button');
+    buyMore.className = 'skin-btn';
+    buyMore.style.cssText = 'margin-top:4px;font-size:11px;padding:5px 8px;opacity:0.75;';
+    buyMore.textContent = `+ Buy copy 🪙${skin.price}`;
+    buyMore.disabled = playerCoins < skin.price;
+    buyMore.onclick = () => {
+      if (playerCoins >= skin.price) {
+        playerCoins -= skin.price;
+        ownedSkins.push(skin.id);
+        saveCoins();
+        saveSkins();
+        initShopUI();
+      }
+    };
+
     card.appendChild(preview);
     card.appendChild(name);
     card.appendChild(desc);
     card.appendChild(btn);
+    if (owned) card.appendChild(buyMore);
     grid.appendChild(card);
   }
 

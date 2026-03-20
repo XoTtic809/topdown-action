@@ -318,6 +318,7 @@ async function executeSave() {
       highScore:  high,
       totalCoins: playerCoins,
       currentXp,
+      ownedSkins: typeof ownedSkins !== 'undefined' ? ownedSkins : [],
     });
 
     if (!result.error) {

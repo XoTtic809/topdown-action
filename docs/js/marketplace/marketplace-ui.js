@@ -492,19 +492,38 @@ async function openSellModal() {
   if (select) {
     select.innerHTML = '<option value="">— Select a skin —</option>';
 
+    // Count owned copies and listed copies per skin, then show available copies
+    const ownedCounts  = {};
+    const listedCounts = {};
+    for (const s of ownedSkins) ownedCounts[s] = (ownedCounts[s] || 0) + 1;
+    for (const s of marketplaceState.myListings.map(l => l.skinId)) {
+      listedCounts[s] = (listedCounts[s] || 0) + 1;
+    }
+
+    const seen = new Set();
     for (const skinId of ownedSkins) {
+      if (seen.has(skinId)) continue; // deduplicate loop
+      seen.add(skinId);
+
+      const available = (ownedCounts[skinId] || 0) - (listedCounts[skinId] || 0);
+      if (available <= 0) continue;
+
       const blockReason = getSkinListingBlockReason(skinId);
       if (blockReason) continue;
-      if (listedSkins.has(skinId)) continue;
 
       const info       = getSkinInfo(skinId);
       const rarity     = getSkinRarity(skinId);
       const rarityInfo = RARITY_PRICING[rarity];
       if (!info || !rarityInfo) continue;
 
+      const { mutation } = typeof parseMutatedSkinId === 'function' ? parseMutatedSkinId(skinId) : { mutation: null };
+      const mc = mutation && typeof MUTATION_CONFIG !== 'undefined' ? MUTATION_CONFIG[mutation] : null;
+      const mutLabel = mc ? ` [${mc.label}]` : '';
+      const countLabel = available > 1 ? ` ×${available}` : '';
+
       const opt       = document.createElement('option');
       opt.value       = skinId;
-      opt.textContent = `${info.name} (${rarityInfo.label})`;
+      opt.textContent = `${info.name}${mutLabel}${countLabel} (${rarityInfo.label})`;
       opt.dataset.rarity = rarity;
       select.appendChild(opt);
     }

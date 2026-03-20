@@ -238,14 +238,7 @@ router.post('/cancel', requireAuth, async (req, res) => {
       if (!listing)                            throw new Error('Listing no longer exists.');
       if (listing.seller_id !== req.user.uid)  throw new Error('Not your listing.');
 
-      const { rows: userRows } = await client.query(
-        'SELECT owned_skins FROM users WHERE uid = $1 FOR UPDATE',
-        [req.user.uid]
-      );
-      const owned = userRows[0]?.owned_skins || [];
-      if (!owned.includes(listing.skin_id)) {
-        await addSkin(req.user.uid, listing.skin_id, client);
-      }
+      await addSkin(req.user.uid, listing.skin_id, client);
 
       await deleteListing(client, listingId);
       return listing.skin_id;
