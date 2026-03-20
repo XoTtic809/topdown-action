@@ -237,6 +237,8 @@ window.addEventListener('load', async () => {
       setTimeout(() => showAuthModal(), 300);
       return;
     }
+    // /me returns a fresh token — save it so JWT always reflects current admin status
+    if (data.token) setToken(data.token);
     // Re-attach token fields missing from /me response
     data.skinReceivedTimes = data.skinReceivedTimes || {};
     _applyUserData(data);
@@ -470,7 +472,10 @@ async function loadUserDataFromFirebase(userId) {
   // unless called explicitly to refresh
   try {
     const data = await apiGet('/auth/me');
-    if (!data.error) _applyUserData(data);
+    if (!data.error) {
+      if (data.token) setToken(data.token);
+      _applyUserData(data);
+    }
   } catch (e) { /* ignore */ }
 }
 

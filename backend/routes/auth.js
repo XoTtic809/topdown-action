@@ -146,8 +146,10 @@ router.get('/me', requireAuth, async (req, res) => {
     }
 
     const whitelisted = await isWhitelisted(user.uid);
+    const freshToken  = signToken(user.uid, user.username, user.is_admin);
 
     return res.json({
+      token:             freshToken,
       uid:               user.uid,
       username:          user.username,
       email:             user.email,

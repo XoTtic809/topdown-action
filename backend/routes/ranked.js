@@ -169,8 +169,8 @@ router.get('/admin/profile/:uid', requireAuth, requireAdmin, async (req, res) =>
   }
 });
 
-// PUT /api/ranked/admin/set  (admin)  body: { uid, tier, division, rp }
-router.put('/admin/set', requireAuth, requireAdmin, async (req, res) => {
+// POST /api/ranked/admin/set  (admin)  body: { uid, tier, division, rp }
+router.post('/admin/set', requireAuth, requireAdmin, async (req, res) => {
   const { uid, tier, division, rp } = req.body;
   if (!uid || !TIER_ORDER.includes(tier)) return res.status(400).json({ error: 'Invalid fields' });
   const safeDiv = Math.max(1, Math.min(5, parseInt(division) || 1));
