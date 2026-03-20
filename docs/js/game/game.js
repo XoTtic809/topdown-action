@@ -8593,6 +8593,7 @@ function _buildInvCard(skinId, count) {
   // Preview circle — use rich gradients + animations matching the crates tab
   const preview = document.createElement('div');
   preview.className = 'inv-preview';
+  const rc = (rarity && typeof getRarityColor === 'function') ? getRarityColor(rarity) : '#888';
   applyRichSkinPreview(preview, baseSkinId, skin ? skin.color : null);
   if (mc) {
     if (mc.cssFilter) preview.style.filter = mc.cssFilter;
