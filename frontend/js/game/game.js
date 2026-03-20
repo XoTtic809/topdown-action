@@ -869,7 +869,7 @@ let runStartTime = 0;
 let spawnTimer = 0;
 
 // ── Game modes ──────────────────────────────────────────────
-let currentGameMode = 'classic'; // classic | timeattack | bossrush | horde
+let currentGameMode = 'classic'; // classic | timeattack | bossrush | ranked
 let modeRunActive   = false;     // true while a mode run is in progress; guards endModeRun
 
 // Time Attack
@@ -880,10 +880,6 @@ let taTimeLeft = TIME_ATTACK_DURATION;
 let brBossesBeaten = 0;
 let brRestTimer = 0;          // countdown between bosses
 const BR_REST_TIME = 4;
-
-// Horde
-let hordeSpawnRate = 0.5;     // enemies/sec, ramps up
-let hordeSpawnAccum = 0;
 
 let combo = 0;
 let comboTimer = 0;
@@ -7570,16 +7566,6 @@ if (gameSettings.screenShake) screenShakeAmt = 1;
       spawnTimer += dt;
       const taRate = Math.max(0.18, 0.5 - (TIME_ATTACK_DURATION - taTimeLeft) / 600);
       if (spawnTimer >= taRate) { spawnEnemy(); spawnTimer = 0; }
-    } else if (currentGameMode === 'horde') {
-      hordeSpawnAccum += dt;
-      hordeSpawnRate = 0.5 + (Date.now() - runStartTime) / 1000 / 15 * 0.15; // +0.15/sec every 15s
-      hordeSpawnRate = Math.min(hordeSpawnRate, 8);
-      const hordeInterval = 1 / hordeSpawnRate;
-      if (hordeSpawnAccum >= hordeInterval) {
-        spawnEnemy();
-        hordeSpawnAccum -= hordeInterval;
-      }
-      // No wave tracking, just update kill counter
     } else if (currentGameMode === 'bossrush') {
       if (!boss && brRestTimer <= 0 && enemies.length === 0) {
         spawnBossRushBoss();
@@ -8082,7 +8068,7 @@ if (gameSettings.screenShake) screenShakeAmt = 1;
 
 // ── Mode HUD visibility ───────────────────────────────────────
 function hideModeHUDs() {
-  ['modeTimerHUD','bossRushHUD','hordeModeHUD','modeEndOverlay','rankedHUD','rankedEndOverlay'].forEach(id => {
+  ['modeTimerHUD','bossRushHUD','modeEndOverlay','rankedHUD','rankedEndOverlay'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.style.display = 'none';
   });
@@ -8090,7 +8076,7 @@ function hideModeHUDs() {
 
 function showModeHUD(type) {
   hideModeHUDs();
-  const map = { timer:'modeTimerHUD', bossrush:'bossRushHUD', horde:'hordeModeHUD', ranked:'rankedHUD' };
+  const map = { timer:'modeTimerHUD', bossrush:'bossRushHUD', ranked:'rankedHUD' };
   const el = document.getElementById(map[type]);
   if (el) el.style.display = '';
 }
@@ -8199,13 +8185,12 @@ function populateModeSelectBests() {
     classic:    v => `Best: Wave ${v}`,
     timeattack: v => `Best: ${v} kills`,
     bossrush:   v => `Best: ${v} bosses`,
-    horde:      v => `Best: ${v} kills`,
   };
   // Also use classic high score
   const classicEl = document.getElementById('modeBest_classic');
   if (classicEl) classicEl.textContent = high > 0 ? `Best: Score ${high.toLocaleString()}` : 'Best: —';
 
-  ['timeattack','bossrush','horde'].forEach(m => {
+  ['timeattack','bossrush'].forEach(m => {
     const el = document.getElementById(`modeBest_${m}`);
     if (!el) return;
     el.textContent = bests[m] ? formats[m](bests[m]) : 'Best: —';
@@ -8241,13 +8226,6 @@ async function endModeRun(reason) {
       fetch(`${BASE}/api/leaderboard/submit/bossrush`, { method:'POST', headers:{'Content-Type':'application/json','Authorization':`Bearer ${token}`}, body: JSON.stringify({bosses: brBossesBeaten}) }).catch(()=>{});
     }
     showModeEndOverlay('DEFEATED', 'Boss Rush Over', [{val: brBossesBeaten, lbl:'BOSSES BEATEN'},{val: formatRunTime(elapsed), lbl:'SURVIVED'}], isNew);
-
-  } else if (currentGameMode === 'horde') {
-    const isNew = saveModeBest('horde', totalKills);
-    if (token && currentUser && !isGuest) {
-      fetch(`${BASE}/api/leaderboard/submit/horde`, { method:'POST', headers:{'Content-Type':'application/json','Authorization':`Bearer ${token}`}, body: JSON.stringify({kills: totalKills}) }).catch(()=>{});
-    }
-    showModeEndOverlay('OVERRUN', 'Horde Mode Over', [{val: totalKills, lbl:'KILLS'},{val: formatRunTime(elapsed), lbl:'SURVIVED'}], isNew);
 
   } else if (currentGameMode === 'ranked') {
     // endRankedRun handles RP calc, server submit, and overlay
@@ -8330,8 +8308,6 @@ function startGame() {
   taTimeLeft = TIME_ATTACK_DURATION;
   brBossesBeaten = 0;
   brRestTimer = 0;
-  hordeSpawnRate = 0.5;
-  hordeSpawnAccum = 0;
 
   if (currentGameMode === 'timeattack') {
     showModeHUD('timer');
@@ -8343,9 +8319,6 @@ function startGame() {
     updateBossRushHUD();
     document.getElementById('wave').style.display = 'none';
     spawnBossRushBoss();
-  } else if (currentGameMode === 'horde') {
-    showModeHUD('horde');
-    document.getElementById('wave').style.display = 'none';
   } else if (currentGameMode === 'ranked') {
     if (typeof rankedInit === 'function') rankedInit();
     showModeHUD('ranked');

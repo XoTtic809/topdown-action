@@ -176,10 +176,16 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // ── Leaderboard ─────────────────────────────────────────────
+  let _activeLeaderboardFilter = 'allTime';
+
   document.getElementById('leaderboardBtn')?.addEventListener('click', () => {
     document.getElementById('homeScreen')?.classList.add('hidden');
     document.getElementById('leaderboardPanel')?.classList.remove('hidden');
-    displayLeaderboard('allTime');
+    // Restore the last-viewed tab
+    document.querySelectorAll('.filter-btn').forEach(b => {
+      b.classList.toggle('active', b.dataset.filter === _activeLeaderboardFilter);
+    });
+    displayLeaderboard(_activeLeaderboardFilter);
   });
 
   document.getElementById('leaderboardBackBtn')?.addEventListener('click', () => {
@@ -191,6 +197,7 @@ document.addEventListener('DOMContentLoaded', () => {
     btn.addEventListener('click', () => {
       document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
+      _activeLeaderboardFilter = btn.dataset.filter;
       displayLeaderboard(btn.dataset.filter);
     });
   });

@@ -41,16 +41,16 @@ const RARITY_PRICING = {
 // XP → level formula — matches the battle pass tier system in battlepass-system.js.
 // CUMULATIVE_XP[i] is the total XP needed to reach tier (i+1).
 const CUMULATIVE_XP = [
-   250,  500,  750, 1000, 1250,   // tiers  1– 5 (250 XP each)
-  1650, 2050, 2450, 2850, 3250,   // tiers  6–10 (400 XP each)
-  3850, 4450, 5050, 5650, 6250,   // tiers 11–15 (600 XP each)
-  4600, 5200, 5800, 6400, 7000,   // tiers 16–20 (600 XP each)
-  7850, 8700, 9550, 10400, 11250, // tiers 21–25 (850 XP each)
-  12350, 13450, 14550, 15650, 16750, // tiers 26–30 (1100 XP each)
-  18150, 19550, 20950, 22350, 23750, // tiers 31–35 (1400 XP each)
-  25550, 27350, 29150, 30950, 32750, // tiers 36–40 (1800 XP each)
-  34950, 37150, 39350, 41550, 43750, // tiers 41–45 (2200 XP each)
-  46550, 49350, 52150, 54950, 57750, // tiers 46–50 (2800 XP each)
+    250,  500,  750,  1000,  1250,  // tiers  1– 5 (250 XP each)
+   1650, 2050, 2450,  2850,  3250,  // tiers  6–10 (400 XP each)
+   3850, 4450, 5050,  5650,  6250,  // tiers 11–15 (600 XP each)
+   6850, 7450, 8050,  8650,  9250,  // tiers 16–20 (600 XP each)
+  10100, 10950, 11800, 12650, 13500, // tiers 21–25 (850 XP each)
+  14600, 15700, 16800, 17900, 19000, // tiers 26–30 (1100 XP each)
+  20400, 21800, 23200, 24600, 26000, // tiers 31–35 (1400 XP each)
+  27800, 29600, 31400, 33200, 35000, // tiers 36–40 (1800 XP each)
+  37200, 39400, 41600, 43800, 46000, // tiers 41–45 (2200 XP each)
+  48800, 51600, 54400, 57200, 60000, // tiers 46–50 (2800 XP each)
 ];
 
 function calculateTrueLevel(xp) {

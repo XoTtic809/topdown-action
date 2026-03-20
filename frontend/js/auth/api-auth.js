@@ -368,9 +368,6 @@ async function fetchLeaderboard(type = 'allTime') {
       const rows = await apiGet('/leaderboard/levels?limit=100');
       return rows.map(r => ({ userId: r.uid, username: r.username, xp: r.current_xp,
         level: typeof calculateTrueLevel === 'function' ? (calculateTrueLevel(r.current_xp) || 0) : 0 }));
-    } else if (type === 'horde') {
-      const rows = await apiGet('/leaderboard/horde?limit=100');
-      return rows.map(r => ({ userId: r.uid, username: r.username, kills: r.horde_best_kills }));
     } else if (type === 'timeattack') {
       const rows = await apiGet('/leaderboard/timeattack?limit=100');
       return rows.map(r => ({ userId: r.uid, username: r.username, kills: r.ta_best_kills }));
@@ -413,7 +410,7 @@ async function displayLeaderboard(filter = 'allTime') {
     let value;
     if (filter === 'coins')      value = `${(entry.coins  || 0).toLocaleString()} 🪙`;
     else if (filter === 'level') value = `Level ${entry.level || 0} (${(entry.xp || 0).toLocaleString()} XP)`;
-    else if (filter === 'horde' || filter === 'timeattack') value = `${(entry.kills || 0).toLocaleString()} kills`;
+    else if (filter === 'timeattack') value = `${(entry.kills || 0).toLocaleString()} kills`;
     else if (filter === 'bossrush') value = `${entry.bosses || 0} bosses`;
     else value = (entry.score || 0).toLocaleString();
 

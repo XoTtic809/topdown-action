@@ -3043,6 +3043,31 @@ canvas {
   .hs-pstat-val { font-size: 18px; }
 }
 
+/* Chromebook / short-viewport fix — compacts home screen to fit 768px-height screens */
+@media (max-height: 768px) and (min-width: 861px) {
+  #homeScreen { overflow-y: auto; }
+  .hs-layout {
+    padding: 24px 48px;
+    gap: 36px;
+    align-items: flex-start;
+  }
+  .hs-left { gap: 16px; }
+  .hs-t1, .hs-t2 { font-size: clamp(44px, 5.5vw, 72px); }
+  .hs-play { height: 54px; }
+  .hs-nbtn { padding: 11px 14px; }
+  .hs-pcard { padding: 16px; }
+  .hs-pcard-top { margin-bottom: 12px; }
+  .hs-pstats { margin-bottom: 10px; }
+  .hs-xp { margin-bottom: 10px; }
+  .hs-avatar { width: 42px; height: 42px; font-size: 18px; }
+  /* Ensure panels don't overflow vertically */
+  .panel-box,
+  .leaderboard-box {
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+}
+
 /* =====================================================
    ACHIEVEMENTS PANEL
 ===================================================== */
@@ -3405,15 +3430,7 @@ canvas {
 .mode-card[data-mode="bossrush"] .mode-card-tag { color: #ff6b35; background: rgba(255,90,40,0.12); }
 
 
-/* Horde — purple */
-.mode-card[data-mode="horde"] { border-color: rgba(180,80,255,0.18); }
-.mode-card[data-mode="horde"]::before { background: radial-gradient(ellipse at top left, rgba(180,80,255,0.1) 0%, transparent 70%); }
-.mode-card[data-mode="horde"]:hover,
-.mode-card[data-mode="horde"].mode-selected { border-color: rgba(180,80,255,0.6); box-shadow: 0 4px 20px rgba(180,80,255,0.18), 0 0 0 1px rgba(180,80,255,0.1); }
-.mode-card[data-mode="horde"] .mode-card-name { color: #9a40d9; }
-.mode-card[data-mode="horde"]:hover .mode-card-name,
-.mode-card[data-mode="horde"].mode-selected .mode-card-name { color: #cc77ff; }
-.mode-card[data-mode="horde"] .mode-card-tag { color: #bf5aff; background: rgba(180,80,255,0.12); }
+
 
 
 /* ── Mode-specific HUD elements ── */
@@ -3462,23 +3479,7 @@ canvas {
 }
 
 
-/* Horde: mode label */
-#hordeModeHUD {
-  position: absolute;
-  top: 68px;
-  left: 50%;
-  transform: translateX(-50%);
-  font-family: var(--font-title);
-  font-size: 12px;
-  letter-spacing: 3px;
-  color: #ff6b7a;
-  background: rgba(30,8,8,0.75);
-  border: 1px solid rgba(255,71,87,0.25);
-  border-radius: 10px;
-  padding: 7px 20px;
-  pointer-events: none;
-  z-index: 30;
-}
+
 
 /* Mode win/end overlay for modes that have a finish state */
 #modeEndOverlay {
