@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Topdown Action — Starter Core</title>
+  <style>
+    /* ── Reset ────────────────────────────────────────────────── */
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #0d0d0d;
+      overflow: hidden;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      color: #fff;
+      user-select: none;
+    }
+    canvas { display: block; cursor: crosshair; }
+
+    /* ── Utility ─────────────────────────────────────────────── */
+    .hidden { display: none !important; }
+
+    /* ── HUD (shown during gameplay) ─────────────────────────── */
+    #hud {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 10px 20px;
+      background: rgba(0, 0, 0, 0.55);
+      font-size: 15px;
+      font-weight: 600;
+      pointer-events: none;
+      z-index: 20;
+    }
+    .hud-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+    }
+    .hud-label {
+      font-size: 10px;
+      opacity: 0.5;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    /* HP bar */
+    #hp-bar-container {
+      width: 140px;
+      height: 10px;
+      background: #1a1a2e;
+      border-radius: 5px;
+      overflow: hidden;
+    }
+    #hp-bar-fill {
+      height: 100%;
+      width: 100%;
+      background: #2ecc71;
+      border-radius: 5px;
+      transition: width 0.1s, background 0.3s;
+    }
+
+    /* Dash readout */
+    #dash-ready    { color: #58a6ff; }
+    #dash-charging { color: #666; font-size: 13px; display: none; }
+
+    /* ── Combo display ───────────────────────────────────────── */
+    #combo {
+      position: fixed;
+      top: 70px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 22px;
+      font-weight: 900;
+      letter-spacing: 3px;
+      color: #ffd700;
+      text-shadow: 0 0 20px rgba(255, 215, 0, 0.6);
+      pointer-events: none;
+      z-index: 15;
+    }
+
+    /* ── Wave announcement ───────────────────────────────────── */
+    #waveAnnouncement {
+      position: fixed;
+      top: 45%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 52px;
+      font-weight: 900;
+      letter-spacing: 8px;
+      color: #fff;
+      text-shadow: 0 0 40px rgba(88, 166, 255, 0.7);
+      pointer-events: none;
+      z-index: 15;
+      animation: waveIn 2s forwards;
+    }
+    @keyframes waveIn {
+      0%   { opacity: 0; transform: translate(-50%, -55%) scale(0.8); }
+      20%  { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+      70%  { opacity: 1; }
+      100% { opacity: 0; transform: translate(-50%, -45%) scale(1.1); }
+    }
+
+    /* ── Home Screen ─────────────────────────────────────────── */
+    #homeScreen {
+      position: fixed;
+      inset: 0;
+      background: #0d1117;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      z-index: 100;
+    }
+
+    .game-title {
+      font-size: 56px;
+      font-weight: 900;
+      letter-spacing: 10px;
+      text-transform: uppercase;
+      color: #58a6ff;
+      text-shadow: 0 0 40px rgba(88, 166, 255, 0.55);
+      line-height: 1;
+    }
+    .game-subtitle {
+      font-size: 13px;
+      color: #555;
+      letter-spacing: 5px;
+      margin-bottom: 20px;
+    }
+
+    #gameOverMsg {
+      font-size: 18px;
+      color: #ff6b6b;
+      font-weight: 700;
+      letter-spacing: 2px;
+      margin-bottom: 4px;
+    }
+
+    /* ── Buttons ─────────────────────────────────────────────── */
+    .btn {
+      width: 220px;
+      padding: 14px 20px;
+      border: none;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      cursor: pointer;
+      transition: transform 0.15s, background 0.15s;
+    }
+    .btn:active { transform: scale(0.97); }
+
+    .btn-primary {
+      background: #58a6ff;
+      color: #000;
+    }
+    .btn-primary:hover { background: #79b8ff; transform: scale(1.03); }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.07);
+      color: #aaa;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .btn-secondary:hover { background: rgba(255, 255, 255, 0.13); }
+
+    /* ── Skin Selector ───────────────────────────────────────── */
+    #skinSelector {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 8px;
+      max-width: 280px;
+      margin: 4px 0;
+    }
+    .skin-btn {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      border: 2px solid transparent;
+      cursor: pointer;
+      transition: transform 0.15s, border-color 0.15s;
+      font-size: 0;  /* Hide any text */
+    }
+    .skin-btn:hover             { transform: scale(1.1); }
+    .skin-btn.active            { border-color: #fff; transform: scale(1.18); }
+
+    /* ── Home stat footer ────────────────────────────────────── */
+    .home-stats {
+      display: flex;
+      gap: 28px;
+      font-size: 13px;
+      color: #666;
+      margin-top: 8px;
+    }
+    .home-stats strong { color: #ccc; }
+
+    /* ── Controls hint ───────────────────────────────────────── */
+    .controls-hint {
+      margin-top: 16px;
+      font-size: 11px;
+      color: #444;
+      text-align: center;
+      line-height: 2;
+      letter-spacing: 0.5px;
+    }
+
+    /* ── Pause Screen ────────────────────────────────────────── */
+    #pauseScreen {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.72);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      z-index: 50;
+    }
+    #pauseScreen h2 {
+      font-size: 38px;
+      letter-spacing: 8px;
+      margin-bottom: 16px;
+      color: #fff;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ── Game Canvas ─────────────────────────────────────────── -->
+  <canvas id="game"></canvas>
+
+  <!-- ── HUD (shown during gameplay) ───────────────────────────
+       Hidden by default; shown when a game run starts.          -->
+  <div id="hud" class="hidden">
+    <div class="hud-item">
+      <span class="hud-label">Score</span>
+      <span id="scoreVal">0</span>
+    </div>
+    <div class="hud-item">
+      <span class="hud-label">HP</span>
+      <div id="hp-bar-container">
+        <div id="hp-bar-fill"></div>
+      </div>
+    </div>
+    <div class="hud-item">
+      <span class="hud-label">Wave</span>
+      <span id="waveVal">1</span>
+    </div>
+    <div class="hud-item">
+      <span class="hud-label">Dash</span>
+      <span id="dash-ready">READY</span>
+      <span id="dash-charging"></span>
+    </div>
+  </div>
+
+  <!-- ── Combo display ──────────────────────────────────────── -->
+  <div id="combo" class="hidden">
+    <span id="comboVal">0</span>x COMBO!
+  </div>
+
+  <!-- ── Wave announcement (re-cloned by JS to re-trigger anim) -->
+  <div id="waveAnnouncement" class="hidden">WAVE 1</div>
+
+  <!-- ── Home Screen ────────────────────────────────────────── -->
+  <div id="homeScreen">
+    <h1 class="game-title">TOPDOWN</h1>
+    <p class="game-subtitle">SURVIVE · UPGRADE · DOMINATE</p>
+
+    <!-- Game-over banner — hidden on first visit -->
+    <div id="gameOverMsg" class="hidden">
+      ☠ GAME OVER &mdash; Score: <span id="finalScore">0</span>
+    </div>
+
+    <button id="startBtn" class="btn btn-primary">▶ START GAME</button>
+
+    <!-- Skin picker — built dynamically by homeScreen.js -->
+    <div id="skinSelector"></div>
+
+    <div class="home-stats">
+      <span>Best: <strong id="bestScore">0</strong></span>
+      <span>Skin: <strong id="activeSkinName">Agent</strong></span>
+    </div>
+
+    <div class="controls-hint">
+      WASD / Arrow Keys &mdash; Move &nbsp;|&nbsp; Mouse &mdash; Aim &amp; Shoot<br>
+      Hold Left Click &mdash; Fire &nbsp;|&nbsp; SPACE &mdash; Dash (invincible!) &nbsp;|&nbsp; ESC &mdash; Pause
+    </div>
+  </div>
+
+  <!-- ── Pause Screen ───────────────────────────────────────── -->
+  <div id="pauseScreen" class="hidden">
+    <h2>PAUSED</h2>
+    <button id="resumeBtn" class="btn btn-primary">▶ RESUME</button>
+    <button id="menuBtn"   class="btn btn-secondary">⌂ MAIN MENU</button>
+  </div>
+
+  <!--
+    Entry point — all other modules are imported transitively from gameLoop.js.
+    type="module" enables ES module imports and defers execution automatically.
+
+    NOTE: ES modules require a server (http:// or https://).
+    Open this file via `npx serve .` or any local server — NOT file:// directly.
+  -->
+  <script type="module" src="engine/gameLoop.js"></script>
+
+</body>
+</html>
