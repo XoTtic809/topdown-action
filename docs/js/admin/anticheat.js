@@ -11,7 +11,7 @@ const BAD_WORDS = [
   // violence / threats
   'kill','murder','rape','terrorist','jihad','isis','nazi','hitler','kkk',
   // impersonation
-  'admin','moderator','mod','developer','dev','staff','official','ethan','owner',
+  'admin','moderator','mod','developer','staff','official','owner',
 ];
 
 const LEET_MAP = {
