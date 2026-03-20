@@ -38,10 +38,28 @@ const RARITY_PRICING = {
   icon:      { floor: 500,    ceiling: 4000   },
 };
 
-// XP → level formula (must match calculateTrueLevel in game.js)
+// XP → level formula — matches the battle pass tier system in battlepass-system.js.
+// CUMULATIVE_XP[i] is the total XP needed to reach tier (i+1).
+const CUMULATIVE_XP = [
+   150,  300,  450,  600,  750,   // tiers  1– 5 (150 XP each)
+  1000, 1250, 1500, 1750, 2000,   // tiers  6–10 (250 XP each)
+  2400, 2800, 3200, 3600, 4000,   // tiers 11–15 (400 XP each)
+  4600, 5200, 5800, 6400, 7000,   // tiers 16–20 (600 XP each)
+  7850, 8700, 9550, 10400, 11250, // tiers 21–25 (850 XP each)
+  12350, 13450, 14550, 15650, 16750, // tiers 26–30 (1100 XP each)
+  18150, 19550, 20950, 22350, 23750, // tiers 31–35 (1400 XP each)
+  25550, 27350, 29150, 30950, 32750, // tiers 36–40 (1800 XP each)
+  34950, 37150, 39350, 41550, 43750, // tiers 41–45 (2200 XP each)
+  46550, 49350, 52150, 54950, 57750, // tiers 46–50 (2800 XP each)
+];
+
 function calculateTrueLevel(xp) {
   if (xp <= 0) return 0;
-  return Math.floor(Math.sqrt(xp / 100));
+  for (let i = 0; i < CUMULATIVE_XP.length; i++) {
+    if (xp < CUMULATIVE_XP[i]) return i;
+  }
+  // Beyond tier 50: 3500 XP per level
+  return 50 + Math.floor((xp - CUMULATIVE_XP[49]) / 3500);
 }
 
 // ─────────────────────────────────────────────────────────────

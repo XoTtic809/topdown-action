@@ -150,6 +150,7 @@ router.get('/me', requireAuth, async (req, res) => {
     return res.json({
       uid:               user.uid,
       username:          user.username,
+      email:             user.email,
       isAdmin:           user.is_admin,
       totalCoins:        user.total_coins,
       highScore:         user.high_score,

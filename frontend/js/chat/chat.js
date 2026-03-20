@@ -13,7 +13,7 @@
     window.location.hostname === '127.0.0.1'
   )
     ? 'http://localhost:3001'
-    : 'https://web-production-144da.up.railway.app';
+    : 'https://topdown-action-production.up.railway.app';
 
   // ── Quick-chat predefined buttons (must match server QUICK_MESSAGES) ──
   const QUICK_MSGS = [
