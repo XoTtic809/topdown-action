@@ -237,6 +237,32 @@ router.get('/admin/whitelist', requireAuth, requireAdmin, async (req, res) => {
   }
 });
 
+// ─── GET /api/users/search?username=  (auth required) — find user by username
+router.get('/search', requireAuth, async (req, res) => {
+  const { username } = req.query;
+  if (!username || username.trim().length < 2) {
+    return res.status(400).json({ error: 'username query required (min 2 chars)' });
+  }
+  try {
+    const { rows } = await query(
+      `SELECT uid, username, high_score, active_skin FROM users
+       WHERE LOWER(username) = LOWER($1) LIMIT 1`,
+      [username.trim()]
+    );
+    if (!rows[0]) return res.status(404).json({ error: 'User not found' });
+    // Check online status
+    const { rows: presRows } = await query(
+      `SELECT last_seen FROM user_presence WHERE uid = $1`, [rows[0].uid]
+    );
+    const online = presRows[0]
+      ? Date.now() - new Date(presRows[0].last_seen).getTime() < 60_000
+      : false;
+    return res.json({ uid: rows[0].uid, username: rows[0].username, highScore: rows[0].high_score, online });
+  } catch (err) {
+    return res.status(500).json({ error: 'Search failed' });
+  }
+});
+
 // ─── GET /api/users/:uid/profile  (public) — MUST stay AFTER all /admin/* routes
 // so Express doesn't match ":uid = admin" before reaching the admin handlers.
 router.get('/:uid/profile', async (req, res) => {

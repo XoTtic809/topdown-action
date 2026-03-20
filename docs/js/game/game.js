@@ -8456,6 +8456,9 @@ document.querySelectorAll('.shop-tab').forEach(tab => {
     if (targetTab === 'inventory') {
       initInventoryTab();
     }
+    if (targetTab === 'trades' && typeof initTradesTab === 'function') {
+      initTradesTab();
+    }
   });
 });
 

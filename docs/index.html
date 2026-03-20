@@ -10,6 +10,7 @@
 <link rel="stylesheet" href="css/crate-styles.css">
 <link rel="stylesheet" href="css/battlepass-styles.css">
 <link rel="stylesheet" href="css/marketplace-styles.css">
+<link rel="stylesheet" href="css/trades-styles.css">
 </head>
 <body>
 <div id="ui">
@@ -322,6 +323,11 @@
           <span class="shop-tab-icon">🏪</span>
           <span>MARKET</span>
         </button>
+        <button class="shop-tab" data-tab="trades">
+          <span class="shop-tab-icon">🤝</span>
+          <span>TRADES</span>
+          <span id="tradeBadge" class="trade-tab-badge" style="display:none">0</span>
+        </button>
       </div>
       
       <!-- Inventory Tab Content -->
@@ -441,6 +447,134 @@
             <div id="mpMyListings">
               <div class="mp-my-empty">You have no active listings</div>
             </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Trades Tab Content -->
+      <div id="shopTab-trades" class="shop-tab-content hidden">
+        <!-- Login gate -->
+        <div id="tradesLoginGate" class="hidden">
+          <div style="padding:30px;text-align:center;color:#888;font-size:12px;">
+            Sign in to use the trading system.
+          </div>
+        </div>
+
+        <!-- Main trades UI -->
+        <div id="tradesMain" class="hidden">
+          <!-- Sub-tab bar -->
+          <div class="trade-sub-tabs">
+            <button class="trade-sub-tab active" data-sub="notifications" onclick="_switchTradeSubTab('notifications'); _loadTradeNotifications()">🔔 Alerts</button>
+            <button class="trade-sub-tab" data-sub="find" onclick="_switchTradeSubTab('find'); loadOnlineUsers()">🔍 Find Players</button>
+            <button class="trade-sub-tab" data-sub="live" onclick="_switchTradeSubTab('live')">⚔️ Live Trade</button>
+            <button class="trade-sub-tab" data-sub="inbox" onclick="_switchTradeSubTab('inbox'); loadTradeInbox()">📬 Inbox</button>
+            <button class="trade-sub-tab" data-sub="sent" onclick="_switchTradeSubTab('sent'); loadTradeSent()">📤 Sent</button>
+            <button class="trade-sub-tab" data-sub="history" onclick="_switchTradeSubTab('history'); loadTradeHistory()">📋 History</button>
+          </div>
+
+          <!-- Notifications sub-tab -->
+          <div class="trade-sub-content trade-list-area" data-sub="notifications">
+            <div class="trade-section-header">
+              <span class="trade-section-title">Pending Requests &amp; Offers</span>
+              <button class="trade-btn trade-btn-sm" onclick="_loadTradeNotifications()">↻ Refresh</button>
+            </div>
+            <div id="tradeNotifList"><div class="trade-loading">Loading...</div></div>
+          </div>
+
+          <!-- Find Players sub-tab -->
+          <div class="trade-sub-content trade-list-area hidden" data-sub="find">
+            <div class="trade-search-bar">
+              <input type="text" id="tradeSearchInput" class="trade-search-input" placeholder="Search username..." />
+              <button class="trade-btn trade-btn-primary" onclick="searchTradePlayer()">Search</button>
+            </div>
+            <div id="tradeSearchResult"></div>
+            <div class="trade-section-header" style="margin-top:10px">
+              <span class="trade-section-title">Online Now</span>
+              <button class="trade-btn trade-btn-sm" onclick="loadOnlineUsers()">↻ Refresh</button>
+            </div>
+            <div id="tradeOnlineList"><div class="trade-loading">Loading...</div></div>
+          </div>
+
+          <!-- Live trade sub-tab -->
+          <div class="trade-sub-content hidden" data-sub="live">
+            <div id="tradeLivePanel">
+              <div class="trade-empty">No active trade session.<br>Find a player to start a live trade.</div>
+            </div>
+          </div>
+
+          <!-- Inbox sub-tab -->
+          <div class="trade-sub-content trade-list-area hidden" data-sub="inbox">
+            <div class="trade-section-header">
+              <span class="trade-section-title">Received Offers</span>
+              <button class="trade-btn trade-btn-sm" onclick="loadTradeInbox()">↻ Refresh</button>
+            </div>
+            <div id="tradeInboxList"><div class="trade-loading">Loading...</div></div>
+          </div>
+
+          <!-- Sent sub-tab -->
+          <div class="trade-sub-content trade-list-area hidden" data-sub="sent">
+            <div class="trade-section-header">
+              <span class="trade-section-title">Sent Offers</span>
+              <button class="trade-btn trade-btn-sm" onclick="loadTradeSent()">↻ Refresh</button>
+            </div>
+            <div id="tradeSentList"><div class="trade-loading">Loading...</div></div>
+          </div>
+
+          <!-- History sub-tab -->
+          <div class="trade-sub-content trade-list-area hidden" data-sub="history">
+            <div class="trade-section-header">
+              <span class="trade-section-title">Trade History</span>
+              <button class="trade-btn trade-btn-sm" onclick="loadTradeHistory()">↻ Refresh</button>
+            </div>
+            <div id="tradeHistoryList"><div class="trade-loading">Loading...</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Trade toast -->
+      <div id="tradeToast" class="trade-toast hidden"></div>
+
+      <!-- View player inventory modal -->
+      <div id="tradeViewInventoryModal" class="trade-modal-overlay hidden" onclick="if(event.target===this)closeTradeViewInventory()">
+        <div class="trade-modal-box">
+          <div class="trade-modal-title" id="tradeViewInventoryTitle">Inventory</div>
+          <div class="trade-modal-body">
+            <div id="tradeViewInventoryGrid" class="trade-inv-grid"></div>
+          </div>
+          <div class="trade-modal-footer">
+            <button id="tradeViewLiveBtn" class="trade-btn trade-btn-primary" style="display:none">⚔️ Live Trade</button>
+            <button id="tradeViewOfferBtn" class="trade-btn trade-btn-accept">📬 Send Offer</button>
+            <button class="trade-btn" onclick="closeTradeViewInventory()">Close</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Send offline offer modal -->
+      <div id="tradeSendOfferModal" class="trade-modal-overlay hidden" onclick="if(event.target===this)closeTradeOfferModal()">
+        <div class="trade-modal-box" style="max-width:600px">
+          <div class="trade-modal-title" id="tradeSendOfferTitle">Send Offer</div>
+          <input type="hidden" id="tradeSendOfferReceiverId" />
+          <input type="hidden" id="tradeSendOfferReceiverName" />
+          <div class="trade-modal-body">
+            <div class="trade-offer-form">
+              <div class="trade-offer-split">
+                <div class="trade-offer-col">
+                  <div class="trade-offer-col-title">You Give</div>
+                  <div class="trade-offer-checks" id="tradeSendMySkinsChecks"></div>
+                  <input type="number" id="tradeSendMyCoins" class="trade-coins-input" placeholder="Your coins (optional)" min="0" max="100000" />
+                </div>
+                <div class="trade-offer-col">
+                  <div class="trade-offer-col-title">You Want</div>
+                  <div class="trade-offer-checks" id="tradeSendTheirSkinsChecks"></div>
+                  <input type="number" id="tradeSendTheirCoins" class="trade-coins-input" placeholder="Their coins (optional)" min="0" max="100000" />
+                </div>
+              </div>
+              <textarea id="tradeSendMessage" class="trade-message-input" rows="2" placeholder="Optional message to recipient..."></textarea>
+            </div>
+          </div>
+          <div class="trade-modal-footer">
+            <button id="tradeSendOfferSubmitBtn" class="trade-btn trade-btn-accept" onclick="submitSendOffer()">Send Offer</button>
+            <button class="trade-btn" onclick="closeTradeOfferModal()">Cancel</button>
           </div>
         </div>
       </div>
@@ -2033,6 +2167,8 @@
 <!-- Marketplace system (depends on game.js SKINS + crate-system SKIN_RARITIES) -->
 <script src="js/marketplace/marketplace.js"></script>
 <script src="js/marketplace/marketplace-ui.js"></script>
+<script src="js/marketplace/trades.js"></script>
+<script src="js/marketplace/trades-ui.js"></script>
 <!-- Auth and UI modules -->
 <script src="js/auth/api-auth.js"></script>
 <script src="js/game/ranked.js"></script>

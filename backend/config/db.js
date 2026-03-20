@@ -171,6 +171,69 @@ async function initSchema() {
       );
 
       CREATE INDEX IF NOT EXISTS idx_ranked_tier ON ranked_profiles(tier, division ASC, rp DESC);
+
+      -- ── Peer Trading ──────────────────────────────────────────────
+
+      CREATE TABLE IF NOT EXISTS user_presence (
+        uid        TEXT PRIMARY KEY REFERENCES users(uid) ON DELETE CASCADE,
+        username   TEXT NOT NULL,
+        last_seen  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+
+      CREATE TABLE IF NOT EXISTS trade_sessions (
+        id               TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
+        initiator_id     TEXT NOT NULL REFERENCES users(uid) ON DELETE CASCADE,
+        initiator_name   TEXT NOT NULL,
+        target_id        TEXT NOT NULL REFERENCES users(uid) ON DELETE CASCADE,
+        target_name      TEXT NOT NULL,
+        status           TEXT NOT NULL DEFAULT 'pending',
+        initiator_skins  TEXT[] NOT NULL DEFAULT ARRAY[]::TEXT[],
+        target_skins     TEXT[] NOT NULL DEFAULT ARRAY[]::TEXT[],
+        initiator_coins  INTEGER NOT NULL DEFAULT 0,
+        target_coins     INTEGER NOT NULL DEFAULT 0,
+        initiator_ready  BOOLEAN NOT NULL DEFAULT FALSE,
+        target_ready     BOOLEAN NOT NULL DEFAULT FALSE,
+        created_at       TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at       TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        expires_at       TIMESTAMPTZ NOT NULL DEFAULT NOW() + INTERVAL '10 minutes'
+      );
+
+      CREATE TABLE IF NOT EXISTS trade_offers (
+        id             TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
+        sender_id      TEXT NOT NULL REFERENCES users(uid) ON DELETE CASCADE,
+        sender_name    TEXT NOT NULL,
+        receiver_id    TEXT NOT NULL REFERENCES users(uid) ON DELETE CASCADE,
+        receiver_name  TEXT NOT NULL,
+        sender_skins   TEXT[] NOT NULL DEFAULT ARRAY[]::TEXT[],
+        receiver_skins TEXT[] NOT NULL DEFAULT ARRAY[]::TEXT[],
+        sender_coins   INTEGER NOT NULL DEFAULT 0,
+        receiver_coins INTEGER NOT NULL DEFAULT 0,
+        message        TEXT,
+        status         TEXT NOT NULL DEFAULT 'pending',
+        created_at     TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        expires_at     TIMESTAMPTZ NOT NULL DEFAULT NOW() + INTERVAL '7 days'
+      );
+
+      CREATE TABLE IF NOT EXISTS peer_trade_logs (
+        id           TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
+        trade_type   TEXT NOT NULL,
+        user_a_id    TEXT NOT NULL,
+        user_a_name  TEXT NOT NULL,
+        user_b_id    TEXT NOT NULL,
+        user_b_name  TEXT NOT NULL,
+        a_gave_skins TEXT[] NOT NULL DEFAULT ARRAY[]::TEXT[],
+        b_gave_skins TEXT[] NOT NULL DEFAULT ARRAY[]::TEXT[],
+        a_gave_coins INTEGER NOT NULL DEFAULT 0,
+        b_gave_coins INTEGER NOT NULL DEFAULT 0,
+        timestamp    TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_trade_sessions_initiator ON trade_sessions(initiator_id, status);
+      CREATE INDEX IF NOT EXISTS idx_trade_sessions_target    ON trade_sessions(target_id, status);
+      CREATE INDEX IF NOT EXISTS idx_trade_offers_sender      ON trade_offers(sender_id, status);
+      CREATE INDEX IF NOT EXISTS idx_trade_offers_receiver    ON trade_offers(receiver_id, status);
+      CREATE INDEX IF NOT EXISTS idx_peer_trade_logs_a        ON peer_trade_logs(user_a_id, timestamp DESC);
+      CREATE INDEX IF NOT EXISTS idx_peer_trade_logs_b        ON peer_trade_logs(user_b_id, timestamp DESC);
     `);
     console.log('[DB] Schema ready');
   } finally {

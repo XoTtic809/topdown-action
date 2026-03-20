@@ -143,6 +143,8 @@ async function handleLogout() {
   isGuest     = false;
   isAdmin     = false;
   if (typeof resetMarketplaceState === 'function') resetMarketplaceState();
+  if (typeof stopTradeHeartbeat    === 'function') stopTradeHeartbeat();
+  if (typeof stopTradeNotifPolling === 'function') stopTradeNotifPolling();
   return { success: true };
 }
 
@@ -205,6 +207,10 @@ async function _postLoginSetup() {
   if (typeof updateXPDisplay          === 'function') updateXPDisplay();
 
   setTimeout(checkForNewAnnouncements, 1000);
+
+  // Start trade heartbeat + notification polling
+  if (typeof startTradeHeartbeat     === 'function') startTradeHeartbeat();
+  if (typeof startTradeNotifPolling  === 'function') startTradeNotifPolling();
 
   // Grant champion skins to admins so they can preview them
   if (isAdmin) {
