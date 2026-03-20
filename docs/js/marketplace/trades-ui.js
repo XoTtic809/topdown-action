@@ -163,12 +163,11 @@ async function searchTradePlayer() {
   const input = document.getElementById('tradeSearchInput');
   if (!input || !input.value.trim()) return;
   const el = document.getElementById('tradeSearchResult');
+  if (!el) return;
   el.innerHTML = '<div class="trade-loading">Searching...</div>';
   try {
-    // Use existing public profile endpoint
     const data = await apiGet('/users/search?username=' + encodeURIComponent(input.value.trim()));
     if (data.error || !data.uid) {
-      // Fallback: try to load by UID
       el.innerHTML = '<div class="trade-empty">Player not found. Try their exact username.</div>';
       return;
     }
@@ -382,7 +381,7 @@ function renderLiveSession(session) {
 }
 
 function _buildMySkinsOptions(currentlyOffered) {
-  if (typeof ownedSkins === 'undefined' || ownedSkins.length === 0) return '<em>No skins owned</em>';
+  if (!Array.isArray(ownedSkins) || ownedSkins.length === 0) return '<em>No skins owned</em>';
   const counts = {};
   for (const s of ownedSkins) counts[s] = (counts[s] || 0) + 1;
   const unique = [...new Set(ownedSkins)].filter(s => s !== 'agent');
@@ -394,17 +393,16 @@ function _buildMySkinsOptions(currentlyOffered) {
     const checked = currentlyOffered.includes(skinId) ? 'checked' : '';
     return `<label class="trade-skin-check-label">
       <input type="checkbox" class="trade-skin-check" value="${skinId}" ${checked}
-             onchange="updateLiveOfferCount()">
+             onchange="updateLiveOfferCount(event)">
       <span>${escapeHtmlUI(label)}${count > 1 ? ` ×${count}` : ''}</span>
     </label>`;
   }).join('');
 }
 
-function updateLiveOfferCount() {
+function updateLiveOfferCount(e) {
   const checked = document.querySelectorAll('.trade-skin-check:checked');
   if (checked.length > 6) {
-    // Uncheck the last one clicked
-    event.target.checked = false;
+    if (e && e.target) e.target.checked = false;
     _tradeToast('Max 6 skins per trade', 'error');
   }
 }
@@ -472,7 +470,7 @@ function openSendOffer(receiverUid, receiverName) {
   // Populate my skins checkboxes
   const el = document.getElementById('tradeSendMySkinsChecks');
   if (el) {
-    if (typeof ownedSkins === 'undefined' || ownedSkins.length === 0) {
+    if (!Array.isArray(ownedSkins) || ownedSkins.length === 0) {
       el.innerHTML = '<em>No skins owned</em>';
     } else {
       const counts = {};

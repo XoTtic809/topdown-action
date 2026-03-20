@@ -351,22 +351,20 @@ async function _commitLiveTrade(sessionId, session, res) {
       const initiatorsNewSkins = [...newInitiatorSkins, ...s.target_skins];
       const targetsNewSkins    = [...newTargetSkins, ...s.initiator_skins];
 
-      // Apply skin swap
+      // Apply skin swap — reset active_skin to 'agent' if the equipped skin was traded away
       await client.query(
         `UPDATE users SET owned_skins = $2, total_coins = total_coins - $3 + $4,
-         active_skin = CASE WHEN NOT ($5 = ANY($2::text[])) THEN 'agent' ELSE active_skin END,
+         active_skin = CASE WHEN NOT (active_skin = ANY($2::text[])) THEN 'agent' ELSE active_skin END,
          updated_at = NOW()
          WHERE uid = $1`,
-        [session.initiator_id, initiatorsNewSkins, s.initiator_coins, s.target_coins,
-         initiatorUser.owned_skins.find(sk => !initiatorsNewSkins.includes(sk)) || '__none__']
+        [session.initiator_id, initiatorsNewSkins, s.initiator_coins, s.target_coins]
       );
       await client.query(
         `UPDATE users SET owned_skins = $2, total_coins = total_coins - $3 + $4,
-         active_skin = CASE WHEN NOT ($5 = ANY($2::text[])) THEN 'agent' ELSE active_skin END,
+         active_skin = CASE WHEN NOT (active_skin = ANY($2::text[])) THEN 'agent' ELSE active_skin END,
          updated_at = NOW()
          WHERE uid = $1`,
-        [session.target_id, targetsNewSkins, s.target_coins, s.initiator_coins,
-         targetUser.owned_skins.find(sk => !targetsNewSkins.includes(sk)) || '__none__']
+        [session.target_id, targetsNewSkins, s.target_coins, s.initiator_coins]
       );
 
       // Mark session done
@@ -557,11 +555,15 @@ async function _commitOfferTrade(offerId, offer, res) {
       const newReceiverSkins = [...removeSkinsCopy(receiverUser.owned_skins, o.receiver_skins), ...o.sender_skins];
 
       await client.query(
-        `UPDATE users SET owned_skins = $2, total_coins = total_coins - $3 + $4, updated_at = NOW() WHERE uid = $1`,
+        `UPDATE users SET owned_skins = $2, total_coins = total_coins - $3 + $4,
+         active_skin = CASE WHEN NOT (active_skin = ANY($2::text[])) THEN 'agent' ELSE active_skin END,
+         updated_at = NOW() WHERE uid = $1`,
         [offer.sender_id, newSenderSkins, o.sender_coins, o.receiver_coins]
       );
       await client.query(
-        `UPDATE users SET owned_skins = $2, total_coins = total_coins - $3 + $4, updated_at = NOW() WHERE uid = $1`,
+        `UPDATE users SET owned_skins = $2, total_coins = total_coins - $3 + $4,
+         active_skin = CASE WHEN NOT (active_skin = ANY($2::text[])) THEN 'agent' ELSE active_skin END,
+         updated_at = NOW() WHERE uid = $1`,
         [offer.receiver_id, newReceiverSkins, o.receiver_coins, o.sender_coins]
       );
 

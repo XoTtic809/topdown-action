@@ -455,9 +455,7 @@
       <div id="shopTab-trades" class="shop-tab-content hidden">
         <!-- Login gate -->
         <div id="tradesLoginGate" class="hidden">
-          <div style="padding:30px;text-align:center;color:#888;font-size:12px;">
-            Sign in to use the trading system.
-          </div>
+          Sign in to use the trading system.
         </div>
 
         <!-- Main trades UI -->
@@ -484,7 +482,7 @@
           <!-- Find Players sub-tab -->
           <div class="trade-sub-content trade-list-area hidden" data-sub="find">
             <div class="trade-search-bar">
-              <input type="text" id="tradeSearchInput" class="trade-search-input" placeholder="Search username..." />
+              <input type="text" id="tradeSearchInput" class="trade-search-input" placeholder="Search username..." onkeydown="if(event.key==='Enter')searchTradePlayer()" />
               <button class="trade-btn trade-btn-primary" onclick="searchTradePlayer()">Search</button>
             </div>
             <div id="tradeSearchResult"></div>
