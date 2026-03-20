@@ -190,7 +190,7 @@ function formatTradeDate(ts) {
   return d.toLocaleDateString() + ' ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 }
 
-// Build a skin display name from a skin ID, using SKINS_DATA + MUTATION_CONFIG if available
+// Build a skin display name from a skin ID, using SKINS + MUTATION_CONFIG if available
 function tradeGetSkinLabel(skinId) {
   if (!skinId) return 'Unknown';
   const parts = skinId.split('__');
@@ -198,8 +198,8 @@ function tradeGetSkinLabel(skinId) {
   const mutation   = parts[1] || null;
 
   let name = baseSkinId;
-  if (typeof SKINS_DATA !== 'undefined') {
-    const found = SKINS_DATA.find(s => s.id === baseSkinId);
+  if (typeof SKINS !== 'undefined') {
+    const found = SKINS.find(s => s.id === baseSkinId);
     if (found) name = found.name;
   }
 

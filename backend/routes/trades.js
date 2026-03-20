@@ -13,13 +13,32 @@ const OFFER_EXPIRE_DAYS    = 7;
 const MAX_SKINS_PER_OFFER  = 6;        // each side can offer up to 6 skins
 const MAX_COINS_PER_OFFER  = 100_000;
 
+// ── Non-tradeable skin enforcement ──────────────────────────────────────────
+// These skins are permanently blocked from all peer trades (server-authoritative).
+const BACKEND_NON_TRADEABLE = new Set([
+  'agent',                                          // default skin
+  'gold-champion', 'silver-champion', 'bronze-champion', // leaderboard rewards
+  'transcendence',                                  // achievement-only skin
+  'icon_the_creator',                               // creator-only skin
+]);
+
+// Returns false for any skin that must never appear in a trade.
+// bp1_ prefix covers all Battle Pass Season 1 skins; extend for future seasons.
+function isTradeableSkinId(skinId) {
+  if (!skinId || typeof skinId !== 'string') return false;
+  const base = skinId.split('__')[0]; // strip mutation suffix
+  if (BACKEND_NON_TRADEABLE.has(base)) return false;
+  if (/^bp\d+_/.test(base)) return false; // any battle pass season (bp1_, bp2_, …)
+  return true;
+}
+
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
-// Validate skin array: each entry must be a non-empty string ≤ 120 chars
+// Validate skin array: each entry must be a non-empty string ≤ 120 chars, all tradeable
 function validSkinList(arr) {
   if (!Array.isArray(arr)) return false;
   if (arr.length > MAX_SKINS_PER_OFFER) return false;
-  return arr.every(s => typeof s === 'string' && s.length > 0 && s.length <= 120);
+  return arr.every(s => typeof s === 'string' && s.length > 0 && s.length <= 120 && isTradeableSkinId(s));
 }
 
 // Count occurrences of each value in an array
@@ -330,7 +349,13 @@ async function _commitLiveTrade(sessionId, session, res) {
         throw Object.assign(new Error('Trade no longer valid'), { code: 'STALE' });
       }
 
-      // Validate ownership
+      // Validate tradeability + ownership
+      if (s.initiator_skins.some(sk => !isTradeableSkinId(sk))) {
+        throw Object.assign(new Error('Initiator offered a non-tradeable skin'), { code: 'OWNS' });
+      }
+      if (s.target_skins.some(sk => !isTradeableSkinId(sk))) {
+        throw Object.assign(new Error('Target offered a non-tradeable skin'), { code: 'OWNS' });
+      }
       if (!ownsAllSkins(initiatorUser.owned_skins, s.initiator_skins)) {
         throw Object.assign(new Error('Initiator no longer owns offered skins'), { code: 'OWNS' });
       }
@@ -536,7 +561,13 @@ async function _commitOfferTrade(offerId, offer, res) {
         throw Object.assign(new Error('Offer no longer valid'), { code: 'STALE' });
       }
 
-      // Validate
+      // Validate tradeability + ownership
+      if (o.sender_skins.some(sk => !isTradeableSkinId(sk))) {
+        throw Object.assign(new Error('Sender offered a non-tradeable skin'), { code: 'OWNS' });
+      }
+      if (o.receiver_skins.some(sk => !isTradeableSkinId(sk))) {
+        throw Object.assign(new Error('Receiver skin is non-tradeable'), { code: 'OWNS' });
+      }
       if (!ownsAllSkins(senderUser.owned_skins, o.sender_skins)) {
         throw Object.assign(new Error('Sender no longer owns offered skins'), { code: 'OWNS' });
       }

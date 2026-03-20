@@ -6746,10 +6746,11 @@ function initShopUI() {
   // Icon Crate       → icon skins
   // Oblivion Crate   → ob_* skins
   const SR = (typeof SKIN_RARITIES !== 'undefined') ? SKIN_RARITIES : { common:[], uncommon:[], rare:[], epic:[], legendary:[], mythic:[] };
-  const commonCrateSkins    = SKINS.filter(s => s.crateOnly && !s.iconSkin && !s.battlePassTier && [...SR.common, ...SR.uncommon, ...SR.rare].includes(s.id));
-  const rareCrateSkins      = SKINS.filter(s => s.crateOnly && !s.iconSkin && !s.battlePassTier && [...SR.common, ...SR.uncommon, ...SR.rare, ...SR.epic].includes(s.id));
-  const epicCrateSkins      = SKINS.filter(s => s.crateOnly && !s.iconSkin && !s.battlePassTier && [...SR.uncommon, ...SR.rare, ...SR.epic, ...SR.legendary].includes(s.id));
-  const legendaryCrateSkins = SKINS.filter(s => s.crateOnly && !s.iconSkin && !s.battlePassTier && [...SR.rare, ...SR.epic, ...SR.legendary, ...SR.mythic].includes(s.id));
+  // Show all skins that can drop from each crate (crateOnly exclusives + shop skins added to pool)
+  const commonCrateSkins    = SKINS.filter(s => !s.iconSkin && !s.battlePassTier && [...SR.common, ...SR.uncommon, ...SR.rare].includes(s.id));
+  const rareCrateSkins      = SKINS.filter(s => !s.iconSkin && !s.battlePassTier && [...SR.common, ...SR.uncommon, ...SR.rare, ...SR.epic].includes(s.id));
+  const epicCrateSkins      = SKINS.filter(s => !s.iconSkin && !s.battlePassTier && [...SR.uncommon, ...SR.rare, ...SR.epic, ...SR.legendary].includes(s.id));
+  const legendaryCrateSkins = SKINS.filter(s => !s.iconSkin && !s.battlePassTier && [...SR.rare, ...SR.epic, ...SR.legendary, ...SR.mythic].includes(s.id));
   const oblivionCrateSkins  = SKINS.filter(s => s.crateOnly && !s.iconSkin && !s.battlePassTier && s.id.startsWith('ob_'));
 
   // Sort each group by rarity tier (cheapest/lowest rarity first)

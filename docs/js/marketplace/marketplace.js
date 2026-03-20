@@ -61,12 +61,12 @@ function buildSkinRarityMap() {
   if (typeof SKINS === 'undefined') return;
 
   for (const skin of SKINS) {
-    // price 0  = default skin  |  -1 = champion reward
-    // price -3 = battle pass
+    // price 0   = default skin  |  -1 = champion reward
+    // price -3  = battle pass   |  -99 = achievement-only
     // icon_the_creator is a secret/dev skin — always non-tradeable
     // Champion skins are EXPLICITLY blocked regardless of price field.
     if (CHAMPION_SKIN_IDS.has(skin.id) ||
-        skin.price === 0 || skin.price === -1 || skin.price === -3 ||
+        skin.price === 0 || skin.price === -1 || skin.price === -3 || skin.price === -99 ||
         skin.id === 'icon_the_creator') {
       NON_TRADEABLE_SKINS.add(skin.id);
       continue;

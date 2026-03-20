@@ -27,7 +27,18 @@ const SKIN_COOLDOWN_HOURS     = 24;
 const SHOP_UPDATE_TIMESTAMP_MS = new Date('2026-02-18T12:45:00Z').getTime();
 
 const CHAMPION_SKIN_IDS = new Set(['gold-champion', 'silver-champion', 'bronze-champion']);
-const NON_TRADEABLE_PRICES = new Set([0, -1, -3]); // default, champion, battle pass
+// Skin IDs permanently blocked from the marketplace (server-authoritative)
+const NON_TRADEABLE_SKIN_IDS = new Set([
+  'agent', 'transcendence', 'icon_the_creator',
+  'gold-champion', 'silver-champion', 'bronze-champion',
+]);
+// Returns true if this skin ID is allowed to be listed (base ID before mutation suffix)
+function isMarketplaceTradeableSkinId(skinId) {
+  const base = (skinId || '').split('__')[0];
+  if (NON_TRADEABLE_SKIN_IDS.has(base)) return false;
+  if (/^bp\d+_/.test(base)) return false; // battle pass seasons (bp1_, bp2_, …)
+  return true;
+}
 
 // Mutation price multipliers — must stay in sync with MUTATION_CONFIG in game.js
 const MUTATION_PRICE_MULTIPLIERS = {
@@ -144,9 +155,9 @@ router.post('/list', requireAuth, async (req, res) => {
 
   const { baseSkinId, mutation } = parseMutatedSkinId(skinId);
 
-  // Champion skins — absolute block (check base skin ID)
-  if (CHAMPION_SKIN_IDS.has(baseSkinId)) {
-    return res.status(403).json({ error: 'Champion skins are achievement rewards and cannot be traded.' });
+  // Non-tradeable skins — absolute block
+  if (!isMarketplaceTradeableSkinId(baseSkinId)) {
+    return res.status(403).json({ error: 'This skin cannot be listed on the marketplace.' });
   }
 
   const price = Math.floor(Number(rawPrice));
@@ -184,8 +195,8 @@ router.post('/list', requireAuth, async (req, res) => {
       if (!user.owned_skins.includes(skinId)) throw new Error('You do not own this skin.');
       if (user.active_skin === skinId)        throw new Error('Cannot list your equipped skin.');
 
-      if (CHAMPION_SKIN_IDS.has(baseSkinId)) {
-        throw new Error('Champion skins are achievement rewards and cannot be traded.');
+      if (!isMarketplaceTradeableSkinId(baseSkinId)) {
+        throw new Error('This skin cannot be listed on the marketplace.');
       }
 
       const receivedRaw = user.skin_received_times?.[skinId];
@@ -270,8 +281,8 @@ router.post('/buy', requireAuth, async (req, res) => {
       if (new Date(listing.expires_at) < new Date()) throw new Error('This listing has expired.');
       if (listing.seller_id === req.user.uid) throw new Error('You cannot buy your own listing.');
 
-      if (CHAMPION_SKIN_IDS.has(listing.skin_id)) {
-        throw new Error('Champion skins cannot be traded. This listing will be purged.');
+      if (!isMarketplaceTradeableSkinId(listing.skin_id)) {
+        throw new Error('This skin cannot be traded. This listing will be purged.');
       }
 
       const { rows: buyerRows } = await client.query(

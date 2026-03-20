@@ -146,12 +146,17 @@ const CRATES = [
 ];
 
 const SKIN_RARITIES = {
-  common:    ['c_static', 'c_rust', 'c_slate', 'c_olive', 'c_maroon'],
-  uncommon:  ['c_cobalt', 'c_teal', 'c_coral', 'c_sand', 'c_chrome'],
-  rare:      ['c_prism', 'c_aurora', 'c_lava', 'c_storm', 'c_neon'],
-  epic:      ['c_glitch', 'c_nebula', 'c_biohazard', 'c_arctic', 'c_wildfire', 'c_spectre'],
-  legendary: ['c_supernova', 'c_wraith', 'c_titan', 'c_astral'],
-  mythic:    ['c_omnichrome', 'c_singularity', 'c_ultraviolet', 'c_godmode', 'c_rift']
+  // common/uncommon crate skins (map to 'common' marketplace tier)
+  common:    ['c_static', 'c_rust', 'c_slate', 'c_olive', 'c_maroon', 'inferno', 'venom', 'ice'],
+  uncommon:  ['c_cobalt', 'c_teal', 'c_coral', 'c_sand', 'c_chrome', 'shadow', 'amber', 'crimson', 'gold', 'ocean', 'toxic'],
+  // rare crate skins (map to 'rare' marketplace tier)
+  rare:      ['c_prism', 'c_aurora', 'c_lava', 'c_storm', 'c_neon', 'magma', 'plasma', 'emerald', 'frost', 'midnight', 'sakura'],
+  // epic crate skins (map to 'epic' marketplace tier)
+  epic:      ['c_glitch', 'c_nebula', 'c_biohazard', 'c_arctic', 'c_wildfire', 'c_spectre', 'electric', 'ruby', 'lime', 'violet', 'rainbow', 'copper', 'cyber', 'sunset'],
+  // legendary crate skins (map to 'legendary' marketplace tier)
+  legendary: ['c_supernova', 'c_wraith', 'c_titan', 'c_astral', 'galaxy', 'phoenix', 'void', 'diamond'],
+  // mythic crate skins (map to 'mythic' marketplace tier)
+  mythic:    ['c_omnichrome', 'c_singularity', 'c_ultraviolet', 'c_godmode', 'c_rift', 'quantum', 'celestial']
 };
 
 // Oblivion Crate - Premium exclusive pools

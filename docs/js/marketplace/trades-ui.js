@@ -219,8 +219,20 @@ async function viewPlayerInventory(uid, username) {
     el.innerHTML = unique.map(skinId => {
       const label = tradeGetSkinLabel(skinId);
       const count = counts[skinId];
+      const skinInfo = typeof getSkinInfo === 'function' ? getSkinInfo(skinId.split('__')[0]) : null;
+      const special = typeof getSkinPreviewStyle === 'function' ? getSkinPreviewStyle(skinId.split('__')[0]) : null;
+      let dotStyle = '';
+      if (special) {
+        dotStyle = `background:${special.bg};box-shadow:${special.sh || 'none'};${special.an ? `animation:${special.an};` : ''}`;
+      } else if (skinInfo?.color) {
+        const c = skinInfo.color;
+        dotStyle = `background:radial-gradient(circle at 35% 35%,${c}ee 0%,${c} 55%,${c}88 100%);box-shadow:0 0 10px ${c}80`;
+      } else {
+        dotStyle = 'background:#4a9eff44;box-shadow:0 0 8px #4a9eff40';
+      }
       return `
         <div class="trade-inv-card">
+          <div class="trade-inv-dot" style="${dotStyle}"></div>
           <div class="trade-inv-name">${escapeHtmlUI(label)}</div>
           ${count > 1 ? `<div class="trade-inv-count">×${count}</div>` : ''}
         </div>`;
@@ -384,7 +396,8 @@ function _buildMySkinsOptions(currentlyOffered) {
   if (!Array.isArray(ownedSkins) || ownedSkins.length === 0) return '<em>No skins owned</em>';
   const counts = {};
   for (const s of ownedSkins) counts[s] = (counts[s] || 0) + 1;
-  const unique = [...new Set(ownedSkins)].filter(s => s !== 'agent');
+  const canTrade = typeof isSkinTradeable === 'function' ? isSkinTradeable : () => true;
+  const unique = [...new Set(ownedSkins)].filter(s => s !== 'agent' && canTrade(s));
   if (unique.length === 0) return '<em>No tradeable skins</em>';
 
   return unique.map(skinId => {
@@ -475,7 +488,8 @@ function openSendOffer(receiverUid, receiverName) {
     } else {
       const counts = {};
       for (const s of ownedSkins) counts[s] = (counts[s] || 0) + 1;
-      const unique = [...new Set(ownedSkins)].filter(s => s !== 'agent');
+      const canTrade = typeof isSkinTradeable === 'function' ? isSkinTradeable : () => true;
+      const unique = [...new Set(ownedSkins)].filter(s => s !== 'agent' && canTrade(s));
       el.innerHTML = unique.map(skinId => {
         const label = tradeGetSkinLabel(skinId);
         const count = counts[skinId];
@@ -507,7 +521,8 @@ async function _loadReceiverSkins(uid) {
   el.innerHTML = '<div class="trade-loading">Loading...</div>';
   try {
     const data = await tradeGetProfile(uid);
-    const skins = (data.ownedSkins || []).filter(s => s !== 'agent');
+    const canTrade = typeof isSkinTradeable === 'function' ? isSkinTradeable : () => true;
+    const skins = (data.ownedSkins || []).filter(s => s !== 'agent' && canTrade(s));
     if (skins.length === 0) { el.innerHTML = '<em>No tradeable skins</em>'; return; }
     const counts = {};
     for (const s of skins) counts[s] = (counts[s] || 0) + 1;
