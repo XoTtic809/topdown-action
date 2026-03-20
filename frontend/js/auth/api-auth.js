@@ -415,19 +415,30 @@ async function displayLeaderboard(filter = 'allTime') {
     else if (filter === 'level') value = `Level ${entry.level || 0} (${(entry.xp || 0).toLocaleString()} XP)`;
     else if (filter === 'horde' || filter === 'timeattack') value = `${(entry.kills || 0).toLocaleString()} kills`;
     else if (filter === 'bossrush') value = `${entry.bosses || 0} bosses`;
-    else if (filter === 'ranked') {
+    else value = (entry.score || 0).toLocaleString();
+
+    if (filter === 'ranked') {
       const lbl = typeof rankLabel === 'function' ? rankLabel(entry.tier, entry.division) : (entry.tier || 'Unranked');
       const cfg = typeof RANKED_CONFIG !== 'undefined' && RANKED_CONFIG[entry.tier];
       const clr = cfg ? cfg.color : '#aaa';
-      value = `<span style="color:${clr};font-weight:700">${lbl}</span> &middot; ${entry.rp} RP`;
+      const badgeHtml = typeof rankBadgeSvg === 'function'
+        ? `<div class="lb-rank-badge">${rankBadgeSvg(entry.tier)}</div>` : '';
+      el.innerHTML = `
+        <div class="rank">${i + 1}</div>
+        ${badgeHtml}
+        <div class="leaderboard-name">${entry.username}</div>
+        <div class="leaderboard-score lb-ranked-score">
+          <span style="color:${clr};font-weight:700;">${lbl}</span>
+          <span class="lb-ranked-rp">${entry.rp} RP</span>
+        </div>
+      `;
+    } else {
+      el.innerHTML = `
+        <div class="rank">${badge || (i + 1)}</div>
+        <div class="leaderboard-name">${entry.username}</div>
+        <div class="leaderboard-score">${value}</div>
+      `;
     }
-    else value = (entry.score || 0).toLocaleString();
-
-    el.innerHTML = `
-      <div class="rank">${badge || (i + 1)}</div>
-      <div class="leaderboard-name">${entry.username}</div>
-      <div class="leaderboard-score">${value}</div>
-    `;
     listEl.appendChild(el);
   });
 }

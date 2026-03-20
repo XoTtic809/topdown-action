@@ -108,6 +108,73 @@ function rankLabel(tier, division) {
   return cfg.hasDivisions ? `${cfg.label} ${_divLabel(division)}` : cfg.label;
 }
 
+/* ── Rank badge SVG icons ────────────────────────────────────── */
+// Shield-shaped badges with a unique symbol per tier.
+// Top 3 tiers get CSS animation classes (master/grandmaster/apex).
+function rankBadgeSvg(tier) {
+  // bg=main fill  bevel=inner highlight  stroke=border  sym=inner SVG symbol markup
+  const D = {
+    bronze: {
+      bg: '#cd7f32', bevel: 'rgba(240,168,96,0.35)', stroke: '#a0522d',
+      sym: `<polyline points="11,25 18,18 25,25" fill="none" stroke="#ffd4a0" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>`,
+    },
+    silver: {
+      bg: '#aaaacc', bevel: 'rgba(220,220,240,0.3)', stroke: '#7777aa',
+      sym: `<polyline points="11,21 18,15 25,21" fill="none" stroke="#e8e8ff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+            <polyline points="11,27 18,21 25,27" fill="none" stroke="#e8e8ff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>`,
+    },
+    gold: {
+      bg: '#e8a800', bevel: 'rgba(255,240,80,0.4)', stroke: '#b07800',
+      sym: `<polygon points="18,13 19.7,18.2 25.4,18.2 20.8,21.5 22.6,26.8 18,23.5 13.4,26.8 15.2,21.5 10.6,18.2 16.3,18.2" fill="#fff9c4" stroke="rgba(160,100,0,0.3)" stroke-width="0.5"/>`,
+    },
+    platinum: {
+      bg: '#00b894', bevel: 'rgba(100,255,220,0.3)', stroke: '#008866',
+      sym: `<polygon points="18,13 23,16.5 23,23.5 18,27 13,23.5 13,16.5" fill="none" stroke="#b0fff0" stroke-width="2"/>
+            <line x1="18" y1="13" x2="18" y2="27" stroke="#b0fff0" stroke-width="1" opacity="0.55"/>
+            <line x1="13" y1="16.5" x2="23" y2="23.5" stroke="#b0fff0" stroke-width="1" opacity="0.55"/>
+            <line x1="23" y1="16.5" x2="13" y2="23.5" stroke="#b0fff0" stroke-width="1" opacity="0.55"/>`,
+    },
+    diamond: {
+      bg: '#29b6f6', bevel: 'rgba(180,230,255,0.35)', stroke: '#0277bd',
+      sym: `<polygon points="18,12 25,19 18,28 11,19" fill="#cceeff" stroke="rgba(255,255,255,0.5)" stroke-width="0.8"/>
+            <polygon points="18,12 25,19 18,20 11,19" fill="rgba(255,255,255,0.45)"/>
+            <line x1="11" y1="19" x2="25" y2="19" stroke="rgba(255,255,255,0.4)" stroke-width="0.8"/>`,
+    },
+    master: {
+      bg: '#9575cd', bevel: 'rgba(210,180,255,0.3)', stroke: '#6a3faa',
+      sym: `<path d="M10,27 L10,19 L14,23 L18,14 L22,23 L26,19 L26,27 Z" fill="#ede0ff" stroke="rgba(190,140,255,0.4)" stroke-width="0.8" stroke-linejoin="round"/>
+            <circle cx="10.5" cy="18.5" r="1.5" fill="#f5f0ff"/>
+            <circle cx="18" cy="13.5" r="1.8" fill="#fff"/>
+            <circle cx="25.5" cy="18.5" r="1.5" fill="#f5f0ff"/>`,
+    },
+    grandmaster: {
+      bg: '#e53935', bevel: 'rgba(255,150,150,0.25)', stroke: '#b71c1c',
+      sym: `<line x1="18" y1="14" x2="18" y2="28" stroke="#fff0a0" stroke-width="2.5" stroke-linecap="round"/>
+            <path d="M13,15 Q12,20 16.5,20" fill="none" stroke="#fff0a0" stroke-width="2" stroke-linecap="round"/>
+            <path d="M23,15 Q24,20 19.5,20" fill="none" stroke="#fff0a0" stroke-width="2" stroke-linecap="round"/>
+            <line x1="13" y1="15" x2="13" y2="18.5" stroke="#fff0a0" stroke-width="2.5" stroke-linecap="round"/>
+            <line x1="23" y1="15" x2="23" y2="18.5" stroke="#fff0a0" stroke-width="2.5" stroke-linecap="round"/>`,
+    },
+    apex: {
+      bg: '#f57c00', bevel: 'rgba(255,220,80,0.35)', stroke: '#bf360c',
+      sym: `<polygon points="21,12 14,21 18.5,21 15,28 23,19 18.5,19" fill="#fff9e0" stroke="rgba(255,200,0,0.7)" stroke-width="0.6" stroke-linejoin="round"/>`,
+    },
+  };
+
+  const d = D[tier] || D.bronze;
+  const animClass = tier === 'apex' ? ' rank-badge-apex'
+                  : tier === 'grandmaster' ? ' rank-badge-grandmaster'
+                  : tier === 'master' ? ' rank-badge-master' : '';
+
+  // Shield path + inner bevel + top-left highlight for depth
+  return `<span class="rank-badge-svg${animClass}" title="${RANKED_CONFIG[tier]?.label || tier}"><svg xmlns="http://www.w3.org/2000/svg" width="36" height="40" viewBox="0 0 36 40">
+    <path d="M18,2 L33,8 L33,21 Q33,36 18,41 Q3,36 3,21 L3,8 Z" fill="${d.bg}" stroke="${d.stroke}" stroke-width="1.5"/>
+    <path d="M18,6 L28,11 L28,21 Q28,33 18,37 Q8,33 8,21 L8,11 Z" fill="${d.bevel}"/>
+    <path d="M18,2 L33,8 L24,5 Z" fill="rgba(255,255,255,0.28)" opacity="0.8"/>
+    ${d.sym}
+  </svg></span>`;
+}
+
 function getRankedConfig() {
   return RANKED_CONFIG[_rankedProfile.tier] || RANKED_CONFIG.bronze;
 }

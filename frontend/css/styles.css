@@ -1037,6 +1037,103 @@ canvas {
   border-color: rgba(88,166,255,0.4);
 }
 
+/* ── Rank badge icons ──────────────────────────────────────────── */
+.lb-rank-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  flex-shrink: 0;
+}
+
+.rank-badge-svg {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  transition: transform 0.15s;
+}
+
+.rank-badge-svg svg {
+  display: block;
+  overflow: visible;
+}
+
+.lb-ranked-score {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+
+.lb-ranked-rp {
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--muted);
+}
+
+/* ── Animated badge: Master (purple glow pulse) ─────────────────── */
+@keyframes masterGlow {
+  0%, 100% {
+    filter: drop-shadow(0 0 3px #9c66dc) drop-shadow(0 0 7px #7e22ce);
+  }
+  50% {
+    filter: drop-shadow(0 0 7px #c084fc) drop-shadow(0 0 16px #a855f7) brightness(1.18);
+  }
+}
+
+.rank-badge-master {
+  animation: masterGlow 2.2s ease-in-out infinite;
+}
+
+/* ── Animated badge: Grandmaster (red shimmer) ─────────────────── */
+@keyframes grandmasterShimmer {
+  0%, 100% {
+    filter: drop-shadow(0 0 4px #ef5350) drop-shadow(0 0 9px #b71c1c);
+  }
+  33% {
+    filter: drop-shadow(0 0 9px #ff8a80) drop-shadow(0 0 20px #ef5350) brightness(1.22) saturate(1.3);
+  }
+  66% {
+    filter: drop-shadow(0 0 5px #e57373) drop-shadow(0 0 13px #c62828) brightness(1.1);
+  }
+}
+
+.rank-badge-grandmaster {
+  animation: grandmasterShimmer 1.6s ease-in-out infinite;
+}
+
+/* ── Animated badge: Apex (fire aura — most intense) ───────────── */
+@keyframes apexFire {
+  0% {
+    filter: drop-shadow(0 0 5px #ff9800) drop-shadow(0 0 12px #ff6d00) drop-shadow(0 0 22px #ff3d00);
+    transform: scale(1);
+  }
+  20% {
+    filter: drop-shadow(0 0 10px #ffcc02) drop-shadow(0 0 20px #ff9800) drop-shadow(0 0 35px #ff5722) brightness(1.25);
+    transform: scale(1.07);
+  }
+  40% {
+    filter: drop-shadow(0 0 7px #ff6d00) drop-shadow(0 0 15px #e64a19) drop-shadow(0 0 28px #bf360c);
+    transform: scale(0.98);
+  }
+  60% {
+    filter: drop-shadow(0 0 12px #ffd740) drop-shadow(0 0 22px #ff9800) drop-shadow(0 0 38px #ff6d00) brightness(1.3);
+    transform: scale(1.08);
+  }
+  80% {
+    filter: drop-shadow(0 0 6px #ff8f00) drop-shadow(0 0 14px #ff5722) drop-shadow(0 0 25px #dd2c00);
+    transform: scale(1);
+  }
+  100% {
+    filter: drop-shadow(0 0 5px #ff9800) drop-shadow(0 0 12px #ff6d00) drop-shadow(0 0 22px #ff3d00);
+    transform: scale(1);
+  }
+}
+
+.rank-badge-apex {
+  animation: apexFire 0.9s ease-in-out infinite;
+}
+
 .loading-spinner {
   text-align: center;
   padding: 40px;
