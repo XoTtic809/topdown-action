@@ -12,26 +12,26 @@ const BP_XP_CONFIG = {
 };
 
 const BATTLE_PASS_TIERS = [
-  // Tier 1-5 (150 XP each) — Early tiers: fast to unlock, gives quick coin boosts
-  { tier: 1, xpRequired: 150, freeReward: { type: 'coins', value: 30 },  premiumReward: { type: 'coins', value: 75 } },
-  { tier: 2, xpRequired: 150, freeReward: { type: 'coins', value: 40 },  premiumReward: { type: 'coins', value: 100 } },
-  { tier: 3, xpRequired: 150, freeReward: { type: 'coins', value: 50 },  premiumReward: { type: 'coins', value: 125 } },
-  { tier: 4, xpRequired: 150, freeReward: { type: 'coins', value: 60 },  premiumReward: { type: 'coins', value: 150 } },
-  { tier: 5, xpRequired: 150, freeReward: { type: 'coins', value: 75 },  premiumReward: { type: 'skin', skinId: 'bp1_striker' } },
+  // Tier 1-5 (250 XP each) — Early tiers: fast to unlock, gives quick coin boosts
+  { tier: 1, xpRequired: 250, freeReward: { type: 'coins', value: 30 },  premiumReward: { type: 'coins', value: 75 } },
+  { tier: 2, xpRequired: 250, freeReward: { type: 'coins', value: 40 },  premiumReward: { type: 'coins', value: 100 } },
+  { tier: 3, xpRequired: 250, freeReward: { type: 'coins', value: 50 },  premiumReward: { type: 'coins', value: 125 } },
+  { tier: 4, xpRequired: 250, freeReward: { type: 'coins', value: 60 },  premiumReward: { type: 'coins', value: 150 } },
+  { tier: 5, xpRequired: 250, freeReward: { type: 'coins', value: 75 },  premiumReward: { type: 'skin', skinId: 'bp1_striker' } },
 
-  // Tier 6-10 (250 XP each)
-  { tier: 6,  xpRequired: 250, freeReward: { type: 'coins', value: 75 },  premiumReward: { type: 'coins', value: 175 } },
-  { tier: 7,  xpRequired: 250, freeReward: { type: 'coins', value: 90 },  premiumReward: { type: 'coins', value: 200 } },
-  { tier: 8,  xpRequired: 250, freeReward: { type: 'coins', value: 100 }, premiumReward: { type: 'trail', effectId: 'comet' } },
-  { tier: 9,  xpRequired: 250, freeReward: { type: 'coins', value: 120 }, premiumReward: { type: 'coins', value: 225 } },
-  { tier: 10, xpRequired: 250, freeReward: { type: 'coins', value: 150 }, premiumReward: { type: 'skin', skinId: 'bp1_guardian' } },
+  // Tier 6-10 (400 XP each)
+  { tier: 6,  xpRequired: 400, freeReward: { type: 'coins', value: 75 },  premiumReward: { type: 'coins', value: 175 } },
+  { tier: 7,  xpRequired: 400, freeReward: { type: 'coins', value: 90 },  premiumReward: { type: 'coins', value: 200 } },
+  { tier: 8,  xpRequired: 400, freeReward: { type: 'coins', value: 100 }, premiumReward: { type: 'trail', effectId: 'comet' } },
+  { tier: 9,  xpRequired: 400, freeReward: { type: 'coins', value: 120 }, premiumReward: { type: 'coins', value: 225 } },
+  { tier: 10, xpRequired: 400, freeReward: { type: 'coins', value: 150 }, premiumReward: { type: 'skin', skinId: 'bp1_guardian' } },
 
-  // Tier 11-15 (400 XP each) — Mid-early: player has marketplace access
-  { tier: 11, xpRequired: 400, freeReward: { type: 'coins', value: 150 }, premiumReward: { type: 'coins', value: 275 } },
-  { tier: 12, xpRequired: 400, freeReward: { type: 'coins', value: 160 }, premiumReward: { type: 'title', titleId: 'battleborn' } },
-  { tier: 13, xpRequired: 400, freeReward: { type: 'coins', value: 175 }, premiumReward: { type: 'coins', value: 300 } },
-  { tier: 14, xpRequired: 400, freeReward: { type: 'coins', value: 190 }, premiumReward: { type: 'coins', value: 325 } },
-  { tier: 15, xpRequired: 400, freeReward: { type: 'coins', value: 200 }, premiumReward: { type: 'crate', crateId: 'common-crate', quantity: 1 } },
+  // Tier 11-15 (600 XP each) — Mid-early: player has marketplace access
+  { tier: 11, xpRequired: 600, freeReward: { type: 'coins', value: 150 }, premiumReward: { type: 'coins', value: 275 } },
+  { tier: 12, xpRequired: 600, freeReward: { type: 'coins', value: 160 }, premiumReward: { type: 'title', titleId: 'battleborn' } },
+  { tier: 13, xpRequired: 600, freeReward: { type: 'coins', value: 175 }, premiumReward: { type: 'coins', value: 300 } },
+  { tier: 14, xpRequired: 600, freeReward: { type: 'coins', value: 190 }, premiumReward: { type: 'coins', value: 325 } },
+  { tier: 15, xpRequired: 600, freeReward: { type: 'coins', value: 200 }, premiumReward: { type: 'crate', crateId: 'common-crate', quantity: 1 } },
 
   // Tier 16-20 (600 XP each)
   { tier: 16, xpRequired: 600, freeReward: { type: 'coins', value: 210 }, premiumReward: { type: 'trail', effectId: 'lightning' } },
