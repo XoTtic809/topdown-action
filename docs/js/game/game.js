@@ -6446,7 +6446,10 @@ function _drawBaseballPreview(container) {
 
 function initShopUI() {
   document.getElementById('shopCoinsVal').textContent = playerCoins;
+  // Refresh inventory if it's the active tab
+  if (typeof _renderInventory === 'function') _renderInventory();
   const grid = document.getElementById('skinGrid');
+  if (!grid) return; // Inventory tab replaces skins tab
   grid.innerHTML = '';
 
  // Also initialize crates tab
@@ -6582,27 +6585,10 @@ function initShopUI() {
       };
     }
 
-    // Buy-another button shown when already owned (for stacking copies to resell)
-    const buyMore = document.createElement('button');
-    buyMore.className = 'skin-btn';
-    buyMore.style.cssText = 'margin-top:4px;font-size:11px;padding:5px 8px;opacity:0.75;';
-    buyMore.textContent = `+ Buy copy 🪙${skin.price}`;
-    buyMore.disabled = playerCoins < skin.price;
-    buyMore.onclick = () => {
-      if (playerCoins >= skin.price) {
-        playerCoins -= skin.price;
-        ownedSkins.push(skin.id);
-        saveCoins();
-        saveSkins();
-        initShopUI();
-      }
-    };
-
     card.appendChild(preview);
     card.appendChild(name);
     card.appendChild(desc);
     card.appendChild(btn);
-    if (owned) card.appendChild(buyMore);
     grid.appendChild(card);
   }
 
@@ -8467,8 +8453,251 @@ document.querySelectorAll('.shop-tab').forEach(tab => {
     if (targetTab === 'marketplace' && typeof openMarketplaceTab === 'function') {
       openMarketplaceTab();
     }
+    if (targetTab === 'inventory') {
+      initInventoryTab();
+    }
   });
 });
+
+// ══════════════════════════════════════════════════════════════
+// INVENTORY TAB + LIVE SKIN TRY
+// ══════════════════════════════════════════════════════════════
+
+let _invFilter = 'all';
+let _tryingSkin = null;
+let _realEquippedSkin = null;
+
+function initInventoryTab() {
+  _renderInventory();
+  document.querySelectorAll('.inv-filter').forEach(btn => {
+    btn.onclick = () => {
+      document.querySelectorAll('.inv-filter').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      _invFilter = btn.dataset.filter;
+      _renderInventory();
+    };
+  });
+}
+
+function _renderInventory() {
+  const grid  = document.getElementById('invGrid');
+  const empty = document.getElementById('invEmpty');
+  if (!grid) return;
+  grid.innerHTML = '';
+
+  // Count copies per skin
+  const countMap = {};
+  for (const id of ownedSkins) countMap[id] = (countMap[id] || 0) + 1;
+
+  // Stats bar
+  const totalCount   = ownedSkins.length;
+  const mutatedCount = ownedSkins.filter(s => s.includes('__')).length;
+  const totalEl = document.getElementById('invTotalCount');
+  const mutEl   = document.getElementById('invMutatedCount');
+  if (totalEl) totalEl.textContent = `${totalCount} skin${totalCount !== 1 ? 's' : ''}`;
+  if (mutEl)  { mutEl.textContent = `${mutatedCount} mutated`; mutEl.style.display = mutatedCount > 0 ? '' : 'none'; }
+
+  // Deduplicate and sort: equipped first → rarity order → name
+  const rarityOrder = { mythic: 0, legendary: 1, epic: 2, rare: 3, common: 4, icon: 5 };
+  const seen = new Set();
+  const entries = [];
+  for (const skinId of ownedSkins) {
+    if (seen.has(skinId)) continue;
+    seen.add(skinId);
+    entries.push({ skinId, count: countMap[skinId] });
+  }
+  entries.sort((a, b) => {
+    if (a.skinId === activeSkin) return -1;
+    if (b.skinId === activeSkin) return 1;
+    const ra = typeof getSkinRarity === 'function' ? (getSkinRarity(a.skinId) || 'common') : 'common';
+    const rb = typeof getSkinRarity === 'function' ? (getSkinRarity(b.skinId) || 'common') : 'common';
+    const oa = rarityOrder[ra] ?? 6;
+    const ob = rarityOrder[rb] ?? 6;
+    return oa !== ob ? oa - ob : a.skinId.localeCompare(b.skinId);
+  });
+
+  // Apply filter
+  const filtered = entries.filter(({ skinId }) => {
+    if (_invFilter === 'all')     return true;
+    if (_invFilter === 'mutated') return skinId.includes('__');
+    const r = typeof getSkinRarity === 'function' ? getSkinRarity(skinId) : null;
+    return r === _invFilter;
+  });
+
+  if (filtered.length === 0) {
+    if (empty) empty.classList.remove('hidden');
+    return;
+  }
+  if (empty) empty.classList.add('hidden');
+
+  for (const { skinId, count } of filtered) {
+    grid.appendChild(_buildInvCard(skinId, count));
+  }
+}
+
+function _buildInvCard(skinId, count) {
+  const { baseSkinId, mutation } = typeof parseMutatedSkinId === 'function'
+    ? parseMutatedSkinId(skinId) : { baseSkinId: skinId, mutation: null };
+  const skin    = SKINS.find(s => s.id === baseSkinId);
+  const mc      = mutation && typeof MUTATION_CONFIG !== 'undefined' ? MUTATION_CONFIG[mutation] : null;
+  const rarity  = typeof getSkinRarity === 'function' ? getSkinRarity(skinId) : null;
+  const isActive  = activeSkin === skinId;
+  const isTrying  = _tryingSkin === skinId;
+
+  const card = document.createElement('div');
+  card.className = 'inv-card' + (isActive ? ' inv-active' : '') + (mc ? ` ${mc.cssClass}` : '');
+
+  // Preview circle
+  const preview = document.createElement('div');
+  preview.className = 'inv-preview';
+  const rc = (rarity && typeof getRarityColor === 'function') ? getRarityColor(rarity) : '#888';
+  if (skin && skin.color) {
+    preview.style.background  = skin.color;
+    preview.style.boxShadow   = `0 0 10px ${skin.color}60`;
+  } else {
+    preview.style.background  = rc;
+    preview.style.boxShadow   = `0 0 10px ${rc}60`;
+  }
+  if (mc) {
+    if (mc.cssFilter) preview.style.filter = mc.cssFilter;
+    preview.style.boxShadow += `, 0 0 16px ${mc.glowColor}`;
+  }
+
+  // Name + count badge
+  const nameRow = document.createElement('div');
+  nameRow.className = 'inv-name-row';
+  const nameEl = document.createElement('div');
+  nameEl.className = 'inv-name';
+  nameEl.textContent = skin ? skin.name : baseSkinId;
+  if (mc) { nameEl.style.color = mc.color; nameEl.style.textShadow = `0 0 8px ${mc.color}`; }
+  nameRow.appendChild(nameEl);
+  if (count > 1) {
+    const badge = document.createElement('span');
+    badge.className = 'inv-count-badge';
+    badge.textContent = `×${count}`;
+    nameRow.appendChild(badge);
+  }
+
+  // Rarity + mutation badges
+  const meta = document.createElement('div');
+  meta.className = 'inv-meta';
+  if (rarity) {
+    const rar = document.createElement('span');
+    rar.className = 'inv-rarity';
+    rar.style.color = rc;
+    rar.textContent = rarity.toUpperCase();
+    meta.appendChild(rar);
+  }
+  if (mc) {
+    const mb = document.createElement('span');
+    mb.className = `inv-mut-badge`;
+    mb.style.color = mc.color;
+    mb.textContent = `✦ ${mc.label}`;
+    meta.appendChild(mb);
+  }
+
+  // Market value hint
+  const tradeable = typeof isSkinTradeable === 'function' && isSkinTradeable(skinId);
+  if (tradeable && typeof getMutatedPriceLimits === 'function') {
+    const limits = getMutatedPriceLimits(skinId);
+    if (limits) {
+      const priceEl = document.createElement('div');
+      priceEl.className = 'inv-price';
+      priceEl.textContent = `🪙 ${limits.floor.toLocaleString()} – ${limits.ceiling.toLocaleString()}`;
+      meta.appendChild(priceEl);
+    }
+  }
+
+  // Action buttons
+  const btns = document.createElement('div');
+  btns.className = 'inv-btns';
+
+  const equipBtn = document.createElement('button');
+  equipBtn.className = 'inv-btn inv-btn-equip';
+  if (isActive) {
+    equipBtn.textContent = '✓ ON';
+    equipBtn.disabled = true;
+  } else {
+    equipBtn.textContent = 'EQUIP';
+    equipBtn.onclick = () => {
+      if (_tryingSkin) stopTrySkin();
+      activeSkin = skinId;
+      saveSkins();
+      _renderInventory();
+    };
+  }
+
+  const tryBtn = document.createElement('button');
+  tryBtn.className = 'inv-btn inv-btn-try' + (isTrying ? ' trying' : '');
+  tryBtn.textContent = isTrying ? '⏹ STOP' : '▶ TRY';
+  tryBtn.onclick = () => { isTrying ? stopTrySkin() : trySkin(skinId); };
+
+  btns.appendChild(equipBtn);
+  btns.appendChild(tryBtn);
+
+  if (tradeable) {
+    const listBtn = document.createElement('button');
+    listBtn.className = 'inv-btn inv-btn-list';
+    listBtn.textContent = '🏪 SELL';
+    listBtn.onclick = () => quickListSkin(skinId);
+    btns.appendChild(listBtn);
+  }
+
+  card.appendChild(preview);
+  card.appendChild(nameRow);
+  card.appendChild(meta);
+  card.appendChild(btns);
+  return card;
+}
+
+function trySkin(skinId) {
+  if (!_tryingSkin) _realEquippedSkin = activeSkin;
+  _tryingSkin = skinId;
+  activeSkin  = skinId;
+  const banner = document.getElementById('trySkinBanner');
+  const label  = document.getElementById('trySkinLabel');
+  if (banner) banner.classList.remove('hidden');
+  if (label) {
+    const { baseSkinId, mutation } = typeof parseMutatedSkinId === 'function'
+      ? parseMutatedSkinId(skinId) : { baseSkinId: skinId, mutation: null };
+    const skin = SKINS.find(s => s.id === baseSkinId);
+    const mc   = mutation && typeof MUTATION_CONFIG !== 'undefined' ? MUTATION_CONFIG[mutation] : null;
+    label.textContent = mc ? `${skin?.name || baseSkinId} [${mc.label}]` : (skin?.name || baseSkinId);
+    if (mc) { label.style.color = mc.color; } else { label.style.color = ''; }
+  }
+  _renderInventory();
+}
+
+function stopTrySkin() {
+  if (!_tryingSkin) return;
+  activeSkin      = _realEquippedSkin || 'agent';
+  _tryingSkin     = null;
+  _realEquippedSkin = null;
+  const banner = document.getElementById('trySkinBanner');
+  if (banner) banner.classList.add('hidden');
+  _renderInventory();
+}
+
+function quickListSkin(skinId) {
+  // Switch to marketplace tab
+  document.querySelectorAll('.shop-tab').forEach(t => t.classList.remove('active'));
+  const mpTab = document.querySelector('.shop-tab[data-tab="marketplace"]');
+  if (mpTab) mpTab.classList.add('active');
+  document.querySelectorAll('.shop-tab-content').forEach(c => c.classList.add('hidden'));
+  document.getElementById('shopTab-marketplace')?.classList.remove('hidden');
+  if (typeof openMarketplaceTab === 'function') openMarketplaceTab();
+  // Pre-select the skin after marketplace initializes
+  setTimeout(() => {
+    if (typeof openSellModal === 'function') openSellModal();
+    setTimeout(() => {
+      const sel = document.getElementById('mpSellSkinSelect');
+      if (sel && sel.querySelector(`option[value="${skinId}"]`)) {
+        sel.value = skinId;
+        if (typeof onSkinSelectChange === 'function') onSkinSelectChange();
+      }
+    }, 150);
+  }, 200);
+}
 
 document.getElementById('resumeBtn').addEventListener('click', () => {
   togglePause();

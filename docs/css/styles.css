@@ -4096,3 +4096,230 @@ canvas {
   background: rgba(255,255,255,0.08);
   margin-left: 6px;
 }
+
+/* ══════════════════════════════════════════════════
+   INVENTORY TAB
+══════════════════════════════════════════════════ */
+
+.inv-toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 12px 6px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+
+.inv-stats {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.inv-stat {
+  font-size: 11px;
+  color: rgba(255,255,255,0.5);
+  font-weight: 600;
+}
+
+.inv-stat-mut {
+  color: #9933ff;
+  font-weight: 800;
+}
+
+.inv-filters {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.inv-filter {
+  padding: 4px 9px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 12px;
+  background: transparent;
+  color: rgba(255,255,255,0.5);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.inv-filter:hover { color: #fff; border-color: rgba(255,255,255,0.3); }
+.inv-filter.active { background: rgba(255,255,255,0.12); color: #fff; border-color: rgba(255,255,255,0.35); }
+.inv-filter[data-filter="mutated"].active { background: rgba(153,51,255,0.2); color: #cc77ff; border-color: #9933ff; }
+
+.inv-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(148px, 1fr));
+  gap: 8px;
+  padding: 10px 12px;
+  max-height: calc(100% - 100px);
+  overflow-y: auto;
+}
+
+.inv-empty {
+  text-align: center;
+  padding: 40px 20px;
+  color: rgba(255,255,255,0.35);
+  font-size: 13px;
+}
+
+.inv-card {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 10px;
+  padding: 10px 8px 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  transition: border-color 0.2s;
+  position: relative;
+}
+
+.inv-card:hover { border-color: rgba(255,255,255,0.16); }
+.inv-card.inv-active { border-color: rgba(107,255,123,0.4); background: rgba(107,255,123,0.04); }
+
+.inv-preview {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.inv-name-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  justify-content: center;
+  width: 100%;
+}
+
+.inv-name {
+  font-size: 11px;
+  font-weight: 700;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100px;
+}
+
+.inv-count-badge {
+  font-size: 9px;
+  font-weight: 800;
+  background: rgba(255,215,0,0.2);
+  color: #ffd700;
+  border: 1px solid rgba(255,215,0,0.4);
+  border-radius: 8px;
+  padding: 1px 5px;
+  flex-shrink: 0;
+}
+
+.inv-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  width: 100%;
+}
+
+.inv-rarity {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  opacity: 0.85;
+}
+
+.inv-mut-badge {
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: 1px;
+}
+
+.inv-price {
+  font-size: 9px;
+  color: rgba(255,215,0,0.6);
+  letter-spacing: 0.3px;
+}
+
+.inv-btns {
+  display: flex;
+  gap: 3px;
+  width: 100%;
+  margin-top: 2px;
+}
+
+.inv-btn {
+  flex: 1;
+  padding: 4px 2px;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  border: 1px solid rgba(255,255,255,0.13);
+  border-radius: 5px;
+  background: rgba(255,255,255,0.06);
+  color: rgba(255,255,255,0.8);
+  cursor: pointer;
+  transition: all 0.15s;
+  text-align: center;
+}
+
+.inv-btn:disabled { opacity: 0.35; cursor: default; }
+.inv-btn-equip:not(:disabled):hover { background: rgba(107,255,123,0.2); border-color: #6bff7b; color: #6bff7b; }
+.inv-btn-equip:disabled { background: rgba(107,255,123,0.1); border-color: rgba(107,255,123,0.3); color: #6bff7b; }
+.inv-btn-try:not(:disabled):hover { background: rgba(107,186,255,0.2); border-color: #6bbaff; color: #6bbaff; }
+.inv-btn-try.trying { background: rgba(107,186,255,0.2); border-color: #6bbaff; color: #6bbaff; }
+.inv-btn-list:not(:disabled):hover { background: rgba(255,215,0,0.18); border-color: rgba(255,215,0,0.6); color: #ffd700; }
+
+/* Try-skin floating banner */
+.try-skin-banner {
+  position: absolute;
+  bottom: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(8,8,20,0.96);
+  border: 1px solid rgba(107,186,255,0.45);
+  border-radius: 20px;
+  padding: 7px 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  z-index: 20;
+  white-space: nowrap;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+}
+
+.try-skin-info {
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.7);
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.try-skin-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #6bbaff;
+  animation: mutationGlowPulse 1s ease-in-out infinite;
+  flex-shrink: 0;
+}
+
+.try-skin-stop {
+  background: rgba(255,80,80,0.18);
+  border: 1px solid rgba(255,80,80,0.45);
+  color: #ff6464;
+  border-radius: 12px;
+  padding: 4px 10px;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  transition: background 0.15s;
+}
+
+.try-skin-stop:hover { background: rgba(255,80,80,0.3); }

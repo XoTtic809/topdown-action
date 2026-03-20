@@ -302,9 +302,9 @@
       
       <!-- Shop Tabs -->
       <div class="shop-tabs">
-        <button class="shop-tab active" data-tab="skins">
-          <span class="shop-tab-icon">🎨</span>
-          <span>SKINS</span>
+        <button class="shop-tab active" data-tab="inventory">
+          <span class="shop-tab-icon">🎒</span>
+          <span>INVENTORY</span>
         </button>
         <button class="shop-tab" data-tab="crates">
           <span class="shop-tab-icon">📦</span>
@@ -324,9 +324,37 @@
         </button>
       </div>
       
-      <!-- Skins Tab Content -->
-      <div id="shopTab-skins" class="shop-tab-content">
-        <div id="skinGrid" class="skin-grid"></div>
+      <!-- Inventory Tab Content -->
+      <div id="shopTab-inventory" class="shop-tab-content">
+        <div class="inv-toolbar">
+          <div class="inv-stats">
+            <span id="invTotalCount" class="inv-stat">0 skins</span>
+            <span id="invMutatedCount" class="inv-stat inv-stat-mut" style="display:none">0 mutated</span>
+          </div>
+          <div class="inv-filters">
+            <button class="inv-filter active" data-filter="all">ALL</button>
+            <button class="inv-filter" data-filter="common">COMMON</button>
+            <button class="inv-filter" data-filter="rare">RARE</button>
+            <button class="inv-filter" data-filter="epic">EPIC</button>
+            <button class="inv-filter" data-filter="legendary">LEGENDARY</button>
+            <button class="inv-filter" data-filter="mythic">MYTHIC</button>
+            <button class="inv-filter" data-filter="icon">ICON</button>
+            <button class="inv-filter" data-filter="mutated">✦ MUTATED</button>
+          </div>
+        </div>
+        <div id="invGrid" class="inv-grid"></div>
+        <div id="invEmpty" class="inv-empty hidden">
+          <div>No skins match this filter.</div>
+          <div style="margin-top:8px;font-size:11px;opacity:0.5">Open crates or buy from the Marketplace to get more!</div>
+        </div>
+        <!-- Try skin floating banner -->
+        <div id="trySkinBanner" class="try-skin-banner hidden">
+          <div class="try-skin-info">
+            <span class="try-skin-dot"></span>
+            TRYING: <strong id="trySkinLabel"></strong>
+          </div>
+          <button class="try-skin-stop" onclick="stopTrySkin()">✕ Stop</button>
+        </div>
       </div>
       
       <!-- Crates Tab Content -->
