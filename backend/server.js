@@ -56,6 +56,9 @@ app.use(cors({
 
 app.use(express.json({ limit: '10kb' }));
 
+// Health check must be before HTTPS redirect so Railway's internal probe works
+app.get('/health', (req, res) => res.json({ status: 'ok', ts: Date.now() }));
+
 // ─── HTTPS enforcement (Railway terminates TLS and sets this header) ───
 if (process.env.NODE_ENV === 'production') {
   app.use((req, res, next) => {
@@ -106,8 +109,6 @@ app.use('/api/ranked',             require('./routes/ranked'));
 app.post('/api/marketplace/buy',    writeLimiter);
 app.post('/api/marketplace/list',   writeLimiter);
 app.post('/api/marketplace/cancel', writeLimiter);
-
-app.get('/health', (req, res) => res.json({ status: 'ok', ts: Date.now() }));
 
 // ─── DEV-ONLY: promote account to admin ───────────────────────
 // Disabled automatically in production (NODE_ENV=production).
