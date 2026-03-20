@@ -422,7 +422,7 @@ async function displayLeaderboard(filter = 'allTime') {
       const cfg = typeof RANKED_CONFIG !== 'undefined' && RANKED_CONFIG[entry.tier];
       const clr = cfg ? cfg.color : '#aaa';
       const badgeHtml = typeof rankBadgeSvg === 'function'
-        ? `<div class="lb-rank-badge">${rankBadgeSvg(entry.tier)}</div>` : '';
+        ? `<div class="lb-rank-badge">${rankBadgeSvg(entry.tier, entry.division)}</div>` : '';
       el.innerHTML = `
         <div class="rank">${i + 1}</div>
         ${badgeHtml}
