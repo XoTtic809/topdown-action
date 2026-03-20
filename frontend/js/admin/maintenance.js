@@ -266,7 +266,7 @@ const MAINTENANCE_CONFIG = {
     try {
       const _mBase = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
         ? 'http://localhost:3001/api'
-        : 'https://topdown-action-production.up.railway.app/api';
+        : 'https://topdown-action-production-8a95.up.railway.app/api';
       const res  = await fetch(`${_mBase}/auth/login`, {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
