@@ -1,0 +1,1074 @@
+/* ============================================
+   BATTLE PASS STYLES
+   Season-based progression UI
+   ============================================ */
+
+/* ───────────────────────────────────────────
+   HEADER & INFO
+   ─────────────────────────────────────────── */
+
+.battlepass-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 16px;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 12px;
+  margin-bottom: 12px;
+  border: 1px solid rgba(88, 166, 255, 0.2);
+  flex-shrink: 0;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.battlepass-season-info {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.battlepass-season-title {
+  font-family: var(--font-title);
+  font-size: 20px;
+  font-weight: 900;
+  letter-spacing: 2px;
+  color: #00ff9d;
+  text-shadow: 0 0 12px rgba(0, 255, 157, 0.6);
+  text-transform: uppercase;
+}
+
+.battlepass-season-level {
+  font-family: var(--font-title);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: #dbe7ff;
+  opacity: 0.8;
+}
+
+.battlepass-premium-btn {
+  padding: 14px 28px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 900;
+  font-family: var(--font-title);
+  letter-spacing: 1.5px;
+  cursor: pointer;
+  border: 2px solid rgba(255, 215, 0, 0.5);
+  transition: all 0.3s;
+  text-transform: uppercase;
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.2), rgba(255, 165, 0, 0.2));
+  color: #ffd700;
+  box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+}
+
+.battlepass-premium-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.35), rgba(255, 165, 0, 0.35));
+  box-shadow: 0 0 30px rgba(255, 215, 0, 0.5);
+  transform: translateY(-2px);
+  border-color: rgba(255, 215, 0, 0.7);
+}
+
+.battlepass-premium-btn:disabled {
+  opacity: 0.7;
+  cursor: default;
+  transform: none;
+}
+
+/* ───────────────────────────────────────────
+   PROGRESS BAR
+   ─────────────────────────────────────────── */
+
+.battlepass-progress-container {
+  padding: 12px 16px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 12px;
+  margin-bottom: 12px;
+  border: 1px solid rgba(88, 166, 255, 0.15);
+  flex-shrink: 0;
+}
+
+.battlepass-progress-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  font-family: var(--font-title);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: #dbe7ff;
+}
+
+.battlepass-progress-bar-outer {
+  width: 100%;
+  height: 24px;
+  background: rgba(0, 0, 0, 0.4);
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid rgba(88, 166, 255, 0.3);
+  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.5);
+}
+
+.battlepass-progress-bar-inner {
+  height: 100%;
+  background: linear-gradient(90deg, #00ff9d, #00d9ff, #00ff9d);
+  background-size: 200% 100%;
+  animation: progressGlow 2s ease-in-out infinite;
+  border-radius: 12px;
+  box-shadow: 0 0 20px rgba(0, 255, 157, 0.6);
+  transition: width 0.5s ease-out;
+}
+
+@keyframes progressGlow {
+  0%, 100% {
+    background-position: 0% 50%;
+    box-shadow: 0 0 15px rgba(0, 255, 157, 0.5);
+  }
+  50% {
+    background-position: 100% 50%;
+    box-shadow: 0 0 25px rgba(0, 217, 255, 0.7);
+  }
+}
+
+/* ───────────────────────────────────────────
+   COSMETICS SELECTOR
+   ─────────────────────────────────────────── */
+
+.battlepass-cosmetics-section {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 12px;
+  padding: 16px 20px;
+  margin-bottom: 20px;
+  border: 1px solid rgba(88, 166, 255, 0.15);
+}
+
+.battlepass-cosmetics-title {
+  font-family: var(--font-title);
+  font-size: 16px;
+  font-weight: 900;
+  letter-spacing: 2px;
+  color: #00ff9d;
+  text-shadow: 0 0 10px rgba(0, 255, 157, 0.5);
+  margin-bottom: 16px;
+  text-align: center;
+}
+
+.battlepass-cosmetics-container {
+  margin-bottom: 16px;
+}
+
+.battlepass-cosmetics-container:last-child {
+  margin-bottom: 0;
+}
+
+.battlepass-cosmetics-label {
+  font-family: var(--font-title);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: #dbe7ff;
+  margin-bottom: 10px;
+  opacity: 0.9;
+}
+
+.battlepass-cosmetics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: 10px;
+}
+
+.battlepass-cosmetic-card {
+  background: rgba(20, 20, 30, 0.6);
+  border: 2px solid rgba(88, 166, 255, 0.3);
+  border-radius: 10px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.3s;
+  position: relative;
+}
+
+.battlepass-cosmetic-card:not(.locked):hover {
+  background: rgba(30, 30, 40, 0.8);
+  border-color: rgba(0, 255, 157, 0.5);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 255, 157, 0.2);
+}
+
+.battlepass-cosmetic-card.active {
+  border-color: #00ff9d;
+  background: rgba(0, 255, 157, 0.15);
+  box-shadow: 0 0 20px rgba(0, 255, 157, 0.3);
+}
+
+.battlepass-cosmetic-card.locked {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.battlepass-cosmetic-icon {
+  font-size: 32px;
+  filter: drop-shadow(0 0 8px currentColor);
+}
+
+.battlepass-cosmetic-name {
+  font-family: var(--font-title);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  color: #dbe7ff;
+  text-align: center;
+}
+
+.battlepass-cosmetic-lock {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 28px;
+  opacity: 0.8;
+  pointer-events: none;
+}
+
+.battlepass-cosmetic-active {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 20px;
+  height: 20px;
+  background: #00ff9d;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 900;
+  color: #000;
+  box-shadow: 0 0 10px rgba(0, 255, 157, 0.6);
+}
+
+/* ───────────────────────────────────────────
+   TIER GRID
+   ─────────────────────────────────────────── */
+
+.battlepass-tier-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 16px;
+  padding: 8px 4px 16px;
+}
+
+.battlepass-tier-grid::-webkit-scrollbar {
+  height: 10px;
+}
+
+.battlepass-tier-grid::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 5px;
+}
+
+.battlepass-tier-grid::-webkit-scrollbar-thumb {
+  background: rgba(88, 166, 255, 0.4);
+  border-radius: 5px;
+  border: 2px solid rgba(0, 0, 0, 0.3);
+}
+
+.battlepass-tier-grid::-webkit-scrollbar-thumb:hover {
+  background: rgba(88, 166, 255, 0.6);
+}
+
+/* ───────────────────────────────────────────
+   TIER CARDS
+   ─────────────────────────────────────────── */
+
+.battlepass-tier {
+  background: rgba(20, 20, 30, 0.7);
+  border: 2px solid rgba(88, 166, 255, 0.2);
+  border-radius: 12px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition: all 0.3s;
+  position: relative;
+}
+
+.battlepass-tier:not(.unlocked) {
+  opacity: 0.5;
+  filter: grayscale(0.7);
+}
+
+.battlepass-tier.unlocked {
+  border-color: rgba(0, 255, 157, 0.4);
+  background: rgba(20, 30, 40, 0.8);
+}
+
+.battlepass-tier.current {
+  border-color: #00ff9d;
+  box-shadow: 0 0 25px rgba(0, 255, 157, 0.4);
+  animation: tierPulse 2s ease-in-out infinite;
+}
+
+@keyframes tierPulse {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(0, 255, 157, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 35px rgba(0, 255, 157, 0.6);
+  }
+}
+
+.battlepass-tier:hover.unlocked {
+  transform: translateY(-4px);
+  border-color: rgba(0, 255, 157, 0.6);
+  box-shadow: 0 8px 20px rgba(0, 255, 157, 0.2);
+}
+
+.battlepass-tier-number {
+  text-align: center;
+  font-family: var(--font-title);
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 1.5px;
+  color: #00ff9d;
+  text-shadow: 0 0 8px rgba(0, 255, 157, 0.5);
+  padding: 6px;
+  background: rgba(0, 255, 157, 0.1);
+  border-radius: 6px;
+  border: 1px solid rgba(0, 255, 157, 0.3);
+}
+
+/* ───────────────────────────────────────────
+   REWARDS
+   ─────────────────────────────────────────── */
+
+.battlepass-reward {
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 8px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  position: relative;
+  border: 1px solid rgba(88, 166, 255, 0.2);
+  transition: all 0.3s;
+}
+
+.battlepass-reward-free {
+  border-color: rgba(120, 183, 255, 0.3);
+}
+
+.battlepass-reward-premium {
+  border-color: rgba(255, 215, 0, 0.3);
+  background: rgba(255, 215, 0, 0.05);
+}
+
+.battlepass-reward.locked {
+  opacity: 0.4;
+}
+
+.battlepass-reward.premium-locked {
+  opacity: 0.6;
+  position: relative;
+}
+
+.battlepass-reward.claimed {
+  background: rgba(0, 255, 157, 0.1);
+  border-color: rgba(0, 255, 157, 0.4);
+}
+
+.battlepass-reward-track {
+  font-family: var(--font-title);
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.battlepass-reward-icon {
+  font-size: 28px;
+  filter: drop-shadow(0 0 8px currentColor);
+}
+
+.battlepass-reward-name {
+  font-family: var(--font-title);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  color: #dbe7ff;
+  text-align: center;
+  min-height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.battlepass-reward-locked,
+.battlepass-reward-premium-lock {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 32px;
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+.battlepass-reward-claimed {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 24px;
+  height: 24px;
+  background: #00ff9d;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 900;
+  color: #000;
+  box-shadow: 0 0 12px rgba(0, 255, 157, 0.6);
+}
+
+/* ───────────────────────────────────────────
+   CLAIM BUTTON
+   ─────────────────────────────────────────── */
+
+.battlepass-claim-btn {
+  width: 100%;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 10px;
+  font-weight: 900;
+  font-family: var(--font-title);
+  letter-spacing: 1px;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s;
+  text-transform: uppercase;
+  background: linear-gradient(135deg, rgba(0, 255, 157, 0.3), rgba(0, 217, 255, 0.3));
+  color: #00ff9d;
+  border: 1px solid rgba(0, 255, 157, 0.5);
+  box-shadow: 0 0 12px rgba(0, 255, 157, 0.3);
+  margin-top: 4px;
+}
+
+.battlepass-claim-btn:hover {
+  background: linear-gradient(135deg, rgba(0, 255, 157, 0.5), rgba(0, 217, 255, 0.5));
+  box-shadow: 0 0 20px rgba(0, 255, 157, 0.5);
+  transform: translateY(-2px);
+  border-color: rgba(0, 255, 157, 0.8);
+}
+
+.battlepass-claim-btn:active {
+  transform: translateY(0);
+}
+
+/* ───────────────────────────────────────────
+   NOTIFICATIONS
+   ─────────────────────────────────────────── */
+
+.battlepass-unlock-notification,
+.battlepass-reward-notification,
+.battlepass-premium-notification {
+  position: fixed;
+  top: 100px;
+  right: -400px;
+  width: 350px;
+  padding: 20px;
+  background: rgba(20, 20, 30, 0.95);
+  border: 2px solid #00ff9d;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 255, 157, 0.4);
+  z-index: 10000;
+  transition: right 0.3s ease-out;
+}
+
+.battlepass-unlock-notification.show,
+.battlepass-reward-notification.show,
+.battlepass-premium-notification.show {
+  right: 30px;
+}
+
+.battlepass-unlock-content,
+.battlepass-reward-content,
+.battlepass-premium-content {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.battlepass-unlock-icon,
+.battlepass-reward-icon-notif,
+.battlepass-premium-icon {
+  font-size: 48px;
+  filter: drop-shadow(0 0 12px #00ff9d);
+}
+
+.battlepass-unlock-title,
+.battlepass-reward-title,
+.battlepass-premium-title {
+  font-family: var(--font-title);
+  font-size: 18px;
+  font-weight: 900;
+  letter-spacing: 2px;
+  color: #00ff9d;
+  text-shadow: 0 0 12px rgba(0, 255, 157, 0.6);
+  margin-bottom: 4px;
+}
+
+.battlepass-unlock-subtitle,
+.battlepass-reward-name-notif,
+.battlepass-premium-subtitle {
+  font-family: var(--font-title);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  color: #dbe7ff;
+  opacity: 0.9;
+}
+
+.battlepass-reward-icon-notif {
+  font-size: 42px;
+}
+
+/* For reward notifications */
+.battlepass-reward-notification {
+  border-color: #78b7ff;
+  box-shadow: 0 8px 32px rgba(120, 183, 255, 0.4);
+}
+
+.battlepass-reward-title {
+  color: #78b7ff;
+  text-shadow: 0 0 12px rgba(120, 183, 255, 0.6);
+}
+
+/* For premium notifications */
+.battlepass-premium-notification {
+  border-color: #ffd700;
+  box-shadow: 0 8px 32px rgba(255, 215, 0, 0.4);
+}
+
+.battlepass-premium-title {
+  color: #ffd700;
+  text-shadow: 0 0 12px rgba(255, 215, 0, 0.6);
+}
+
+/* ───────────────────────────────────────────
+   RESPONSIVE DESIGN
+   ─────────────────────────────────────────── */
+
+@media (max-width: 768px) {
+  .battlepass-header {
+    flex-direction: column;
+    gap: 16px;
+    align-items: stretch;
+  }
+
+  .battlepass-premium-btn {
+    width: 100%;
+    text-align: center;
+  }
+
+  .battlepass-tier {
+    min-width: 120px;
+    width: 120px;
+  }
+
+  .battlepass-unlock-notification,
+  .battlepass-reward-notification,
+  .battlepass-premium-notification {
+    width: calc(100% - 40px);
+    right: -100%;
+  }
+
+  .battlepass-unlock-notification.show,
+  .battlepass-reward-notification.show,
+  .battlepass-premium-notification.show {
+    right: 20px;
+  }
+}
+
+/* ───────────────────────────────────────────
+   ANIMATIONS
+   ─────────────────────────────────────────── */
+
+@keyframes rewardClaim {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.battlepass-reward.claiming {
+  animation: rewardClaim 0.5s ease-out;
+}
+
+/* XP Gain Floating Text */
+.battlepass-xp-gain {
+  position: fixed;
+  font-family: var(--font-title);
+  font-size: 24px;
+  font-weight: 900;
+  color: #00ff9d;
+  text-shadow: 0 0 12px rgba(0, 255, 157, 0.8);
+  pointer-events: none;
+  z-index: 9999;
+  animation: floatUp 2s ease-out forwards;
+}
+
+@keyframes floatUp {
+  0% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-100px) scale(1.2);
+  }
+}
+
+/* ============================================
+   COSMETICS TAB STYLES
+   ============================================ */
+
+/* ── HEADER ── */
+.cosmetics-header {
+  text-align: center;
+  padding: 10px 12px 8px;
+  background: linear-gradient(135deg, rgba(153,51,255,0.15), rgba(0,217,255,0.1));
+  border-radius: 10px;
+  border: 1px solid rgba(153,51,255,0.3);
+  margin-bottom: 12px;
+  flex-shrink: 0;
+}
+
+.cosmetics-header-title {
+  font-family: var(--font-title);
+  font-size: 18px;
+  font-weight: 900;
+  letter-spacing: 3px;
+  color: #cc66ff;
+  text-shadow: 0 0 20px rgba(153,51,255,0.7), 0 0 40px rgba(153,51,255,0.3);
+  margin-bottom: 4px;
+}
+
+.cosmetics-header-sub {
+  font-family: var(--font-title);
+  font-size: 11px;
+  color: #aaaacc;
+  letter-spacing: 0.8px;
+}
+
+/* ── SECTIONS ── */
+.cosmetics-section {
+  background: rgba(10,10,20,0.5);
+  border: 1px solid rgba(88,166,255,0.18);
+  border-radius: 12px;
+  padding: 12px 10px;
+  margin-bottom: 12px;
+  flex-shrink: 0;
+}
+
+.cosmetics-section-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(88,166,255,0.15);
+  flex-wrap: wrap;
+}
+
+.cosmetics-section-icon {
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.cosmetics-section-title {
+  font-family: var(--font-title);
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: 2px;
+  color: #dbe7ff;
+  flex: 1;
+  min-width: 80px;
+}
+
+.cosmetics-section-desc {
+  font-size: 10px;
+  color: #778899;
+  font-family: var(--font-title);
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+}
+
+/* ── CARD GRID ── */
+.cosmetics-card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(95px, 1fr));
+  gap: 8px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* ── INDIVIDUAL CARDS ── */
+.cosmetics-card {
+  position: relative;
+  background: rgba(16,16,28,0.8);
+  border: 2px solid rgba(88,166,255,0.2);
+  border-radius: 12px;
+  padding: 12px 8px 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  cursor: none !important;
+  transition: all 0.22s ease;
+  overflow: hidden;
+  min-height: 100px;
+  justify-content: center;
+  box-sizing: border-box;
+}
+
+.cosmetics-card:not(.locked):hover {
+  border-color: rgba(153,51,255,0.6);
+  background: rgba(25,15,40,0.9);
+  transform: translateY(-2px);
+  box-shadow: 0 5px 18px rgba(153,51,255,0.22);
+}
+
+.cosmetics-card.active {
+  border-color: #cc66ff;
+  background: rgba(40,10,60,0.9);
+  box-shadow: 0 0 20px rgba(153,51,255,0.4), inset 0 0 10px rgba(153,51,255,0.08);
+  transform: translateY(-1px);
+}
+
+.cosmetics-card.locked {
+  opacity: 0.4;
+  cursor: default !important;
+  filter: grayscale(0.5);
+}
+
+/* Glow background blob */
+.cosmetics-card-glow {
+  position: absolute;
+  inset: 0;
+  border-radius: 12px;
+  pointer-events: none;
+  opacity: 0.45;
+  transition: opacity 0.3s;
+}
+
+.cosmetics-card:not(.locked):hover .cosmetics-card-glow,
+.cosmetics-card.active .cosmetics-card-glow {
+  opacity: 0.9;
+}
+
+/* Icon */
+.cosmetics-card-icon {
+  font-size: 30px;
+  line-height: 1;
+  transition: transform 0.22s;
+  position: relative;
+}
+
+.cosmetics-card:not(.locked):hover .cosmetics-card-icon {
+  transform: scale(1.12);
+}
+
+/* Name */
+.cosmetics-card-name {
+  font-family: var(--font-title);
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.6px;
+  color: #dbe7ff;
+  text-align: center;
+  position: relative;
+  line-height: 1.2;
+}
+
+/* Description */
+.cosmetics-card-desc {
+  font-size: 9px;
+  color: #778899;
+  text-align: center;
+  line-height: 1.3;
+  position: relative;
+  font-family: var(--font-title);
+}
+
+/* Badges */
+.cosmetics-card-badge {
+  font-family: var(--font-title);
+  font-size: 8px;
+  font-weight: 900;
+  letter-spacing: 0.8px;
+  border-radius: 30px;
+  padding: 2px 8px;
+  position: relative;
+  white-space: nowrap;
+}
+
+.active-badge {
+  background: rgba(153,51,255,0.3);
+  color: #cc66ff;
+  border: 1px solid rgba(153,51,255,0.5);
+  text-shadow: 0 0 8px rgba(153,51,255,0.6);
+}
+
+.locked-badge {
+  background: rgba(80,80,100,0.3);
+  color: #778899;
+  border: 1px solid rgba(80,80,100,0.3);
+  font-size: 7.5px;
+}
+
+/* ── EARN HINT ── */
+.cosmetics-earn-hint {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 12px 16px;
+  background: rgba(0,0,0,0.3);
+  border: 1px dashed rgba(255,215,0,0.25);
+  border-radius: 10px;
+  font-family: var(--font-title);
+  font-size: 11px;
+  color: #aaaacc;
+  letter-spacing: 0.4px;
+  flex-shrink: 0;
+  box-sizing: border-box;
+}
+
+.cosmetics-earn-hint span:first-child {
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.cosmetics-earn-hint strong {
+  color: #ffd700;
+}
+
+@media (max-width: 500px) {
+  .cosmetics-card-grid {
+    grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+    gap: 8px;
+  }
+  .cosmetics-section-desc {
+    display: none;
+  }
+}
+
+/* ================================================
+   CHROMEBOOK & SMALL SCREEN FIXES FOR BATTLE PASS
+   ================================================ */
+
+@media (max-height: 768px) {
+  .battlepass-modal-box {
+    max-height: 90vh;
+    padding: 20px;
+  }
+
+  .battlepass-season-title {
+    font-size: 28px;
+    margin-bottom: 10px;
+  }
+
+  .battlepass-tiers-grid {
+    gap: 12px;
+  }
+
+  .battlepass-tier-card {
+    min-height: auto;
+  }
+
+  .battlepass-tier-rewards {
+    gap: 8px;
+  }
+
+  .cosmetics-modal-content {
+    max-height: 85vh;
+  }
+
+  .cosmetics-section {
+    padding: 15px;
+  }
+}
+
+@media (max-height: 600px) {
+  .battlepass-modal-box {
+    max-height: 95vh;
+    padding: 16px;
+  }
+
+  .battlepass-season-title {
+    font-size: 24px;
+    margin-bottom: 8px;
+  }
+
+  .battlepass-season-level {
+    font-size: 14px;
+  }
+
+  .battlepass-tiers-grid {
+    gap: 10px;
+  }
+
+  .battlepass-tier-card {
+    padding: 12px;
+  }
+
+  .battlepass-tier-number {
+    font-size: 14px;
+  }
+
+  .battlepass-reward-item {
+    min-height: 70px;
+    padding: 8px;
+  }
+
+  .battlepass-reward-preview {
+    width: 40px;
+    height: 40px;
+  }
+
+  .battlepass-premium-btn {
+    padding: 10px 16px;
+    font-size: 13px;
+  }
+
+  .cosmetics-modal-content {
+    max-height: 90vh;
+    padding: 16px;
+  }
+
+  .cosmetics-section-title {
+    font-size: 18px;
+  }
+
+  .cosmetics-card-grid {
+    gap: 8px;
+  }
+
+  .cosmetics-card {
+    padding: 10px;
+  }
+}
+
+@media (max-width: 1280px) and (max-height: 720px) {
+  .battlepass-modal-box {
+    width: 96%;
+    max-width: 96%;
+  }
+
+  .battlepass-tiers-grid {
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  }
+
+  .battlepass-progress-container {
+    padding: 10px;
+  }
+
+  .cosmetics-card-grid {
+    grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+  }
+}
+
+/* ================================================
+   BATTLE PASS SKIN PREVIEW ANIMATIONS
+   ================================================ */
+
+@keyframes battlepassPulse {
+  0%, 100% {
+    transform: scale(1);
+    filter: brightness(1);
+  }
+  50% {
+    transform: scale(1.05);
+    filter: brightness(1.2);
+  }
+}
+
+@keyframes battlepassGhost {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.85;
+    filter: blur(0px);
+  }
+  50% {
+    transform: scale(1.08);
+    opacity: 0.95;
+    filter: blur(1px);
+  }
+}
+
+@keyframes battlepassStorm {
+  0%, 100% {
+    transform: scale(1);
+    filter: brightness(1) saturate(1);
+  }
+  25% {
+    filter: brightness(1.3) saturate(1.2);
+  }
+  50% {
+    transform: scale(1.06);
+    filter: brightness(1.1) saturate(1.1);
+  }
+  75% {
+    filter: brightness(1.3) saturate(1.2);
+  }
+}
+
+@keyframes battlepassEclipse {
+  0%, 100% {
+    transform: scale(1) rotate(0deg);
+    box-shadow: 0 0 25px #2c3e50, 0 0 40px rgba(74,85,104,0.3), inset 0 0 15px rgba(192,192,192,0.2);
+  }
+  50% {
+    transform: scale(1.05) rotate(180deg);
+    box-shadow: 0 0 35px #2c3e50, 0 0 60px rgba(74,85,104,0.5), inset 0 0 20px rgba(192,192,192,0.4);
+  }
+}
+
+@keyframes battlepassRoyal {
+  0%, 100% {
+    transform: scale(1);
+    filter: brightness(1) hue-rotate(0deg);
+  }
+  50% {
+    transform: scale(1.08);
+    filter: brightness(1.3) hue-rotate(10deg);
+  }
+}
+
+@keyframes battlepassApex {
+  0%, 100% {
+    transform: scale(1);
+    filter: brightness(1) saturate(1);
+    box-shadow: 0 0 40px #e74c3c, 0 0 60px rgba(231,76,60,0.6), inset 0 0 25px rgba(255,107,107,0.4);
+  }
+  33% {
+    transform: scale(1.1);
+    filter: brightness(1.4) saturate(1.3);
+    box-shadow: 0 0 50px #e74c3c, 0 0 80px rgba(231,76,60,0.8), inset 0 0 30px rgba(255,107,107,0.6);
+  }
+  66% {
+    transform: scale(1.05);
+    filter: brightness(1.2) saturate(1.1);
+  }
+}
