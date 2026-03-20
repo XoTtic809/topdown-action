@@ -1018,3 +1018,69 @@
     font-size: 10px;
   }
 }
+
+/* ===================== MUTATION STYLES ===================== */
+
+/* Keyframe animations */
+@keyframes mutationGlowPulse {
+  0%, 100% { opacity: 0.7; }
+  50%       { opacity: 1; }
+}
+
+@keyframes prismaticShift {
+  0%   { filter: hue-rotate(0deg)   saturate(2.5) brightness(1.1); }
+  25%  { filter: hue-rotate(90deg)  saturate(3)   brightness(1.2); }
+  50%  { filter: hue-rotate(180deg) saturate(2.5) brightness(1.1); }
+  75%  { filter: hue-rotate(270deg) saturate(3)   brightness(1.2); }
+  100% { filter: hue-rotate(360deg) saturate(2.5) brightness(1.1); }
+}
+
+/* Per-mutation skin overlays */
+.mutation-corrupted {
+  outline: 2px solid rgba(255, 51, 51, 0.7);
+  animation: mutationGlowPulse 1.4s ease-in-out infinite;
+}
+.mutation-gilded {
+  outline: 2px solid rgba(255, 215, 0, 0.8);
+  animation: mutationGlowPulse 1.8s ease-in-out infinite;
+}
+.mutation-void {
+  outline: 2px solid rgba(153, 0, 255, 0.8);
+  animation: mutationGlowPulse 2s ease-in-out infinite;
+}
+.mutation-prismatic {
+  outline: 2px solid rgba(255, 255, 255, 0.9);
+  animation: prismaticShift 3s linear infinite;
+}
+
+/* Mutation reveal badge shown in crate result card */
+.crate-mutation-reveal {
+  display: inline-block;
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin: 6px 0 4px;
+  padding: 4px 12px;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.45);
+  animation: mutationGlowPulse 1.6s ease-in-out infinite;
+}
+.crate-mutation-reveal.mutation-prismatic {
+  animation: prismaticShift 3s linear infinite;
+}
+
+/* Marketplace mutation tag badge */
+.mp-mutation-tag {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  padding: 2px 7px;
+  border-radius: 3px;
+  background: rgba(0, 0, 0, 0.5);
+  margin-left: 6px;
+  vertical-align: middle;
+}
+}

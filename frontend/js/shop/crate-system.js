@@ -282,39 +282,47 @@ function openCrate(crateId) {
   }
   
   const skin = SKINS.find(s => s.id === skinId);
-  
+
   if (skin) {
-    const isDuplicate = ownedSkins.includes(skinId);
+    // ── Mutation roll ────────────────────────────────────────
+    // Icon skins and the creator skin don't get mutations (too rare already)
+    let mutation = null;
+    if (typeof MUTATION_CONFIG !== 'undefined' && !skin.iconSkin && skinId !== 'icon_the_creator') {
+      const roll = Math.random();
+      let cumulative = 0;
+      for (const [type, cfg] of Object.entries(MUTATION_CONFIG)) {
+        cumulative += cfg.chance;
+        if (roll < cumulative) { mutation = type; break; }
+      }
+    }
+
+    // The final inventory ID — mutated skins are distinct items
+    const finalSkinId = mutation ? `${skinId}__${mutation}` : skinId;
+    const isDuplicate = ownedSkins.includes(finalSkinId);
     let coinValue = 0;
-    
+
     if (isDuplicate) {
-      // Convert duplicate to coins based on rarity
+      // Convert duplicate to coins; mutations are worth more
       const rarityValues = {
-        common: 25,
-        uncommon: 50,
-        rare: 100,
-        epic: 200,
-        legendary: 400,
-        mythic: 750,
-        icon: 150,
-        creator: 1000,
-        ob_epic: 500,
-        ob_legendary: 1000,
-        ob_mythic: 2000,
-        ob_ultra: 4000
+        common: 25, uncommon: 50, rare: 100, epic: 200,
+        legendary: 400, mythic: 750, icon: 150, creator: 1000,
+        ob_epic: 500, ob_legendary: 1000, ob_mythic: 2000, ob_ultra: 4000,
       };
-      coinValue = rarityValues[rarity] || 50;
+      const baseValue  = rarityValues[rarity] || 50;
+      const mutMult    = mutation && MUTATION_CONFIG[mutation] ? MUTATION_CONFIG[mutation].priceMultiplier : 1;
+      coinValue = Math.round(baseValue * mutMult);
       playerCoins += coinValue;
     } else {
-      // Add new skin to owned skins
-      ownedSkins.push(skinId);
+      ownedSkins.push(finalSkinId);
     }
-    
+
     rewards.push({
       skin,
+      skinId: finalSkinId,
       rarity,
       isDuplicate,
-      coinValue
+      coinValue,
+      mutation,
     });
   }
   
@@ -361,7 +369,8 @@ function showCrateOpeningAnimation(crateId) {
         skin: winningItem.skin,
         rarity: winningItem.rarity,
         isDuplicate: winningItem.isDuplicate,
-        coinValue: winningItem.coinValue
+        coinValue: winningItem.coinValue,
+        mutation: winningItem.mutation,
       };
     } else {
       // Generate random items for other positions
@@ -448,22 +457,25 @@ function showCrateOpeningAnimation(crateId) {
     const ps = reelPreviewStyles[item.skin.id];
     if (ps) {
       preview.style.background = ps.bg;
-      // If shadow contains comma (multiple shadows) or starts with "0 0", use it directly
-      if (ps.shadow.includes(',') || ps.shadow.startsWith('0 0')) {
-        preview.style.boxShadow = ps.shadow;
-      } else {
-        preview.style.boxShadow = ps.shadow;
-      }
-      if (ps.anim) preview.style.animation = ps.anim;
-      if (ps.border) preview.style.border = ps.border;
+      preview.style.boxShadow  = ps.shadow;
+      if (ps.anim)   preview.style.animation = ps.anim;
+      if (ps.border) preview.style.border    = ps.border;
     } else {
       preview.style.background = item.skin.color || getRarityColor(item.rarity);
-      preview.style.boxShadow = `0 0 15px ${getRarityColor(item.rarity)}`;
+      preview.style.boxShadow  = `0 0 15px ${getRarityColor(item.rarity)}`;
     }
-    
+    // Apply mutation visual on winning reel item
+    if (item.mutation && typeof MUTATION_CONFIG !== 'undefined' && MUTATION_CONFIG[item.mutation]) {
+      const mc = MUTATION_CONFIG[item.mutation];
+      preview.classList.add(mc.cssClass);
+      if (mc.cssFilter) preview.style.filter = mc.cssFilter;
+    }
+
     const name = document.createElement('div');
     name.className = 'crate-item-name';
-    name.textContent = item.skin.name;
+    name.textContent = item.mutation && typeof MUTATION_CONFIG !== 'undefined' && MUTATION_CONFIG[item.mutation]
+      ? `${item.skin.name} [${MUTATION_CONFIG[item.mutation].label}]`
+      : item.skin.name;
     
     const rarityTag = document.createElement('div');
     rarityTag.className = 'crate-item-rarity';
@@ -650,17 +662,29 @@ function displayCrateResults(result) {
     preview.style.background = reward.skin.color || getRarityColor(reward.rarity);
     preview.style.boxShadow = `0 0 30px ${getRarityColor(reward.rarity)}`;
   }
-  
+  if (reward.mutation && typeof MUTATION_CONFIG !== 'undefined' && MUTATION_CONFIG[reward.mutation]) {
+    const mc = MUTATION_CONFIG[reward.mutation];
+    preview.classList.add(mc.cssClass);
+    if (mc.cssFilter) preview.style.filter = mc.cssFilter;
+    preview.style.boxShadow = (preview.style.boxShadow ? preview.style.boxShadow + ', ' : '') + `0 0 40px ${mc.glowColor}`;
+  }
+
   const info = document.createElement('div');
   info.className = 'crate-reward-info';
-  
+
   const name = document.createElement('div');
   name.className = 'crate-reward-name large-name';
-  name.textContent = reward.skin.name;
-  
+  name.textContent = reward.mutation && MUTATION_CONFIG?.[reward.mutation]
+    ? `${reward.skin.name} [${MUTATION_CONFIG[reward.mutation].label}]`
+    : reward.skin.name;
+  if (reward.mutation && MUTATION_CONFIG?.[reward.mutation]) {
+    name.style.color = MUTATION_CONFIG[reward.mutation].color;
+    name.style.textShadow = `0 0 12px ${MUTATION_CONFIG[reward.mutation].color}`;
+  }
+
   const rarity = document.createElement('div');
   rarity.className = 'crate-reward-rarity large-rarity';
-  
+
   // Special handling for THE CREATOR - no rarity, custom message
   if (reward.skin.id === 'icon_the_creator') {
     rarity.textContent = '✨ DIVINE CREATION ✨';
@@ -672,6 +696,17 @@ function displayCrateResults(result) {
   } else {
     rarity.textContent = getRarityName(reward.rarity);
     rarity.style.color = getRarityColor(reward.rarity);
+  }
+
+  // Mutation reveal badge
+  let mutationReveal = null;
+  if (reward.mutation && typeof MUTATION_CONFIG !== 'undefined' && MUTATION_CONFIG[reward.mutation]) {
+    const mc = MUTATION_CONFIG[reward.mutation];
+    mutationReveal = document.createElement('div');
+    mutationReveal.className = `crate-mutation-reveal ${mc.cssClass}`;
+    mutationReveal.textContent = `✦ ${mc.label} MUTATION ✦`;
+    mutationReveal.style.color = mc.color;
+    mutationReveal.style.textShadow = `0 0 14px ${mc.glowColor}`;
   }
   
   const status = document.createElement('div');
@@ -694,6 +729,7 @@ function displayCrateResults(result) {
   
   info.appendChild(name);
   info.appendChild(rarity);
+  if (mutationReveal) info.appendChild(mutationReveal);
   info.appendChild(status);
   
   card.appendChild(preview);

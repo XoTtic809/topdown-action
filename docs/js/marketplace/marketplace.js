@@ -121,16 +121,35 @@ function buildSkinRarityMap() {
 }
 
 function getSkinRarity(skinId) {
-  return MARKETPLACE_RARITY_MAP[skinId] || null;
+  const { baseSkinId } = typeof parseMutatedSkinId === 'function' ? parseMutatedSkinId(skinId) : { baseSkinId: skinId };
+  return MARKETPLACE_RARITY_MAP[baseSkinId] || null;
 }
 
 function isSkinTradeable(skinId) {
-  return !NON_TRADEABLE_SKINS.has(skinId) && !!MARKETPLACE_RARITY_MAP[skinId];
+  const { baseSkinId } = typeof parseMutatedSkinId === 'function' ? parseMutatedSkinId(skinId) : { baseSkinId: skinId };
+  return !NON_TRADEABLE_SKINS.has(baseSkinId) && !!MARKETPLACE_RARITY_MAP[baseSkinId];
 }
 
 function getSkinInfo(skinId) {
   if (typeof SKINS === 'undefined') return null;
-  return SKINS.find(s => s.id === skinId) || null;
+  const { baseSkinId } = typeof parseMutatedSkinId === 'function' ? parseMutatedSkinId(skinId) : { baseSkinId: skinId };
+  return SKINS.find(s => s.id === baseSkinId) || null;
+}
+
+// Returns mutation-adjusted price limits for a skin.
+function getMutatedPriceLimits(skinId) {
+  const { mutation } = typeof parseMutatedSkinId === 'function' ? parseMutatedSkinId(skinId) : { mutation: null };
+  const rarity = getSkinRarity(skinId);
+  if (!rarity) return null;
+  const base = RARITY_PRICING[rarity];
+  if (!mutation || typeof MUTATION_CONFIG === 'undefined' || !MUTATION_CONFIG[mutation]) return base;
+  const mult = MUTATION_CONFIG[mutation].priceMultiplier;
+  return {
+    floor:   Math.floor(base.floor   * mult),
+    ceiling: Math.floor(base.ceiling * mult),
+    label:   `${base.label} [${MUTATION_CONFIG[mutation].label}]`,
+    color:   MUTATION_CONFIG[mutation].color,
+  };
 }
 
 // ════════════════════════════════════════════════════════════
@@ -375,7 +394,7 @@ async function createListing(skinId, price) {
   if (!rarity) return { success: false, error: 'Unknown skin rarity.' };
 
   price = Math.floor(price);
-  const limits = RARITY_PRICING[rarity];
+  const limits = getMutatedPriceLimits(skinId);
   if (price < limits.floor || price > limits.ceiling) {
     return {
       success: false,
@@ -388,11 +407,15 @@ async function createListing(skinId, price) {
   }
 
   const skinInfo = getSkinInfo(skinId);
+  const { mutation } = typeof parseMutatedSkinId === 'function' ? parseMutatedSkinId(skinId) : { mutation: null };
+  const mutLabel = mutation && typeof MUTATION_CONFIG !== 'undefined' && MUTATION_CONFIG[mutation]
+    ? ` [${MUTATION_CONFIG[mutation].label}]` : '';
+  const displayName = skinInfo ? `${skinInfo.name}${mutLabel}` : skinId;
 
   try {
     const result = await apiPost('/marketplace/list', {
       skinId,
-      skinName: skinInfo ? skinInfo.name : skinId,
+      skinName: displayName,
       rarity,
       price,
     });

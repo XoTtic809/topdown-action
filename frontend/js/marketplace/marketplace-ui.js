@@ -246,6 +246,8 @@ function renderMarketplaceListings() {
 function createListingCard(listing) {
   const rarity   = RARITY_PRICING[listing.rarity] || RARITY_PRICING.common;
   const skinInfo = getSkinInfo(listing.skinId);
+  const { mutation } = typeof parseMutatedSkinId === 'function' ? parseMutatedSkinId(listing.skinId) : { mutation: null };
+  const mc = mutation && typeof MUTATION_CONFIG !== 'undefined' ? MUTATION_CONFIG[mutation] : null;
 
   // Time remaining display
   const expiresMs  = listing.expiresAt?.seconds ? listing.expiresAt.seconds * 1000 : 0;
@@ -257,17 +259,19 @@ function createListingCard(listing) {
   const canBuy     = !isOwn && canAfford;
 
   const btnLabel   = isOwn ? 'YOUR LISTING' : !canAfford ? 'NOT ENOUGH' : 'BUY';
+  const mutTag     = mc ? `<span class="mp-mutation-tag" style="color:${mc.color};text-shadow:0 0 8px ${mc.glowColor}">${mc.label}</span>` : '';
+  const rarityLabel = mc ? `${rarity.label} <span style="color:${mc.color}">[${mc.label}]</span>` : rarity.label;
 
   const card = document.createElement('div');
   card.className   = 'mp-listing-card';
-  card.style.setProperty('--rarity-color', rarity.color);
-  card.style.borderColor = rarity.color + '40';
+  card.style.setProperty('--rarity-color', mc ? mc.color : rarity.color);
+  card.style.borderColor = (mc ? mc.color : rarity.color) + '40';
 
   card.innerHTML = `
-    ${buildSkinPreview(skinInfo, rarity, 'mp-listing-preview')}
+    ${buildSkinPreview(skinInfo, rarity, 'mp-listing-preview', mutation)}
     <div class="mp-listing-info">
-      <div class="mp-listing-name">${_esc(listing.skinName || listing.skinId)}</div>
-      <div class="mp-listing-rarity" style="color:${rarity.color}">${rarity.label}</div>
+      <div class="mp-listing-name">${_esc(listing.skinName || listing.skinId)}${mutTag}</div>
+      <div class="mp-listing-rarity" style="color:${mc ? mc.color : rarity.color}">${rarityLabel}</div>
       <div class="mp-listing-seller">by ${_esc(listing.sellerName || 'Unknown')}</div>
       <div class="mp-listing-time">${timeText}</div>
     </div>
@@ -290,21 +294,30 @@ function createListingCard(listing) {
 
 // Renders a skin preview circle using the skin's own color/gradient if available,
 // falling back to the rarity color so it looks less generic.
-function buildSkinPreview(skinInfo, rarity, className) {
+// mutation: optional mutation key (e.g. 'corrupted') to apply mutation visual effects.
+function buildSkinPreview(skinInfo, rarity, className, mutation) {
   let bg;
   if (skinInfo && skinInfo.color) {
-    // Solid color skin
     bg = skinInfo.color;
   } else if (skinInfo && skinInfo.gradient) {
-    // Some skins expose a gradient array
     const stops = skinInfo.gradient.map((c, i, arr) => `${c} ${Math.round((i / (arr.length - 1)) * 100)}%`).join(', ');
     bg = `linear-gradient(135deg, ${stops})`;
   } else {
     bg = rarity.color;
   }
 
-  const glow = (skinInfo?.color || rarity.color) + '50';
-  return `<div class="${className}" style="background:${bg};box-shadow:0 0 14px ${glow};"></div>`;
+  let glow = (skinInfo?.color || rarity.color) + '50';
+  let extraClass = '';
+  let filterStyle = '';
+
+  if (mutation && typeof MUTATION_CONFIG !== 'undefined' && MUTATION_CONFIG[mutation]) {
+    const mc = MUTATION_CONFIG[mutation];
+    extraClass = ` ${mc.cssClass}`;
+    if (mc.cssFilter) filterStyle = `filter:${mc.cssFilter};`;
+    glow += `, 0 0 20px ${mc.glowColor}`;
+  }
+
+  return `<div class="${className}${extraClass}" style="background:${bg};box-shadow:0 0 14px ${glow};${filterStyle}"></div>`;
 }
 
 // ════════════════════════════════════════════════════════════
@@ -325,16 +338,18 @@ function renderMyListings() {
   for (const listing of marketplaceState.myListings) {
     const rarity    = RARITY_PRICING[listing.rarity] || RARITY_PRICING.common;
     const skinInfo  = getSkinInfo(listing.skinId);
+    const { mutation: myMut } = typeof parseMutatedSkinId === 'function' ? parseMutatedSkinId(listing.skinId) : { mutation: null };
+    const myMc = myMut && typeof MUTATION_CONFIG !== 'undefined' ? MUTATION_CONFIG[myMut] : null;
     const expiresMs = listing.expiresAt?.seconds ? listing.expiresAt.seconds * 1000 : 0;
     const hoursLeft = Math.max(0, Math.floor((expiresMs - Date.now()) / 3600000));
     const timeText  = hoursLeft > 24 ? `${Math.floor(hoursLeft / 24)}d` : `${hoursLeft}h`;
 
     const row = document.createElement('div');
     row.className = 'mp-my-listing';
-    row.style.borderColor = rarity.color + '30';
+    row.style.borderColor = (myMc ? myMc.color : rarity.color) + '30';
 
     row.innerHTML = `
-      ${buildSkinPreview(skinInfo, rarity, 'mp-my-preview')}
+      ${buildSkinPreview(skinInfo, rarity, 'mp-my-preview', myMut)}
       <div class="mp-my-info">
         <div class="mp-my-name">${_esc(listing.skinName || listing.skinId)}</div>
         <div class="mp-my-price">${listing.price.toLocaleString()} coins · ${timeText} left</div>
@@ -390,7 +405,8 @@ function openBuyModal(listing) {
   const previewContainer = document.getElementById('mpBuyModalPreview');
   if (previewContainer) {
     const skinInfo = getSkinInfo(listing.skinId);
-    previewContainer.innerHTML = buildSkinPreview(skinInfo, rarity, 'mp-buy-modal-preview');
+    const { mutation: modalMut } = typeof parseMutatedSkinId === 'function' ? parseMutatedSkinId(listing.skinId) : { mutation: null };
+    previewContainer.innerHTML = buildSkinPreview(skinInfo, rarity, 'mp-buy-modal-preview', modalMut);
   }
 
   // Wire up confirm button (replace to avoid duplicate listeners)

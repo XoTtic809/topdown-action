@@ -29,6 +29,21 @@ const SHOP_UPDATE_TIMESTAMP_MS = new Date('2026-02-18T12:45:00Z').getTime();
 const CHAMPION_SKIN_IDS = new Set(['gold-champion', 'silver-champion', 'bronze-champion']);
 const NON_TRADEABLE_PRICES = new Set([0, -1, -3]); // default, champion, battle pass
 
+// Mutation price multipliers — must stay in sync with MUTATION_CONFIG in game.js
+const MUTATION_PRICE_MULTIPLIERS = {
+  corrupted: 1.5,
+  gilded:    2.0,
+  void:      3.0,
+  prismatic: 5.0,
+};
+
+// Splits "baseSkinId__mutationType" into its parts (server-side mirror of frontend helper).
+function parseMutatedSkinId(skinId) {
+  const sep = (skinId || '').indexOf('__');
+  if (sep === -1) return { baseSkinId: skinId, mutation: null };
+  return { baseSkinId: skinId.slice(0, sep), mutation: skinId.slice(sep + 2) };
+}
+
 const RARITY_PRICING = {
   common:    { floor: 100,    ceiling: 500    },
   rare:      { floor: 500,    ceiling: 2000   },
@@ -127,18 +142,27 @@ router.post('/list', requireAuth, async (req, res) => {
     return res.status(400).json({ error: 'skinId, skinName, rarity, and price are required' });
   }
 
-  // Champion skins — absolute block
-  if (CHAMPION_SKIN_IDS.has(skinId)) {
+  const { baseSkinId, mutation } = parseMutatedSkinId(skinId);
+
+  // Champion skins — absolute block (check base skin ID)
+  if (CHAMPION_SKIN_IDS.has(baseSkinId)) {
     return res.status(403).json({ error: 'Champion skins are achievement rewards and cannot be traded.' });
   }
 
   const price = Math.floor(Number(rawPrice));
-  const limits = RARITY_PRICING[rarity];
-  if (!limits) return res.status(400).json({ error: 'Invalid rarity tier' });
+  const baseLimits = RARITY_PRICING[rarity];
+  if (!baseLimits) return res.status(400).json({ error: 'Invalid rarity tier' });
+
+  const mutMult = (mutation && MUTATION_PRICE_MULTIPLIERS[mutation]) || 1;
+  const limits = {
+    floor:   Math.floor(baseLimits.floor   * mutMult),
+    ceiling: Math.floor(baseLimits.ceiling * mutMult),
+  };
 
   if (price < limits.floor || price > limits.ceiling) {
+    const mutLabel = mutation ? ` [${mutation.toUpperCase()}]` : '';
     return res.status(400).json({
-      error: `${rarity} skins: ${limits.floor.toLocaleString()}–${limits.ceiling.toLocaleString()} coins.`,
+      error: `${rarity}${mutLabel} skins: ${limits.floor.toLocaleString()}–${limits.ceiling.toLocaleString()} coins.`,
     });
   }
 
@@ -160,7 +184,7 @@ router.post('/list', requireAuth, async (req, res) => {
       if (!user.owned_skins.includes(skinId)) throw new Error('You do not own this skin.');
       if (user.active_skin === skinId)        throw new Error('Cannot list your equipped skin.');
 
-      if (CHAMPION_SKIN_IDS.has(skinId)) {
+      if (CHAMPION_SKIN_IDS.has(baseSkinId)) {
         throw new Error('Champion skins are achievement rewards and cannot be traded.');
       }
 
