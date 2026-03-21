@@ -402,7 +402,7 @@ function rankBadgeSvg(tier, division) {
   const svgHtml = badges[tier] || badges.bronze;
   const divHtml = div ? `<span style="display:block;text-align:center;font-family:'Orbitron',monospace,sans-serif;font-size:9px;font-weight:700;letter-spacing:2px;color:${RANKED_CONFIG[tier]?.color || '#aaa'};margin-top:2px">${div}</span>` : '';
 
-  return `<span class="rank-badge-svg" title="${label}${div ? ' ' + div : ''}">${svgHtml}${divHtml}</span>`;
+  return `<span class="rank-badge-svg rank-badge-${tier}" title="${label}${div ? ' ' + div : ''}">${svgHtml}${divHtml}</span>`;
 }
 
 function getRankedConfig() {

@@ -1059,8 +1059,21 @@ canvas {
 }
 
 .rank-badge-svg:hover svg {
-  filter: drop-shadow(0 2px 8px rgba(0,0,0,0.7)) brightness(1.08);
+  brightness: 1.08;
 }
+
+/* ── Per-tier shaped glow (CSS drop-shadow follows shield outline) ── */
+.rank-badge-diamond svg  { filter: drop-shadow(0 0 6px rgba(80,160,255,0.5)); }
+.rank-badge-master svg   { filter: drop-shadow(0 0 6px rgba(170,50,255,0.5)); }
+.rank-badge-grandmaster svg { filter: drop-shadow(0 0 6px rgba(255,50,50,0.45)); }
+.rank-badge-apex svg     { filter: drop-shadow(0 0 8px rgba(255,136,0,0.55)); }
+.rank-badge-sovereign svg { filter: drop-shadow(0 0 10px rgba(255,255,255,0.5)); }
+
+.rank-badge-diamond:hover svg  { filter: drop-shadow(0 0 10px rgba(80,160,255,0.7)) brightness(1.08); }
+.rank-badge-master:hover svg   { filter: drop-shadow(0 0 10px rgba(170,50,255,0.7)) brightness(1.08); }
+.rank-badge-grandmaster:hover svg { filter: drop-shadow(0 0 10px rgba(255,50,50,0.65)) brightness(1.08); }
+.rank-badge-apex:hover svg     { filter: drop-shadow(0 0 14px rgba(255,136,0,0.75)) brightness(1.08); }
+.rank-badge-sovereign:hover svg { filter: drop-shadow(0 0 16px rgba(255,255,255,0.7)) brightness(1.08); }
 
 /* ── Rank badge animations (Apex + Sovereign) ─────────────── */
 @keyframes rank-apex-spin {
