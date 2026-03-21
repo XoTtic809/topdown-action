@@ -8890,13 +8890,21 @@ function devResetUpgrades() {
 
 function devUnlockAllSkins() {
   if (typeof SKINS !== 'undefined') {
+    const mutations = Object.keys(MUTATION_CONFIG);
     SKINS.forEach(s => {
+      // Base skin
       if (!ownedSkins.includes(s.id)) ownedSkins.push(s.id);
+      // Every mutation variant
+      mutations.forEach(mut => {
+        const mutId = `${s.id}__${mut}`;
+        if (!ownedSkins.includes(mutId)) ownedSkins.push(mutId);
+      });
     });
     if (typeof saveUserDataToFirebase === 'function') saveUserDataToFirebase('critical');
     else if (typeof saveCoins === 'function') saveCoins();
   }
-  showAdminMessage('All skins unlocked!', false);
+  const total = SKINS.length * (1 + Object.keys(MUTATION_CONFIG).length);
+  showAdminMessage(`All skins + all mutations unlocked! (${total} total)`, false);
 }
 
 // the creator skin
