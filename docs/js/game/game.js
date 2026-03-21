@@ -4170,7 +4170,7 @@ class Enemy {
       this.hp = 1;
       this.maxHp = 1;
       this.score = 15;
-      this.coinValue = 1;
+      this.coinValue = 2;
     } else if (this.type === 'tank') {
       this.r = 20;
       this.speed = 78; // Increased from 65
@@ -4178,7 +4178,7 @@ class Enemy {
       this.hp = 3;
       this.maxHp = 3;
       this.score = 30;
-      this.coinValue = 4;
+      this.coinValue = 6;
     } else if (this.type === 'shooter') {
       this.r = 12;
       this.speed = 102; // Increased from 85
@@ -4187,7 +4187,7 @@ class Enemy {
       this.maxHp = 2;
       this.score = 25;
       this.shootCooldown = 0;
-      this.coinValue = 3;
+      this.coinValue = 5;
     } else if (this.type === 'miniboss') {
       this.r = 25;
       this.speed = 60; // Increased from 50
@@ -4196,7 +4196,7 @@ class Enemy {
       this.maxHp = 8;
       this.score = 100;
       this.shootCooldown = 0;
-      this.coinValue = 10;
+      this.coinValue = 20;
     } else if (this.type === 'enforcer') {
  // Elite enemy that spawns after wave 15
       this.r = 16;
@@ -4205,7 +4205,7 @@ class Enemy {
       this.hp = 4;
       this.maxHp = 4;
       this.score = 45;
-      this.coinValue = 6;
+      this.coinValue = 10;
       this.dashCooldown = 0;
       this.dashTimer = 0;
       this.isDashing = false;
@@ -4219,7 +4219,7 @@ class Enemy {
       this.hp = 1;
       this.maxHp = 1;
       this.score = 10;
-      this.coinValue = 1;
+      this.coinValue = 2;
     }
 
  // Track whether enemy has entered visible screen (prevents off-screen damage)
@@ -7685,7 +7685,7 @@ if (gameSettings.screenShake) screenShakeAmt = 1;
  // Wave complete! — shared by classic and ranked
       const waveBonus = (wave + 1) * 60;
       score += waveBonus;
-      const coinBonus = Math.floor(wave * 2.5);
+      const coinBonus = Math.floor(wave * 5);
       playerCoins += coinBonus;
       saveCoins();
       player.hp = Math.min(player.maxHp, player.hp + 30);
@@ -8498,6 +8498,9 @@ document.querySelectorAll('.shop-tab').forEach(tab => {
     }
     if (targetTab === 'trades' && typeof initTradesTab === 'function') {
       initTradesTab();
+    }
+    if (targetTab === 'tradeup' && typeof initTradeUpTab === 'function') {
+      initTradeUpTab();
     }
   });
 });

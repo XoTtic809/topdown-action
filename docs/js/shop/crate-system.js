@@ -64,7 +64,7 @@ const CRATES = [
   {
     id: 'common-crate',
     name: 'Common Crate',
-    price: 500,
+    price: 300,
     color: '#78b7ff',
     desc: 'Contains 1 random skin from the common pool',
     icon: '📦',
@@ -77,7 +77,7 @@ const CRATES = [
   {
     id: 'rare-crate',
     name: 'Rare Crate',
-    price: 1200,
+    price: 750,
     color: '#9d7aff',
     desc: 'Better odds! Contains 1 skin with higher rarity chances',
     icon: '🎁',
@@ -91,7 +91,7 @@ const CRATES = [
   {
     id: 'epic-crate',
     name: 'Epic Crate',
-    price: 2500,
+    price: 1500,
     color: '#ff78b7',
     desc: 'Premium crate with guaranteed epic or better!',
     icon: '🎭',
@@ -105,7 +105,7 @@ const CRATES = [
   {
     id: 'legendary-crate',
     name: 'Legendary Crate',
-    price: 5000,
+    price: 3000,
     color: '#ffd700',
     desc: 'Ultimate crate! Guaranteed legendary or mythic skin!',
     icon: '⭐',
@@ -119,7 +119,7 @@ const CRATES = [
   {
     id: 'icon-crate',
     name: 'Icon Skins Crate',
-    price: 1000,  // Icon skins priced at 1000 (do not change)
+    price: 750,
     color: '#00ff9d',
     desc: 'Exclusive friend skins! 8 regular + 1 ultra-rare secret!',
     icon: '🎯',
@@ -131,7 +131,7 @@ const CRATES = [
   {
     id: 'oblivion-crate',
     name: 'Oblivion Crate',
-    price: 15000,
+    price: 7500,
     color: '#1a0a2e',
     glowColor: '#8a2be2',
     desc: 'The darkest crate. Only high-tier skins. Two ultra-rare exclusives.',
@@ -788,7 +788,6 @@ function displayCrateResults(result) {
         <span class="crate-summary-value">🪙 ${playerCoins}</span>
       </div>
     `;
-  }
 }
 
 function closeCrateModal() {
@@ -1074,6 +1073,316 @@ function initCratesTab() {
     card.appendChild(btn);
     grid.appendChild(card);
   });
+}
+
+// ══════════════════════════════════════════════════════════════
+// TRADE-UP SYSTEM
+// ══════════════════════════════════════════════════════════════
+
+const TRADEUP_RARITY_NEXT = {
+  common:    'uncommon',
+  uncommon:  'rare',
+  rare:      'epic',
+  epic:      'legendary',
+  legendary: 'mythic',
+};
+
+// All skins that belong to each rarity tier (for outputs)
+function getSkinsForRarity(rarity) {
+  const pool = SKIN_RARITIES[rarity] || [];
+  return pool;
+}
+
+// Get the rarity of a skin id (base, no mutation)
+function tuGetRarity(skinId) {
+  const base = skinId.includes('__') ? skinId.split('__')[0] : skinId;
+  for (const [r, ids] of Object.entries(SKIN_RARITIES)) {
+    if (ids.includes(base)) return r;
+  }
+  return null;
+}
+
+let _tuSelectedRarity = 'common';
+let _tuSlots = new Array(10).fill(null); // each entry: skinId string or null
+let _tuOpenSlotIndex = null; // which slot is being filled
+
+function initTradeUpTab() {
+  _tuSlots = new Array(10).fill(null);
+  _renderTuSlots();
+  _renderTuRarityBtns();
+  _updateTuBtn();
+
+  // Rarity buttons
+  document.getElementById('tuRarityBtns').querySelectorAll('.tu-rarity-btn').forEach(btn => {
+    btn.onclick = () => {
+      _tuSelectedRarity = btn.dataset.rarity;
+      _tuSlots = new Array(10).fill(null);
+      document.querySelectorAll('.tu-rarity-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      _renderTuSlots();
+      _updateTuBtn();
+      _updateTuOutput();
+    };
+  });
+
+  // Trade Up button
+  document.getElementById('tuBtn').onclick = () => _executeTuTradeUp();
+
+  // Picker close
+  document.getElementById('tuPickerClose').onclick = _closeTuPicker;
+  document.getElementById('tuPickerOverlay').onclick = e => {
+    if (e.target === document.getElementById('tuPickerOverlay')) _closeTuPicker();
+  };
+
+  _updateTuOutput();
+}
+
+function _renderTuSlots() {
+  const container = document.getElementById('tuSlots');
+  if (!container) return;
+  container.innerHTML = '';
+  _tuSlots.forEach((skinId, i) => {
+    const slot = document.createElement('div');
+    slot.className = 'tu-slot' + (skinId ? ' filled' : '');
+
+    if (skinId) {
+      const base = skinId.includes('__') ? skinId.split('__')[0] : skinId;
+      const skin = (typeof SKINS !== 'undefined') ? SKINS.find(s => s.id === base) : null;
+      const mut  = skinId.includes('__') ? skinId.split('__')[1] : null;
+      const mc   = (mut && typeof MUTATION_CONFIG !== 'undefined') ? MUTATION_CONFIG[mut] : null;
+
+      const preview = document.createElement('div');
+      preview.className = 'tu-slot-preview';
+      if (mc) preview.classList.add(mc.cssClass);
+      if (typeof applyRichSkinPreview === 'function') {
+        applyRichSkinPreview(preview, base, skin ? skin.color : null);
+      } else if (skin && skin.color) {
+        preview.style.background = skin.color;
+      }
+      if (mc && mc.cssFilter) preview.style.filter = mc.cssFilter;
+
+      const name = document.createElement('div');
+      name.className = 'tu-slot-name';
+      name.textContent = mc ? `${skin?.name || base} [${mc.label}]` : (skin?.name || base);
+      if (mc) name.style.color = mc.color;
+
+      const rm = document.createElement('div');
+      rm.className = 'tu-slot-remove';
+      rm.textContent = '✕';
+      rm.onclick = (e) => { e.stopPropagation(); _tuSlots[i] = null; _renderTuSlots(); _updateTuBtn(); _updateTuMutation(); };
+
+      slot.appendChild(preview);
+      slot.appendChild(name);
+      slot.appendChild(rm);
+    } else {
+      const plus = document.createElement('div');
+      plus.className = 'tu-slot-plus';
+      plus.textContent = '+';
+      slot.appendChild(plus);
+      slot.onclick = () => _openTuPicker(i);
+    }
+
+    container.appendChild(slot);
+  });
+}
+
+function _renderTuRarityBtns() {
+  document.querySelectorAll('.tu-rarity-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.rarity === _tuSelectedRarity);
+  });
+}
+
+function _updateTuOutput() {
+  const nextRarity = TRADEUP_RARITY_NEXT[_tuSelectedRarity];
+  const rarityNames = {
+    common: 'COMMON', uncommon: 'UNCOMMON', rare: 'RARE',
+    epic: 'EPIC', legendary: 'LEGENDARY', mythic: 'MYTHIC'
+  };
+  const rarityColors = {
+    common: '#78b7ff', uncommon: '#9d7aff', rare: '#ff78b7',
+    epic: '#ff9d47', legendary: '#ffd700', mythic: '#ff69ff'
+  };
+  const el = document.getElementById('tuOutputRarity');
+  if (el && nextRarity) {
+    el.textContent = rarityNames[nextRarity] || nextRarity;
+    el.style.color  = rarityColors[nextRarity] || '#fff';
+  }
+}
+
+function _updateTuMutation() {
+  const mutatedCount = _tuSlots.filter(s => s && s.includes('__')).length;
+  const boostPct = mutatedCount * 3; // +3% per mutated input, max 30%
+  const fill = document.getElementById('tuMutationFill');
+  const pct  = document.getElementById('tuMutationPct');
+  if (fill) fill.style.width = `${boostPct}%`;
+  if (pct)  pct.textContent  = `+${boostPct}%`;
+}
+
+function _updateTuBtn() {
+  const filled = _tuSlots.filter(Boolean).length;
+  const btn    = document.getElementById('tuBtn');
+  const msg    = document.getElementById('tuMsg');
+  if (!btn) return;
+
+  const nextRarity = TRADEUP_RARITY_NEXT[_tuSelectedRarity];
+  if (!nextRarity) {
+    btn.textContent = 'MAX RARITY';
+    btn.className   = 'tu-btn';
+    btn.disabled    = true;
+    return;
+  }
+
+  if (filled < 10) {
+    btn.textContent = `SELECT ${10 - filled} MORE`;
+    btn.className   = 'tu-btn';
+    btn.disabled    = true;
+  } else {
+    btn.textContent = '⬆ TRADE UP';
+    btn.className   = 'tu-btn ready';
+    btn.disabled    = false;
+  }
+  if (msg) msg.textContent = '';
+  _updateTuMutation();
+}
+
+function _openTuPicker(slotIndex) {
+  _tuOpenSlotIndex = slotIndex;
+  const overlay = document.getElementById('tuPickerOverlay');
+  const grid    = document.getElementById('tuPickerGrid');
+  if (!overlay || !grid) return;
+
+  // Build count map of owned skins
+  const countMap = {};
+  for (const id of ownedSkins) countMap[id] = (countMap[id] || 0) + 1;
+
+  // Get unique skins of the selected rarity that are available (not already in slots)
+  const inSlots = _tuSlots.filter(Boolean);
+  const pool    = SKIN_RARITIES[_tuSelectedRarity] || [];
+
+  // Collect unique owned skins matching this rarity
+  const seen = new Set();
+  const available = [];
+  for (const id of ownedSkins) {
+    const base = id.includes('__') ? id.split('__')[0] : id;
+    if (!pool.includes(base)) continue;
+    if (seen.has(id)) continue;
+    seen.add(id);
+
+    // How many are available after accounting for slots already using this id
+    const usedInSlots = inSlots.filter(s => s === id).length;
+    const availCount  = (countMap[id] || 0) - usedInSlots;
+    if (availCount > 0) available.push({ skinId: id, count: availCount });
+  }
+
+  grid.innerHTML = '';
+  if (available.length === 0) {
+    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:rgba(255,255,255,0.4);padding:20px;font-size:11px;">No eligible skins.<br>Open crates or trade up from lower tiers!</div>';
+  }
+
+  available.forEach(({ skinId, count }) => {
+    const base = skinId.includes('__') ? skinId.split('__')[0] : skinId;
+    const skin = (typeof SKINS !== 'undefined') ? SKINS.find(s => s.id === base) : null;
+    const mut  = skinId.includes('__') ? skinId.split('__')[1] : null;
+    const mc   = (mut && typeof MUTATION_CONFIG !== 'undefined') ? MUTATION_CONFIG[mut] : null;
+
+    const item = document.createElement('div');
+    item.className = 'tu-picker-item';
+
+    const dot = document.createElement('div');
+    dot.className = 'tu-picker-dot';
+    if (mc) dot.classList.add(mc.cssClass);
+    if (typeof applyRichSkinPreview === 'function') {
+      applyRichSkinPreview(dot, base, skin ? skin.color : null);
+    } else if (skin && skin.color) { dot.style.background = skin.color; }
+    if (mc && mc.cssFilter) dot.style.filter = mc.cssFilter;
+
+    const name = document.createElement('div');
+    name.className = 'tu-picker-name';
+    name.textContent = mc ? `${skin?.name || base} [${mc.label}]` : (skin?.name || base);
+    if (mc) name.style.color = mc.color;
+
+    const cnt = document.createElement('div');
+    cnt.className = 'tu-picker-count';
+    cnt.textContent = `×${count}`;
+
+    item.appendChild(dot);
+    item.appendChild(name);
+    item.appendChild(cnt);
+    item.onclick = () => {
+      _tuSlots[_tuOpenSlotIndex] = skinId;
+      _closeTuPicker();
+      _renderTuSlots();
+      _updateTuBtn();
+    };
+    grid.appendChild(item);
+  });
+
+  overlay.classList.remove('hidden');
+}
+
+function _closeTuPicker() {
+  document.getElementById('tuPickerOverlay')?.classList.add('hidden');
+  _tuOpenSlotIndex = null;
+}
+
+function _executeTuTradeUp() {
+  const filled = _tuSlots.filter(Boolean);
+  if (filled.length < 10) return;
+
+  const nextRarity = TRADEUP_RARITY_NEXT[_tuSelectedRarity];
+  if (!nextRarity) return;
+
+  // Remove the 10 skins from ownedSkins (one of each slot entry)
+  const toRemove = [..._tuSlots];
+  const newOwned = [...ownedSkins];
+  for (const skinId of toRemove) {
+    const idx = newOwned.indexOf(skinId);
+    if (idx !== -1) newOwned.splice(idx, 1);
+  }
+  ownedSkins.length = 0;
+  ownedSkins.push(...newOwned);
+
+  // Pick random skin from next rarity pool
+  const pool = SKIN_RARITIES[nextRarity] || [];
+  if (pool.length === 0) return;
+  const outputBase = pool[Math.floor(Math.random() * pool.length)];
+
+  // Mutation roll with boost
+  const mutatedCount = _tuSlots.filter(s => s && s.includes('__')).length;
+  const boostFlat    = mutatedCount * 0.03; // +3% per mutated input
+  let mutation = null;
+  if (typeof MUTATION_CONFIG !== 'undefined') {
+    const roll = Math.random();
+    let cumulative = 0;
+    for (const [type, cfg] of Object.entries(MUTATION_CONFIG)) {
+      cumulative += cfg.chance + boostFlat / Object.keys(MUTATION_CONFIG).length;
+      if (roll < cumulative) { mutation = type; break; }
+    }
+  }
+
+  const finalId = mutation ? `${outputBase}__${mutation}` : outputBase;
+  ownedSkins.push(finalId);
+
+  if (typeof saveUserDataToFirebase === 'function') saveUserDataToFirebase('critical');
+  else if (typeof saveCoins === 'function') saveCoins();
+
+  // Show result message
+  const skin    = (typeof SKINS !== 'undefined') ? SKINS.find(s => s.id === outputBase) : null;
+  const mc      = mutation && typeof MUTATION_CONFIG !== 'undefined' ? MUTATION_CONFIG[mutation] : null;
+  const skinName = mc ? `${skin?.name || outputBase} [${mc.label}]` : (skin?.name || outputBase);
+  const msg     = document.getElementById('tuMsg');
+  if (msg) {
+    msg.textContent = `✨ Got: ${skinName}!`;
+    msg.style.color = mc ? mc.color : '#6bff7b';
+  }
+
+  // Reset slots
+  _tuSlots = new Array(10).fill(null);
+  _renderTuSlots();
+  _updateTuBtn();
+
+  // Refresh inventory badge
+  if (typeof _renderInventory === 'function') _renderInventory();
 }
 
 console.log('✅ Crate system loaded');

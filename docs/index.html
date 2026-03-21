@@ -328,6 +328,10 @@
           <span>TRADES</span>
           <span id="tradeBadge" class="trade-tab-badge" style="display:none">0</span>
         </button>
+        <button class="shop-tab" data-tab="tradeup">
+          <span class="shop-tab-icon">⬆️</span>
+          <span>TRADE UP</span>
+        </button>
       </div>
       
       <!-- Inventory Tab Content -->
@@ -378,7 +382,7 @@
       <!-- Crates Tab Content -->
       <div id="shopTab-crates" class="shop-tab-content hidden">
         <div class="crates-info">
-          <p>🎁 Each crate gives you 1 item • Duplicates convert to coins</p>
+          <p>🎁 Each crate gives you 1 item • Duplicates stack in your inventory</p>
         </div>
         <div id="cratesGrid" class="crates-grid"></div>
       </div>
@@ -459,6 +463,61 @@
             <div id="mpMyListings">
               <div class="mp-my-empty">You have no active listings</div>
             </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Trade-Up Tab Content -->
+      <div id="shopTab-tradeup" class="shop-tab-content hidden">
+        <div class="tu-container">
+          <div class="tu-header">
+            <div class="tu-title">TRADE UP</div>
+            <div class="tu-subtitle">Sacrifice 10 skins of the same rarity for 1 skin of the next tier</div>
+          </div>
+
+          <!-- Rarity selector -->
+          <div class="tu-rarity-row">
+            <span class="tu-rarity-label">INPUT RARITY</span>
+            <div class="tu-rarity-btns" id="tuRarityBtns">
+              <button class="tu-rarity-btn active" data-rarity="common">COMMON</button>
+              <button class="tu-rarity-btn" data-rarity="uncommon">UNCOMMON</button>
+              <button class="tu-rarity-btn" data-rarity="rare">RARE</button>
+              <button class="tu-rarity-btn" data-rarity="epic">EPIC</button>
+              <button class="tu-rarity-btn" data-rarity="legendary">LEGENDARY</button>
+            </div>
+          </div>
+
+          <!-- 10 input slots -->
+          <div class="tu-slots" id="tuSlots"></div>
+
+          <!-- Mutation boost bar -->
+          <div class="tu-mutation-bar" id="tuMutationBar">
+            <span class="tu-mutation-label">MUTATION BOOST</span>
+            <div class="tu-mutation-track">
+              <div class="tu-mutation-fill" id="tuMutationFill" style="width:0%"></div>
+            </div>
+            <span class="tu-mutation-pct" id="tuMutationPct">+0%</span>
+          </div>
+
+          <!-- Output preview -->
+          <div class="tu-output">
+            <div class="tu-output-label">POSSIBLE OUTPUT</div>
+            <div class="tu-output-tier" id="tuOutputTier">→ 1 RANDOM <span id="tuOutputRarity">UNCOMMON</span> SKIN</div>
+          </div>
+
+          <!-- Trade Up button -->
+          <button class="tu-btn" id="tuBtn" disabled>SELECT 10 SKINS</button>
+          <div class="tu-msg" id="tuMsg"></div>
+        </div>
+
+        <!-- Skin picker modal -->
+        <div id="tuPickerOverlay" class="tu-picker-overlay hidden">
+          <div class="tu-picker-box">
+            <div class="tu-picker-header">
+              <span class="tu-picker-title">SELECT A SKIN</span>
+              <button class="tu-picker-close" id="tuPickerClose">✕</button>
+            </div>
+            <div class="tu-picker-grid" id="tuPickerGrid"></div>
           </div>
         </div>
       </div>

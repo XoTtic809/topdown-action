@@ -4353,3 +4353,324 @@ canvas {
 }
 
 .try-skin-stop:hover { background: rgba(255,80,80,0.3); }
+
+/* ══════════════════════════════════════════════════
+   TRADE-UP TAB
+══════════════════════════════════════════════════ */
+
+.tu-container {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  max-height: 100%;
+  overflow-y: auto;
+}
+
+.tu-header { text-align: center; }
+
+.tu-title {
+  font-size: 18px;
+  font-weight: 900;
+  letter-spacing: 3px;
+  color: #dbe7ff;
+}
+
+.tu-subtitle {
+  font-size: 11px;
+  color: rgba(255,255,255,0.4);
+  margin-top: 4px;
+  letter-spacing: 0.5px;
+}
+
+.tu-rarity-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.tu-rarity-label {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  color: rgba(255,255,255,0.35);
+  white-space: nowrap;
+}
+
+.tu-rarity-btns {
+  display: flex;
+  gap: 5px;
+  flex-wrap: wrap;
+}
+
+.tu-rarity-btn {
+  padding: 4px 10px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 12px;
+  background: transparent;
+  color: rgba(255,255,255,0.45);
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: 'Orbitron', sans-serif;
+}
+
+.tu-rarity-btn:hover { color: #fff; border-color: rgba(255,255,255,0.3); }
+.tu-rarity-btn.active {
+  background: rgba(255,255,255,0.1);
+  color: #fff;
+  border-color: rgba(255,255,255,0.4);
+}
+
+/* Slots grid */
+.tu-slots {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
+}
+
+.tu-slot {
+  aspect-ratio: 1;
+  border: 2px dashed rgba(255,255,255,0.15);
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s;
+  position: relative;
+  background: rgba(255,255,255,0.03);
+  min-height: 64px;
+}
+
+.tu-slot:hover { border-color: rgba(255,255,255,0.35); background: rgba(255,255,255,0.06); }
+
+.tu-slot.filled {
+  border-style: solid;
+  border-color: rgba(255,255,255,0.25);
+}
+
+.tu-slot-preview {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 2px solid rgba(255,255,255,0.2);
+}
+
+.tu-slot-name {
+  font-size: 8px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.5);
+  margin-top: 3px;
+  text-align: center;
+  max-width: 90%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  letter-spacing: 0.3px;
+}
+
+.tu-slot-remove {
+  position: absolute;
+  top: 2px;
+  right: 4px;
+  font-size: 10px;
+  color: rgba(255,80,80,0.6);
+  cursor: pointer;
+  line-height: 1;
+}
+.tu-slot-remove:hover { color: #ff4444; }
+
+.tu-slot-plus {
+  font-size: 22px;
+  color: rgba(255,255,255,0.2);
+  line-height: 1;
+}
+
+/* Mutation boost bar */
+.tu-mutation-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tu-mutation-label {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  color: rgba(255,255,255,0.35);
+  white-space: nowrap;
+}
+
+.tu-mutation-track {
+  flex: 1;
+  height: 6px;
+  background: rgba(255,255,255,0.08);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.tu-mutation-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #9933ff, #ff69ff);
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+.tu-mutation-pct {
+  font-size: 11px;
+  font-weight: 800;
+  color: #cc77ff;
+  min-width: 36px;
+  text-align: right;
+}
+
+/* Output */
+.tu-output { text-align: center; }
+
+.tu-output-label {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  color: rgba(255,255,255,0.3);
+  margin-bottom: 4px;
+}
+
+.tu-output-tier {
+  font-size: 14px;
+  font-weight: 900;
+  color: rgba(255,255,255,0.7);
+  letter-spacing: 1px;
+}
+
+/* Trade Up button */
+.tu-btn {
+  padding: 12px;
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: 2px;
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 10px;
+  background: rgba(255,255,255,0.05);
+  color: rgba(255,255,255,0.3);
+  cursor: not-allowed;
+  font-family: 'Orbitron', sans-serif;
+  transition: all 0.2s;
+}
+
+.tu-btn.ready {
+  background: linear-gradient(135deg, #1a3a6e 0%, #0d1f40 100%);
+  border-color: #4a9eff;
+  color: #4a9eff;
+  cursor: pointer;
+  box-shadow: 0 0 20px rgba(74,158,255,0.2);
+}
+
+.tu-btn.ready:hover {
+  background: linear-gradient(135deg, #2a4a8e 0%, #1a2f50 100%);
+  box-shadow: 0 0 30px rgba(74,158,255,0.4);
+  color: #7ab8ff;
+}
+
+.tu-msg {
+  font-size: 11px;
+  font-weight: 700;
+  text-align: center;
+  min-height: 16px;
+  letter-spacing: 0.5px;
+}
+
+/* Skin picker */
+.tu-picker-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 500;
+  backdrop-filter: blur(4px);
+}
+
+.tu-picker-box {
+  background: linear-gradient(135deg, #0d1525 0%, #0a0f1e 100%);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 14px;
+  width: 90%;
+  max-height: 70%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.tu-picker-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
+.tu-picker-title {
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 2px;
+  color: #dbe7ff;
+}
+
+.tu-picker-close {
+  background: none;
+  border: none;
+  color: rgba(255,255,255,0.4);
+  font-size: 16px;
+  cursor: pointer;
+  padding: 0 4px;
+}
+.tu-picker-close:hover { color: #fff; }
+
+.tu-picker-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  padding: 12px;
+  overflow-y: auto;
+}
+
+.tu-picker-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  padding: 8px 4px;
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.15s;
+  background: rgba(255,255,255,0.03);
+}
+
+.tu-picker-item:hover { background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.25); }
+
+.tu-picker-dot {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 2px solid rgba(255,255,255,0.2);
+}
+
+.tu-picker-name {
+  font-size: 8px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.55);
+  text-align: center;
+  letter-spacing: 0.3px;
+}
+
+.tu-picker-count {
+  font-size: 9px;
+  color: rgba(255,255,255,0.35);
+}
