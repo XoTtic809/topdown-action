@@ -54,6 +54,9 @@ router.post('/submit', requireAuth, async (req, res) => {
       const prevTier     = tier;
       const prevDivision = division;
 
+      // Sovereign players are treated as Apex for RP math
+      const effectiveTier = tier === 'sovereign' ? 'apex' : tier;
+
       // Promotion protection: first loss after promotion costs 0 RP
       let actualDelta = rpDelta;
       if (!won && promo_protect) {
@@ -62,21 +65,24 @@ router.post('/submit', requireAuth, async (req, res) => {
       }
 
       rp = Math.round(rp + actualDelta);
-      const cfg = TIER_CONFIG[tier] || TIER_CONFIG.bronze;
+      const cfg = TIER_CONFIG[effectiveTier] || TIER_CONFIG.bronze;
       let tierChanged     = false;
       let divisionChanged = false;
 
       // ── Promotion ─────────────────────────────────────────────
+      // Sovereign is never reached via normal promotion — capped at Apex.
       if (cfg.rpPerDiv !== null && rp >= cfg.rpPerDiv) {
         rp -= cfg.rpPerDiv;
         if (cfg.hasDivisions && division > 1) {
           division--;           // e.g. V(5) → IV(4)
           divisionChanged = true;
         } else {
-          const idx = TIER_ORDER.indexOf(tier);
-          if (idx < TIER_ORDER.length - 1) {
-            tier      = TIER_ORDER[idx + 1];
-            const nc  = TIER_CONFIG[tier];
+          const idx = TIER_ORDER.indexOf(effectiveTier);
+          // Cap promotion at Apex (index 7). Sovereign (index 8) is auto-assigned.
+          if (idx < TIER_ORDER.indexOf('apex')) {
+            const nextTier = TIER_ORDER[idx + 1];
+            tier      = nextTier;
+            const nc  = TIER_CONFIG[nextTier];
             division  = nc.hasDivisions ? 5 : 1;
             rp        = 0;
             tierChanged     = true;
@@ -90,7 +96,13 @@ router.post('/submit', requireAuth, async (req, res) => {
 
       // ── Demotion ──────────────────────────────────────────────
       if (rp < 0) {
-        if (tier === 'bronze' && division === 5) {
+        // Sovereign demotes to Apex (not Grandmaster)
+        if (tier === 'sovereign') {
+          tier = 'apex';
+          rp   = 75;
+          tierChanged     = true;
+          divisionChanged = true;
+        } else if (tier === 'bronze' && division === 5) {
           rp = 0; // floor: Bronze V cannot demote
         } else if (cfg.hasDivisions && division < 5) {
           division++;   // e.g. III(3) → IV(4)
@@ -98,7 +110,7 @@ router.post('/submit', requireAuth, async (req, res) => {
           divisionChanged = true;
         } else {
           // At lowest division of this tier OR no-division tier → drop to previous tier
-          const idx = TIER_ORDER.indexOf(tier);
+          const idx = TIER_ORDER.indexOf(effectiveTier);
           if (idx > 0) {
             tier     = TIER_ORDER[idx - 1];
             const pc = TIER_CONFIG[tier];
@@ -119,7 +131,7 @@ router.post('/submit', requireAuth, async (req, res) => {
       const newIdx  = TIER_ORDER.indexOf(tier);
       const peakIdx = TIER_ORDER.indexOf(peak_tier);
       let peakUpdated = false;
-      if (newIdx > peakIdx || (newIdx === peakIdx && TIER_CONFIG[tier].hasDivisions && division < peak_division)) {
+      if (newIdx > peakIdx || (newIdx === peakIdx && TIER_CONFIG[tier]?.hasDivisions && division < peak_division)) {
         peak_tier     = tier;
         peak_division = division;
         peakUpdated   = true;
@@ -133,6 +145,41 @@ router.post('/submit', requireAuth, async (req, res) => {
           tier=$2, division=$3, rp=$4, peak_tier=$5, peak_division=$6,
           wins=$7, losses=$8, streak=$9, promo_protect=$10, updated_at=NOW()
       `, [uid, tier, division, rp, peak_tier, peak_division, wins, losses, streak, promo_protect]);
+
+      // ── Sovereign reconciliation ────────────────────────────────
+      // Only #1 Apex player (by RP) gets Sovereign. Runs after every submit.
+      // 1. Find current sovereign (if any)
+      // 2. Find #1 apex player by RP
+      // 3. If #1 apex has more RP than current sovereign, swap them
+      const { rows: sovRows } = await client.query(
+        `SELECT uid, rp FROM ranked_profiles WHERE tier = 'sovereign' LIMIT 1`
+      );
+      const currentSovereign = sovRows[0] || null;
+
+      const { rows: topApex } = await client.query(
+        `SELECT uid, rp FROM ranked_profiles WHERE tier = 'apex' ORDER BY rp DESC LIMIT 1`
+      );
+      const topApexPlayer = topApex[0] || null;
+
+      // Determine who should be sovereign
+      if (topApexPlayer) {
+        const topApexRp = topApexPlayer.rp;
+        const sovRp     = currentSovereign ? currentSovereign.rp : -1;
+
+        if (!currentSovereign) {
+          // No sovereign exists — promote #1 apex
+          await client.query(`UPDATE ranked_profiles SET tier = 'sovereign' WHERE uid = $1`, [topApexPlayer.uid]);
+          if (topApexPlayer.uid === uid) { tier = 'sovereign'; tierChanged = true; }
+        } else if (topApexRp > sovRp) {
+          // An apex player overtook the current sovereign
+          await client.query(`UPDATE ranked_profiles SET tier = 'apex' WHERE uid = $1`, [currentSovereign.uid]);
+          await client.query(`UPDATE ranked_profiles SET tier = 'sovereign' WHERE uid = $1`, [topApexPlayer.uid]);
+          if (topApexPlayer.uid === uid) { tier = 'sovereign'; tierChanged = true; }
+          if (currentSovereign.uid === uid) { tier = 'apex'; tierChanged = true; }
+        }
+      } else if (currentSovereign && !topApexPlayer) {
+        // Sovereign is the only one at the top — they stay sovereign
+      }
 
       return {
         tier, division, rp, peak_tier, peak_division, wins, losses, streak,
