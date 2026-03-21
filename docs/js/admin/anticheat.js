@@ -63,7 +63,7 @@ const AC_GAME = {
     return 20 + w * 3;
   },
   waveBonus:     w => (w + 1) * 60,
-  waveCoinBonus: w => w * 2,
+  waveCoinBonus: w => Math.min(w, 20) * 5 + Math.max(0, w - 20) * 2,
   maxPowerupScore: 9 * 150,
 };
 
@@ -136,7 +136,9 @@ const gameSession = {
 };
 
 function acSessionStart() {
-  gameSession.token        = Math.random().toString(36).slice(2) + Date.now().toString(36);
+  const arr = new Uint8Array(16);
+  crypto.getRandomValues(arr);
+  gameSession.token        = Array.from(arr, b => b.toString(16).padStart(2, '0')).join('');
   gameSession.startTime    = Date.now();
   gameSession.endTime      = null;
   gameSession.waveReached  = 1;
@@ -145,10 +147,21 @@ function acSessionStart() {
   gameSession.coinsAtStart = (typeof playerCoins !== 'undefined') ? playerCoins : 0;
 }
 
+const MAX_SESSION_COINS = 5000;
+
 function acSessionEnd(waveReached, kills) {
   gameSession.endTime     = Date.now();
   gameSession.waveReached = waveReached;
   gameSession.totalKills  = kills;
+
+  // Enforce session coin cap — clamp earnings to MAX_SESSION_COINS
+  if (typeof playerCoins !== 'undefined' && typeof gameSession.coinsAtStart === 'number') {
+    const earned = playerCoins - gameSession.coinsAtStart;
+    if (earned > MAX_SESSION_COINS) {
+      playerCoins = gameSession.coinsAtStart + MAX_SESSION_COINS;
+      if (typeof saveCoins === 'function') saveCoins();
+    }
+  }
 }
 
 let _lastSubmitTime = 0;

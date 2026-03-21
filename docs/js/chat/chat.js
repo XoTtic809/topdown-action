@@ -560,8 +560,10 @@
     if (msg.isQuickChat) wrap.classList.add('chat-msg-quick');
     wrap.setAttribute('data-msg-id', msg.id);
 
+    // escapeHtml is global from anticheat.js — sanitize all user content
+    const _esc = typeof escapeHtml === 'function' ? escapeHtml : (s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'));
     if (msg.isSystem) {
-      wrap.innerHTML = `<span class="chat-sys-text">${msg.text}</span>`;
+      wrap.innerHTML = `<span class="chat-sys-text">${_esc(msg.text)}</span>`;
     } else {
       const time  = new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
       const badge = msg.isAdmin
@@ -569,11 +571,11 @@
         : (msg.isQuickChat ? '<span class="chat-qc-badge">QUICK</span>' : '');
       wrap.innerHTML =
         `<span class="chat-meta">` +
-          `<span class="chat-user ${msg.isAdmin ? 'chat-user-admin' : ''}">${msg.username}</span>` +
+          `<span class="chat-user ${msg.isAdmin ? 'chat-user-admin' : ''}">${_esc(msg.username)}</span>` +
           badge +
           `<span class="chat-time">${time}</span>` +
         `</span>` +
-        `<span class="chat-text">${msg.text}</span>`;
+        `<span class="chat-text">${_esc(msg.text)}</span>`;
 
       if (isAdminView) {
         const del = document.createElement('button');

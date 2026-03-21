@@ -105,14 +105,14 @@ const CRATES = [
   {
     id: 'legendary-crate',
     name: 'Legendary Crate',
-    price: 3000,
+    price: 4000,
     color: '#ffd700',
     desc: 'Ultimate crate! Guaranteed legendary or mythic skin!',
     icon: '⭐',
     rarityWeights: {
       rare: 0.20,      // 20% chance
-      epic: 0.40,      // 40% chance
-      legendary: 0.35, // 35% chance
+      epic: 0.50,      // 50% chance (was 40%)
+      legendary: 0.25, // 25% chance (was 35%)
       mythic: 0.05     // 5% chance
     }
   },
@@ -131,7 +131,7 @@ const CRATES = [
   {
     id: 'oblivion-crate',
     name: 'Oblivion Crate',
-    price: 7500,
+    price: 10000,
     color: '#1a0a2e',
     glowColor: '#8a2be2',
     desc: 'The darkest crate. Only high-tier skins. Two ultra-rare exclusives.',
@@ -236,6 +236,36 @@ function getRandomSkinFromRarity(rarity, crateId) {
   return pool[Math.floor(Math.random() * pool.length)];
 }
 
+// ── Pity Timer System ───────────────────────────────────────
+// Tracks consecutive opens without high-rarity drops.
+// Legendary Crate: after 20 opens without legendary+, guarantee legendary.
+// Any crate: after 50 opens without mythic, double mythic chance for next 10.
+const _pityState = JSON.parse(localStorage.getItem('cratePityState') || '{}');
+function _savePityState() { localStorage.setItem('cratePityState', JSON.stringify(_pityState)); }
+
+function _checkPityOverride(crateId, rolledRarity) {
+  if (!_pityState[crateId]) _pityState[crateId] = { sinceHighRarity: 0, sinceMythic: 0 };
+  const ps = _pityState[crateId];
+
+  // Legendary Crate pity: guarantee legendary after 20 opens without legendary+
+  if (crateId === 'legendary-crate') {
+    const isHighRarity = (rolledRarity === 'legendary' || rolledRarity === 'mythic');
+    if (isHighRarity) { ps.sinceHighRarity = 0; }
+    else {
+      ps.sinceHighRarity++;
+      if (ps.sinceHighRarity >= 20) { ps.sinceHighRarity = 0; _savePityState(); return 'legendary'; }
+    }
+  }
+
+  // Global mythic pity: double mythic chance after 50 opens of any type
+  const isMythic = (rolledRarity === 'mythic' || rolledRarity === 'ob_mythic' || rolledRarity === 'ob_ultra');
+  if (isMythic) { ps.sinceMythic = 0; }
+  else { ps.sinceMythic++; }
+
+  _savePityState();
+  return null; // no override
+}
+
 function openCrate(crateId) {
   const crate = CRATES.find(c => c.id === crateId);
   if (!crate) return null;
@@ -281,8 +311,10 @@ function openCrate(crateId) {
     devForceCreatorFlag = false; // Reset flag after use
     console.log('👑 DEV FORCE: THE CREATOR guaranteed in this crate!');
   } else {
-    // Normal random roll
+    // Normal random roll with pity timer check
     rarity = rollRarity(crate);
+    const pityOverride = _checkPityOverride(crateId, rarity);
+    if (pityOverride) rarity = pityOverride;
     skinId = getRandomSkinFromRarity(rarity, crateId);
   }
   
@@ -303,15 +335,32 @@ function openCrate(crateId) {
 
     // The final inventory ID — mutated skins are distinct items
     const finalSkinId = mutation ? `${skinId}__${mutation}` : skinId;
-    // Always add to inventory — duplicates stack (no coin refund)
+
+    // Duplicate detection — refund partial crate cost if already owned
+    const isDuplicate = ownedSkins.includes(finalSkinId);
+    let coinValue = 0;
+    if (isDuplicate) {
+      const DUPE_REFUND_RATES = {
+        common: 0.25, uncommon: 0.25,
+        rare: 0.35,
+        epic: 0.50, ob_epic: 0.50,
+        legendary: 0.60, ob_legendary: 0.60,
+        mythic: 0.60, ob_mythic: 0.60, ob_ultra: 0.60,
+      };
+      const refundRate = DUPE_REFUND_RATES[rarity] || 0.25;
+      coinValue = Math.floor(crate.price * refundRate);
+      playerCoins += coinValue;
+    }
+
+    // Always add to inventory (duplicates useful for trade-ups)
     ownedSkins.push(finalSkinId);
 
     rewards.push({
       skin,
       skinId: finalSkinId,
       rarity,
-      isDuplicate: false,
-      coinValue: 0,
+      isDuplicate,
+      coinValue,
       mutation,
     });
   }
@@ -757,8 +806,13 @@ function displayCrateResults(result) {
     status.innerHTML = `<div style="font-size: 36px; margin-bottom: 12px;">👑</div><div style="font-size: 20px; font-weight: 900; margin-bottom: 6px; background: linear-gradient(90deg, #ffd700, #ffffff, #ff69b4, #00ffff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">YOU HAVE UNLOCKED THE CREATOR!</div><div style="font-size: 14px; color: rgba(255,255,255,0.8); margin-top: 8px;">The ultimate power has been bestowed upon you.</div>`;
     status.style.textAlign = 'center';
   } else {
-    status.innerHTML = `<div style="font-size: 32px; margin-bottom: 8px;">✨</div>SKIN ADDED TO INVENTORY!`;
-    status.style.color = '#6bff7b';
+    if (reward.isDuplicate && reward.coinValue > 0) {
+      status.innerHTML = `<div style="font-size: 32px; margin-bottom: 8px;">🔁</div>DUPLICATE — +${reward.coinValue.toLocaleString()} coins refunded!`;
+      status.style.color = '#ffbb33';
+    } else {
+      status.innerHTML = `<div style="font-size: 32px; margin-bottom: 8px;">✨</div>SKIN ADDED TO INVENTORY!`;
+      status.style.color = '#6bff7b';
+    }
     status.style.fontWeight = '700';
     status.style.fontSize = '18px';
   }
@@ -774,6 +828,9 @@ function displayCrateResults(result) {
   
   // Update summary
   const summary = document.getElementById('crateSummary');
+  const rerollCost = Math.floor((result.crate.price || 0) * 0.5);
+  const canReroll  = !result._rerolled && rerollCost > 0;
+
   summary.innerHTML = `
       <div class="crate-summary-stat">
         <span class="crate-summary-label">Result:</span>
@@ -785,9 +842,38 @@ function displayCrateResults(result) {
       </div>
       <div class="crate-summary-stat">
         <span class="crate-summary-label">Your Balance:</span>
-        <span class="crate-summary-value">🪙 ${playerCoins}</span>
+        <span class="crate-summary-value">🪙 ${playerCoins.toLocaleString()}</span>
       </div>
     `;
+
+  // Re-roll button — one-time offer per crate open at 50% of crate price
+  if (canReroll) {
+    const rerollBtn = document.createElement('button');
+    rerollBtn.className = 'crate-reroll-btn';
+    rerollBtn.textContent = `🔄 Re-roll (${rerollCost.toLocaleString()} coins)`;
+    rerollBtn.style.cssText = 'margin-top:12px;padding:10px 24px;background:linear-gradient(135deg,#ff9800,#f44336);color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:700;font-size:15px;';
+    if (typeof playerCoins === 'undefined' || playerCoins < rerollCost) {
+      rerollBtn.disabled = true;
+      rerollBtn.style.opacity = '0.5';
+      rerollBtn.title = 'Not enough coins';
+    }
+    rerollBtn.onclick = () => {
+      if (typeof playerCoins === 'undefined' || playerCoins < rerollCost) return;
+      // Remove the skin we just got
+      const idx = ownedSkins.lastIndexOf(reward.skinId || (reward.mutation ? `${reward.skin.id}__${reward.mutation}` : reward.skin.id));
+      if (idx !== -1) ownedSkins.splice(idx, 1);
+      // Deduct re-roll cost
+      playerCoins -= rerollCost;
+      if (typeof saveCoins === 'function') saveCoins();
+      // Re-roll: open the crate again but mark as rerolled
+      const newResult = openCrate(result.crate.id);
+      if (newResult) {
+        newResult._rerolled = true;
+        displayCrateResults(newResult);
+      }
+    };
+    summary.appendChild(rerollBtn);
+  }
 }
 
 function closeCrateModal() {
@@ -1087,6 +1173,15 @@ const TRADEUP_RARITY_NEXT = {
   legendary: 'mythic',
 };
 
+// Coin cost to perform a trade-up at each rarity tier
+const TRADEUP_COSTS = {
+  common:    200,
+  uncommon:  500,
+  rare:      1500,
+  epic:      4000,
+  legendary: 10000,
+};
+
 // All skins that belong to each rarity tier (for outputs)
 function getSkinsForRarity(rarity) {
   const pool = SKIN_RARITIES[rarity] || [];
@@ -1232,12 +1327,18 @@ function _updateTuBtn() {
     return;
   }
 
+  const cost = TRADEUP_COSTS[_tuSelectedRarity] || 0;
+
   if (filled < 10) {
     btn.textContent = `SELECT ${10 - filled} MORE`;
     btn.className   = 'tu-btn';
     btn.disabled    = true;
+  } else if (cost > 0 && (typeof playerCoins === 'undefined' || playerCoins < cost)) {
+    btn.textContent = `⬆ TRADE UP (${cost.toLocaleString()} coins — not enough!)`;
+    btn.className   = 'tu-btn';
+    btn.disabled    = true;
   } else {
-    btn.textContent = '⬆ TRADE UP';
+    btn.textContent = cost > 0 ? `⬆ TRADE UP (${cost.toLocaleString()} coins)` : '⬆ TRADE UP';
     btn.className   = 'tu-btn ready';
     btn.disabled    = false;
   }
@@ -1331,6 +1432,18 @@ function _executeTuTradeUp() {
 
   const nextRarity = TRADEUP_RARITY_NEXT[_tuSelectedRarity];
   if (!nextRarity) return;
+
+  // Deduct trade-up coin cost
+  const cost = TRADEUP_COSTS[_tuSelectedRarity] || 0;
+  if (cost > 0) {
+    if (typeof playerCoins === 'undefined' || playerCoins < cost) {
+      const msg = document.getElementById('tuMsg');
+      if (msg) { msg.textContent = `Not enough coins! Need ${cost.toLocaleString()}`; msg.style.color = '#ff4444'; }
+      return;
+    }
+    playerCoins -= cost;
+    if (typeof saveCoins === 'function') saveCoins();
+  }
 
   // Remove the 10 skins from ownedSkins (one of each slot entry)
   const toRemove = [..._tuSlots];

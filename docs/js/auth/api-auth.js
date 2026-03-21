@@ -214,6 +214,7 @@ async function _postLoginSetup() {
 
   // Grant champion skins to admins so they can preview them
   if (isAdmin) {
+    ownedSkins = [...new Set(ownedSkins)]; // deduplicate before check
     const champs  = ['gold-champion', 'silver-champion', 'bronze-champion'];
     const missing = champs.filter(s => !ownedSkins.includes(s));
     if (missing.length) {
@@ -366,28 +367,36 @@ async function submitLevelToLeaderboard(xp, level) {
   // no-op — XP saved in executeSave
 }
 
+const _lbCache = {};
+const LB_CACHE_TTL = 30000; // 30 seconds
+
 async function fetchLeaderboard(type = 'allTime') {
+  const now = Date.now();
+  if (_lbCache[type] && now - _lbCache[type].ts < LB_CACHE_TTL) return _lbCache[type].data;
   try {
+    let result;
     if (type === 'coins') {
       const rows = await apiGet('/leaderboard/coins?limit=100');
-      return rows.map(r => ({ userId: r.uid, username: r.username, coins: r.total_coins }));
+      result = rows.map(r => ({ userId: r.uid, username: r.username, coins: r.total_coins }));
     } else if (type === 'level') {
       const rows = await apiGet('/leaderboard/levels?limit=100');
-      return rows.map(r => ({ userId: r.uid, username: r.username, xp: r.current_xp,
+      result = rows.map(r => ({ userId: r.uid, username: r.username, xp: r.current_xp,
         level: typeof calculateTrueLevel === 'function' ? (calculateTrueLevel(r.current_xp) || 0) : 0 }));
     } else if (type === 'timeattack') {
       const rows = await apiGet('/leaderboard/timeattack?limit=100');
-      return rows.map(r => ({ userId: r.uid, username: r.username, kills: r.ta_best_kills }));
+      result = rows.map(r => ({ userId: r.uid, username: r.username, kills: r.ta_best_kills }));
     } else if (type === 'bossrush') {
       const rows = await apiGet('/leaderboard/bossrush?limit=100');
-      return rows.map(r => ({ userId: r.uid, username: r.username, bosses: r.br_bosses_beaten }));
+      result = rows.map(r => ({ userId: r.uid, username: r.username, bosses: r.br_bosses_beaten }));
     } else if (type === 'ranked') {
       const rows = await apiGet('/ranked/leaderboard?limit=100');
-      return rows.map(r => ({ userId: r.uid, username: r.username, tier: r.tier, division: r.division, rp: r.rp, wins: r.wins, losses: r.losses }));
+      result = rows.map(r => ({ userId: r.uid, username: r.username, tier: r.tier, division: r.division, rp: r.rp, wins: r.wins, losses: r.losses }));
     } else {
       const rows = await apiGet('/leaderboard/scores?limit=100');
-      return rows.map(r => ({ userId: r.uid, username: r.username, score: r.high_score }));
+      result = rows.map(r => ({ userId: r.uid, username: r.username, score: r.high_score }));
     }
+    _lbCache[type] = { data: result, ts: now };
+    return result;
   } catch (err) {
     console.error('[Leaderboard] fetch failed:', err);
     return [];

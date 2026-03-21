@@ -107,7 +107,7 @@ router.get('/bossrush', async (req, res) => {
 // POST /api/leaderboard/submit/horde  { kills }
 router.post('/submit/horde', requireAuth, async (req, res) => {
   const { kills } = req.body;
-  if (typeof kills !== 'number' || kills < 0) return res.status(400).json({ error: 'Invalid kills' });
+  if (typeof kills !== 'number' || kills < 0 || kills > 50000) return res.status(400).json({ error: 'Invalid kills' });
   try {
     await query(`
       UPDATE users SET horde_best_kills = GREATEST(horde_best_kills, $1), updated_at = NOW()
@@ -122,7 +122,7 @@ router.post('/submit/horde', requireAuth, async (req, res) => {
 // POST /api/leaderboard/submit/timeattack  { kills }
 router.post('/submit/timeattack', requireAuth, async (req, res) => {
   const { kills } = req.body;
-  if (typeof kills !== 'number' || kills < 0) return res.status(400).json({ error: 'Invalid kills' });
+  if (typeof kills !== 'number' || kills < 0 || kills > 10000) return res.status(400).json({ error: 'Invalid kills' });
   try {
     await query(`
       UPDATE users SET ta_best_kills = GREATEST(ta_best_kills, $1), updated_at = NOW()
@@ -137,7 +137,7 @@ router.post('/submit/timeattack', requireAuth, async (req, res) => {
 // POST /api/leaderboard/submit/bossrush  { bosses }
 router.post('/submit/bossrush', requireAuth, async (req, res) => {
   const { bosses } = req.body;
-  if (typeof bosses !== 'number' || bosses < 0) return res.status(400).json({ error: 'Invalid bosses' });
+  if (typeof bosses !== 'number' || bosses < 0 || bosses > 500) return res.status(400).json({ error: 'Invalid bosses' });
   try {
     await query(`
       UPDATE users SET br_bosses_beaten = GREATEST(br_bosses_beaten, $1), updated_at = NOW()

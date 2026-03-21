@@ -46,7 +46,7 @@ function stopTradeHeartbeat() {
 
 async function _sendHeartbeat() {
   if (!currentUser || isGuest) return;
-  try { await _tradePost('/heartbeat'); } catch (_) {}
+  try { await _tradePost('/heartbeat'); } catch (_) { /* silent — heartbeats are best-effort */ }
 }
 
 async function tradeGetPresence(uid) {
@@ -81,7 +81,7 @@ async function _pollNotifications() {
         renderTradeNotifications(data);
       }
     }
-  } catch (_) {}
+  } catch (e) { console.warn('[Trade] notification poll:', e); }
 }
 
 async function tradeGetNotifications() {
@@ -137,7 +137,7 @@ function startSessionPoll(sessionId) {
           tradeState.activeSessionId = null;
         }
       }
-    } catch (_) {}
+    } catch (e) { console.warn('[Trade] session poll:', e); }
   }, TRADE_POLL_INTERVAL);
 }
 

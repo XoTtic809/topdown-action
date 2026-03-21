@@ -11,7 +11,7 @@ console.log('🎨 Admin skins module loaded');
 function adminInitSkinGiveDropdown() {
   const sel = document.getElementById('skinGiveSelect');
   if (!sel || typeof SKINS === 'undefined') return;
-  if (sel.options.length > 1) return; // already populated
+  // Always rebuild to reflect any SKINS array changes
   sel.innerHTML = '<option value="">— Select a skin —</option>';
   SKINS.forEach(skin => {
     const opt = document.createElement('option');
@@ -215,8 +215,10 @@ function adminInitMutationSection() {
   document.getElementById('mutGiveMutSelect')?.addEventListener('change', updatePreview);
 }
 
+let _giveMutLock = false;
 async function adminGiveMutatedSkin() {
-  if (!isAdmin) return;
+  if (!isAdmin || _giveMutLock) return;
+  _giveMutLock = true;
   const userId   = document.getElementById('mutGiveUserId')?.value.trim();
   const baseSkin = document.getElementById('mutGiveSkinSelect')?.value;
   const mutation = document.getElementById('mutGiveMutSelect')?.value;
@@ -233,6 +235,7 @@ async function adminGiveMutatedSkin() {
     const label = mc ? mc.label : mutation.toUpperCase();
     showAdminMessage(`✦ Gave "${skinInfo?.name || baseSkin} [${label}]" (${skinId}) to user`);
   } catch (err) { showAdminMessage('Error: ' + err.message, true); }
+  finally { _giveMutLock = false; }
 }
 
 async function adminLookupMutatedSkins() {

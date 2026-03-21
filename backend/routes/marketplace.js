@@ -17,7 +17,8 @@ const { logTrade, getRecentTrades, getEconomyStats } = require('../models/transa
 // ─────────────────────────────────────────────────────────────
 // CONSTANTS — kept in sync with your frontend marketplace.js
 // ─────────────────────────────────────────────────────────────
-const TAX_RATE                = 0.10;
+const TAX_RATE                = 0.08;
+const LISTING_FEE_RATE        = 0.02;
 const MAX_LISTINGS_PER_PLAYER = 5;
 const MIN_ACCOUNT_AGE_DAYS    = 7;
 const MIN_LEVEL               = 15;
@@ -57,6 +58,7 @@ function parseMutatedSkinId(skinId) {
 
 const RARITY_PRICING = {
   common:    { floor: 100,    ceiling: 500    },
+  uncommon:  { floor: 200,    ceiling: 1000   },
   rare:      { floor: 500,    ceiling: 2000   },
   epic:      { floor: 2000,   ceiling: 8000   },
   legendary: { floor: 8000,   ceiling: 25000  },
@@ -167,7 +169,7 @@ router.post('/list', requireAuth, async (req, res) => {
   const mutMult = (mutation && MUTATION_PRICE_MULTIPLIERS[mutation]) || 1;
   const limits = {
     floor:   Math.floor(baseLimits.floor   * mutMult),
-    ceiling: Math.floor(baseLimits.ceiling * mutMult),
+    ceiling: Math.floor(baseLimits.ceiling * Math.min(mutMult, 3.0)),
   };
 
   if (price < limits.floor || price > limits.ceiling) {
@@ -212,6 +214,18 @@ router.post('/list', requireAuth, async (req, res) => {
       const activeCount = await countActiveListingsBySeller(req.user.uid);
       if (activeCount >= MAX_LISTINGS_PER_PLAYER) {
         throw new Error(`Maximum ${MAX_LISTINGS_PER_PLAYER} active listings.`);
+      }
+
+      // Non-refundable listing fee (2% of asking price)
+      const listingFee = Math.floor(price * LISTING_FEE_RATE);
+      if (listingFee > 0) {
+        if (user.total_coins < listingFee) {
+          throw new Error(`Not enough coins for listing fee (${listingFee.toLocaleString()} coins).`);
+        }
+        await client.query(
+          'UPDATE users SET total_coins = total_coins - $2, updated_at = NOW() WHERE uid = $1',
+          [req.user.uid, listingFee]
+        );
       }
 
       await removeSkin(req.user.uid, skinId, client);

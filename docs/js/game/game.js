@@ -41,8 +41,10 @@ const comboEl = document.getElementById('combo');
 const comboValEl = document.getElementById('comboVal');
 const scorePopupsContainer = document.getElementById('scorePopups');
 const dashAbility = document.getElementById('dashAbility');
-const dashCooldownEl = dashAbility.querySelector('.ability-cooldown');
-const dashTimerEl = dashAbility.querySelector('.ability-timer');
+const dashCooldownEl = dashAbility?.querySelector('.ability-cooldown');
+const dashTimerEl = dashAbility?.querySelector('.ability-timer');
+const buffsDisplayEl = document.getElementById('buffsDisplay');
+const killsValEl_cached = document.getElementById('killsVal');
 
 // --- resize ---
 
@@ -1082,17 +1084,17 @@ class Player {
     this.dashCooldown = Math.max(0, this.dashCooldown - dt);
     
  // Update dash ability UI
-    const cooldownPercent = (this.dashCooldown / 3) * 100;
-    dashCooldownEl.style.height = cooldownPercent + '%';
-    
+    if (dashCooldownEl) {
+      const cooldownPercent = (this.dashCooldown / 3) * 100;
+      dashCooldownEl.style.height = cooldownPercent + '%';
+    }
  // Show cooldown timer text
     if (this.dashCooldown > 0) {
-      dashTimerEl.textContent = Math.ceil(this.dashCooldown);
-      dashTimerEl.style.display = 'block';
-      dashAbility.classList.remove('ready');
+      if (dashTimerEl) { dashTimerEl.textContent = Math.ceil(this.dashCooldown); dashTimerEl.style.display = 'block'; }
+      if (dashAbility) dashAbility.classList.remove('ready');
     } else {
-      dashTimerEl.style.display = 'none';
-      dashAbility.classList.add('ready');
+      if (dashTimerEl) dashTimerEl.style.display = 'none';
+      if (dashAbility) dashAbility.classList.add('ready');
     }
 
     const fireRate = this.rapidFire > 0 ? 0.05 : 0.12;
@@ -6072,12 +6074,28 @@ function addCombo() {
     comboEl.classList.remove('hidden');
   }
   // Update kill counter HUD with bump animation
-  const killsValEl = document.getElementById('killsVal');
-  if (killsValEl) {
-    killsValEl.textContent = totalKills;
-    killsValEl.classList.remove('kills-bump');
-    void killsValEl.offsetWidth; // force reflow to restart animation
-    killsValEl.classList.add('kills-bump');
+  if (killsValEl_cached) {
+    killsValEl_cached.textContent = totalKills;
+    killsValEl_cached.classList.remove('kills-bump');
+    void killsValEl_cached.offsetWidth; // force reflow to restart animation
+    killsValEl_cached.classList.add('kills-bump');
+  }
+  if (typeof achOnKill === 'function') achOnKill(totalKills, combo);
+}
+
+function addComboBulk(count) {
+  const gain = Math.min(count, 15); // cap nuke combo contribution
+  combo += gain;
+  comboTimer = 3;
+  if (combo >= 5) {
+    comboValEl.textContent = combo;
+    comboEl.classList.remove('hidden');
+  }
+  if (killsValEl_cached) {
+    killsValEl_cached.textContent = totalKills;
+    killsValEl_cached.classList.remove('kills-bump');
+    void killsValEl_cached.offsetWidth;
+    killsValEl_cached.classList.add('kills-bump');
   }
   if (typeof achOnKill === 'function') achOnKill(totalKills, combo);
 }
@@ -6100,7 +6118,7 @@ function updateBuffsDisplay() {
   if (now - lastBuffUpdate < 50) return; // throttle DOM updates
   lastBuffUpdate = now;
 
-  const container = document.getElementById('buffsDisplay');
+  const container = buffsDisplayEl;
   if (!container) return;
 
   const buffs = [];
@@ -6952,12 +6970,12 @@ function initShopUI() {
     }
   }
 
-  // ── Common Crate (500 coins) — common/uncommon/rare skins ──────────────
-  grid.appendChild(makeCrateHeader('📦', 'Common Crate — 500 Coins', '#78b7ff', 'rgba(120,183,255,0.25)'));
+  // ── Common Crate (300 coins) — common/uncommon/rare skins ──────────────
+  grid.appendChild(makeCrateHeader('📦', 'Common Crate — 300 Coins', '#78b7ff', 'rgba(120,183,255,0.25)'));
   renderCrateSkinList(commonCrateSkins, '📦 CRATE ONLY');
 
-  // ── Icon Skins Crate (1,000 coins) — icon skins ────────────────────────
-  grid.appendChild(makeCrateHeader('🎯', 'Icon Skins Crate — 1,000 Coins', '#00ff9d', 'rgba(0,255,157,0.25)'));
+  // ── Icon Skins Crate (750 coins) — icon skins ──────────────────────────
+  grid.appendChild(makeCrateHeader('🎯', 'Icon Skins Crate — 750 Coins', '#00ff9d', 'rgba(0,255,157,0.25)'));
 
   // Animated preview helpers for icon skins
   function setIconSkinPreview(preview, skinId) {
@@ -7020,20 +7038,20 @@ function initShopUI() {
     grid.appendChild(card);
   }
 
-  // ── Rare Crate (1200 coins) — epic skins ───────────────────────────────
-  grid.appendChild(makeCrateHeader('🎁', 'Rare Crate — 1,200 Coins', '#9d7aff', 'rgba(157,122,255,0.25)'));
+  // ── Rare Crate (750 coins) — uncommon/rare/epic skins ──────────────────
+  grid.appendChild(makeCrateHeader('🎁', 'Rare Crate — 750 Coins', '#9d7aff', 'rgba(157,122,255,0.25)'));
   renderCrateSkinList(rareCrateSkins, '🎁 CRATE ONLY');
 
-  // ── Epic Crate (2500 coins) — legendary skins ──────────────────────────
-  grid.appendChild(makeCrateHeader('🎭', 'Epic Crate — 2,500 Coins', '#ff78b7', 'rgba(255,120,183,0.25)'));
+  // ── Epic Crate (1,500 coins) — rare/epic/legendary skins ────────────────
+  grid.appendChild(makeCrateHeader('🎭', 'Epic Crate — 1,500 Coins', '#ff78b7', 'rgba(255,120,183,0.25)'));
   renderCrateSkinList(epicCrateSkins, '🎭 CRATE ONLY');
 
-  // ── Legendary Crate (5000 coins) — mythic skins ────────────────────────
-  grid.appendChild(makeCrateHeader('⭐', 'Legendary Crate — 5,000 Coins', '#ffd700', 'rgba(255,215,0,0.25)'));
+  // ── Legendary Crate (4,000 coins) — epic/legendary/mythic skins ────────
+  grid.appendChild(makeCrateHeader('⭐', 'Legendary Crate — 4,000 Coins', '#ffd700', 'rgba(255,215,0,0.25)'));
   renderCrateSkinList(legendaryCrateSkins, '⭐ CRATE ONLY');
 
-  // ── Oblivion Crate (15,000 coins) — ob_* skins ─────────────────────────
-  grid.appendChild(makeCrateHeader('🌑', 'Oblivion Crate — 15,000 Coins', '#9055ff', 'rgba(144,85,255,0.25)'));
+  // ── Oblivion Crate (10,000 coins) — ob_* skins ─────────────────────────
+  grid.appendChild(makeCrateHeader('🌑', 'Oblivion Crate — 10,000 Coins', '#9055ff', 'rgba(144,85,255,0.25)'));
   renderCrateSkinList(oblivionCrateSkins, '🌑 CRATE ONLY');
 
   // battle pass skins section
@@ -7174,7 +7192,7 @@ function loop(time) {
 
   if (running && !paused) {
  // FPS calculation
-    fpsSamples.push(dt > 0 ? 1 / dt : 60);
+    fpsSamples.push(dt > 0.001 ? Math.min(1 / dt, 300) : 60);
     if (fpsSamples.length > 30) fpsSamples.shift();
     fpsTimer += dt;
     if (fpsTimer >= 0.5) {
@@ -7184,7 +7202,7 @@ function loop(time) {
     player.update(dt);
 
  // Create trail particles if battle pass trail is active
-    if (!gameSettings.perfMode && Math.random() < 0.6 && typeof createTrailParticle !== 'undefined') {
+    if (!gameSettings.perfMode && Math.random() < 0.6 && _hasTrailParticle) {
       createTrailParticle(player.x, player.y);
     }
  // Creator skin — warm solar trail when moving
@@ -7276,6 +7294,7 @@ function loop(time) {
           player.explosive = 12;
         } else if (pu.type === 'nuke') {
  // Nuke: instantly kill all on-screen enemies and the boss loses 30 HP
+          const nukeKillCount = enemies.length;
           for (let n = enemies.length - 1; n >= 0; n--) {
             const ne = enemies[n];
             const pts = Math.floor(ne.score || 0);
@@ -7288,7 +7307,7 @@ function loop(time) {
             totalKills++;
 
  // Apply XP with enemy-type multipliers
-            if (typeof battlePassAddXP !== 'undefined') {
+            if (_hasBattlePassXP) {
               let xpAmount = BP_XP_CONFIG.perKill;
               if (ne.type === 'miniboss') xpAmount = Math.round(BP_XP_CONFIG.perKill * BP_XP_CONFIG.minibossKill);
               else if (ne.type === 'enforcer') xpAmount = Math.round(BP_XP_CONFIG.perKill * BP_XP_CONFIG.enforcerKill);
@@ -7296,6 +7315,7 @@ function loop(time) {
             }
           }
           enemies.length = 0;
+          addComboBulk(nukeKillCount); // single UI update + achievement check
           saveCoins();
           if (boss) {
             boss.hp -= 30;
@@ -7442,7 +7462,7 @@ if (gameSettings.screenShake) screenShakeAmt = 1.2;
                   addCombo();
 
  // Apply XP with enemy-type multipliers
-                  if (typeof battlePassAddXP !== 'undefined') {
+                  if (_hasBattlePassXP) {
                     let xpAmount = BP_XP_CONFIG.perKill;
                     if (ne.type === 'miniboss') xpAmount = Math.round(BP_XP_CONFIG.perKill * BP_XP_CONFIG.minibossKill);
                     else if (ne.type === 'enforcer') xpAmount = Math.round(BP_XP_CONFIG.perKill * BP_XP_CONFIG.enforcerKill);
@@ -7492,7 +7512,7 @@ if (gameSettings.screenShake) screenShakeAmt = 1.2;
             totalKills++;
             
  // Apply XP with enemy-type multipliers
-            if (typeof battlePassAddXP !== 'undefined') {
+            if (_hasBattlePassXP) {
               let xpAmount = BP_XP_CONFIG.perKill;
               if (e.type === 'miniboss') xpAmount = Math.round(BP_XP_CONFIG.perKill * BP_XP_CONFIG.minibossKill);
               else if (e.type === 'enforcer') xpAmount = Math.round(BP_XP_CONFIG.perKill * BP_XP_CONFIG.enforcerKill);
@@ -7546,7 +7566,7 @@ if (gameSettings.screenShake) screenShakeAmt = 1.2;
                   addCombo();
 
  // Apply XP with enemy-type multipliers
-                  if (typeof battlePassAddXP !== 'undefined') {
+                  if (_hasBattlePassXP) {
                     let xpAmount = BP_XP_CONFIG.perKill;
                     if (ne.type === 'miniboss') xpAmount = Math.round(BP_XP_CONFIG.perKill * BP_XP_CONFIG.minibossKill);
                     else if (ne.type === 'enforcer') xpAmount = Math.round(BP_XP_CONFIG.perKill * BP_XP_CONFIG.enforcerKill);
@@ -7604,7 +7624,7 @@ if (gameSettings.screenShake) screenShakeAmt = 1.2;
         addCombo();
 
  // Apply XP with enemy-type multipliers
-        if (typeof battlePassAddXP !== 'undefined') {
+        if (_hasBattlePassXP) {
           let xpAmount = BP_XP_CONFIG.perKill;
           if (e.type === 'miniboss') xpAmount = Math.round(BP_XP_CONFIG.perKill * BP_XP_CONFIG.minibossKill);
           else if (e.type === 'enforcer') xpAmount = Math.round(BP_XP_CONFIG.perKill * BP_XP_CONFIG.enforcerKill);
@@ -7685,14 +7705,14 @@ if (gameSettings.screenShake) screenShakeAmt = 1;
  // Wave complete! — shared by classic and ranked
       const waveBonus = (wave + 1) * 60;
       score += waveBonus;
-      const coinBonus = Math.floor(wave * 5);
+      const coinBonus = Math.floor(Math.min(wave, 20) * 5 + Math.max(0, wave - 20) * 2);
       playerCoins += coinBonus;
       saveCoins();
       player.hp = Math.min(player.maxHp, player.hp + 30);
       wave++;
       if (typeof achOnWaveReached === 'function') achOnWaveReached(wave);
       if (activeSkin === 'icon_the_creator') triggerCreatorMilestone();
-      if (typeof battlePassAddXP !== 'undefined') battlePassAddXP(BP_XP_CONFIG.perWave);
+      if (_hasBattlePassXP) battlePassAddXP(BP_XP_CONFIG.perWave);
       enemiesThisWave = 0;
       enemiesKilledThisWave = 0;
       spawnTimer = 0;
@@ -7793,7 +7813,7 @@ if (gameSettings.screenShake) screenShakeAmt = 1;
         player.hp = -9999;
         const deathX = player.x, deathY = player.y;
         player.draw = () => {};
-        if (typeof createDeathEffect !== 'undefined') createDeathEffect(deathX, deathY);
+        if (_hasDeathEffect) createDeathEffect(deathX, deathY);
         else createExplosion(deathX, deathY, '#ff4444', 50);
         document.getElementById('buffsDisplay').innerHTML = '';
         activeBuffElements = {};
@@ -7803,7 +7823,7 @@ if (gameSettings.screenShake) screenShakeAmt = 1;
         requestAnimationFrame(loop);
         return;
       }
-      if (typeof battlePassAddXP !== 'undefined') battlePassAddXP(BP_XP_CONFIG.matchCompletion);
+      if (_hasBattlePassXP) battlePassAddXP(BP_XP_CONFIG.matchCompletion);
 
  // Capture position before clearing player
       const deathX = player.x;
@@ -7814,7 +7834,7 @@ if (gameSettings.screenShake) screenShakeAmt = 1;
       player.hp = -9999; // prevent re-triggering this block
 
  // Trigger death effect
-      if (typeof createDeathEffect !== 'undefined') {
+      if (_hasDeathEffect) {
         createDeathEffect(deathX, deathY);
       } else {
         createExplosion(deathX, deathY, '#ff4444', 50);
@@ -8309,21 +8329,21 @@ async function endModeRun(reason) {
   if (currentGameMode === 'timeattack') {
     const isNew = saveModeBest('timeattack', totalKills);
     if (token && currentUser && !isGuest) {
-      fetch(`${BASE}/api/leaderboard/submit/timeattack`, { method:'POST', headers:{'Content-Type':'application/json','Authorization':`Bearer ${token}`}, body: JSON.stringify({kills: totalKills}) }).catch(()=>{});
+      fetch(`${BASE}/api/leaderboard/submit/timeattack`, { method:'POST', headers:{'Content-Type':'application/json','Authorization':`Bearer ${token}`}, body: JSON.stringify({kills: totalKills}) }).catch(err => console.warn('[Leaderboard] TA submit:', err));
     }
     showModeEndOverlay('TIME\'S UP!', 'Time Attack Complete', [{val: totalKills, lbl:'KILLS'},{val: formatRunTime(elapsed), lbl:'TIME'}], isNew);
 
   } else if (currentGameMode === 'bossrush') {
     const isNew = saveModeBest('bossrush', brBossesBeaten);
     if (token && currentUser && !isGuest) {
-      fetch(`${BASE}/api/leaderboard/submit/bossrush`, { method:'POST', headers:{'Content-Type':'application/json','Authorization':`Bearer ${token}`}, body: JSON.stringify({bosses: brBossesBeaten}) }).catch(()=>{});
+      fetch(`${BASE}/api/leaderboard/submit/bossrush`, { method:'POST', headers:{'Content-Type':'application/json','Authorization':`Bearer ${token}`}, body: JSON.stringify({bosses: brBossesBeaten}) }).catch(err => console.warn('[Leaderboard] BR submit:', err));
     }
     showModeEndOverlay('DEFEATED', 'Boss Rush Over', [{val: brBossesBeaten, lbl:'BOSSES BEATEN'},{val: formatRunTime(elapsed), lbl:'SURVIVED'}], isNew);
 
   } else if (currentGameMode === 'ranked') {
     // endRankedRun handles RP calc, server submit, and overlay
     if (typeof endRankedRun === 'function') {
-      endRankedRun(reason === 'complete').catch(() => {});
+      endRankedRun(reason === 'complete').catch(err => console.warn('[Ranked] end:', err));
     }
   }
 }
@@ -8359,7 +8379,15 @@ console.log('🎮 Setting up UI...');
 document.getElementById('homeHighVal').textContent = high;
 document.getElementById('homeCoinsVal').textContent = playerCoins;
 
+// Cached function-existence checks (resolved once at game start, not every frame)
+let _hasTrailParticle = false;
+let _hasBattlePassXP = false;
+let _hasDeathEffect = false;
+
 function startGame() {
+  _hasTrailParticle = typeof createTrailParticle === 'function';
+  _hasBattlePassXP  = typeof battlePassAddXP === 'function';
+  _hasDeathEffect   = typeof createDeathEffect === 'function';
   initAudio();
   document.getElementById('homeScreen').classList.add('hidden');
   document.getElementById('modeSelectPanel')?.classList.add('hidden');
@@ -8798,7 +8826,7 @@ document.getElementById('rankedQuitConfirmYes').addEventListener('click', () => 
   document.getElementById('pauseOverlay').classList.add('hidden');
   document.getElementById('rankedQuitConfirm').classList.add('hidden');
   if (typeof endRankedRun === 'function') {
-    endRankedRun(false).catch(() => {});
+    endRankedRun(false).catch(err => console.warn('[Ranked] quit:', err));
   }
 });
 

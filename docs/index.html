@@ -6,6 +6,7 @@
 <meta name="description" content="Fast-paced top-down shooter with boss fights, power-ups, and wave-based progression. Built with pure JavaScript!" />
 <meta name="author" content="Ethan" />
 <title>Topdown Action</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎯</text></svg>">
 <link rel="stylesheet" href="css/styles.css">
 <link rel="stylesheet" href="css/crate-styles.css">
 <link rel="stylesheet" href="css/battlepass-styles.css">
@@ -197,7 +198,7 @@
         </div>
         <div style="margin-bottom:12px;">
           <label style="font-size:11px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;display:block;margin-bottom:6px;">Subject <span style="color:var(--muted);font-size:10px;">(max 100 chars)</span></label>
-          <input type="text" id="reportSubject" class="auth-input" placeholder="Brief description of the issue" maxlength="100" style="width:100%;box-sizing:border-box;">
+          <input type="text" id="reportSubject" class="auth-input" placeholder="Brief description of the issue" maxlength="100" style="width:100%;box-sizing:border-box;" aria-label="Report subject">
         </div>
         <div style="margin-bottom:16px;">
           <label style="font-size:11px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;display:block;margin-bottom:6px;">Details <span style="color:var(--muted);font-size:10px;">(max 1000 chars)</span></label>
@@ -815,17 +816,17 @@
       
       <!-- Login Form -->
       <div id="loginForm" class="auth-form">
-        <input type="email" id="loginEmail" placeholder="Email" class="auth-input">
-        <input type="password" id="loginPassword" placeholder="Password" class="auth-input">
+        <input type="email" id="loginEmail" placeholder="Email" class="auth-input" aria-label="Email address">
+        <input type="password" id="loginPassword" placeholder="Password" class="auth-input" aria-label="Password">
         <button id="loginBtn" class="home-btn primary">🔑 LOGIN</button>
         <div id="loginError" class="auth-error hidden"></div>
       </div>
       
       <!-- Signup Form -->
       <div id="signupForm" class="auth-form hidden">
-        <input type="text" id="signupUsername" placeholder="Username" class="auth-input">
-        <input type="email" id="signupEmail" placeholder="Email" class="auth-input">
-        <input type="password" id="signupPassword" placeholder="Password (6+ chars)" class="auth-input">
+        <input type="text" id="signupUsername" placeholder="Username" class="auth-input" aria-label="Username">
+        <input type="email" id="signupEmail" placeholder="Email" class="auth-input" aria-label="Email address">
+        <input type="password" id="signupPassword" placeholder="Password (6+ chars)" class="auth-input" aria-label="Password">
         <button id="signupBtn" class="home-btn primary">✨ CREATE ACCOUNT</button>
         <div id="signupError" class="auth-error hidden"></div>
       </div>
@@ -2212,6 +2213,29 @@
 
 </div>
 
+  <!-- ── ANNOUNCEMENT MODAL (managed by api-announcements.js) ── -->
+  <div id="announcementModal" class="hidden" style="
+    position:fixed;inset:0;background:rgba(0,0,0,0.7);
+    display:flex;align-items:center;justify-content:center;z-index:10000;
+    padding:20px;backdrop-filter:blur(4px);">
+    <div style="
+      background:linear-gradient(145deg,#0f0f1a 0%,#131320 60%,#0a0a14 100%);
+      border:1px solid rgba(100,100,200,0.3);
+      border-radius:16px;max-width:440px;width:100%;
+      padding:28px 28px 22px;position:relative;
+      box-shadow:0 0 60px rgba(80,80,200,0.25),0 24px 60px rgba(0,0,0,0.7);">
+      <div class="announcement-title" style="font-size:20px;font-weight:700;margin-bottom:6px;color:#74b9ff;">Announcement</div>
+      <div class="announcement-subtitle" style="font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:14px;"></div>
+      <div class="announcement-body" style="font-size:14px;line-height:1.6;color:rgba(255,255,255,0.85);margin-bottom:20px;"></div>
+      <button id="closeAnnouncementBtn" style="
+        width:100%;padding:10px;border-radius:8px;font-size:13px;font-weight:600;
+        letter-spacing:1px;background:rgba(100,100,255,0.15);
+        border:1px solid rgba(100,100,255,0.4);color:#a0a0ff;cursor:pointer;
+        transition:all 0.2s;" onmouseover="this.style.background='rgba(100,100,255,0.25)'"
+        onmouseout="this.style.background='rgba(100,100,255,0.15)'">CLOSE</button>
+    </div>
+  </div>
+
 <!-- Socket.IO client — served by our backend at /socket.io/socket.io.js -->
 <script>
   // Load socket.io from the backend server, fall back gracefully if unavailable.
@@ -2246,31 +2270,6 @@
 <script src="js/marketplace/api-announcements.js"></script>
 <script src="js/admin/maintenance.js"></script>
 <script src="js/chat/chat.js"></script>
-
-  <!-- ── ANNOUNCEMENT MODAL (managed by api-announcements.js) ── -->
-  <div id="announcementModal" class="hidden" style="
-    position:fixed;inset:0;background:rgba(0,0,0,0.7);
-    display:flex;align-items:center;justify-content:center;z-index:10000;
-    padding:20px;backdrop-filter:blur(4px);">
-    <div style="
-      background:linear-gradient(145deg,#0f0f1a 0%,#131320 60%,#0a0a14 100%);
-      border:1px solid rgba(100,100,200,0.3);
-      border-radius:16px;max-width:440px;width:100%;
-      padding:28px 28px 22px;position:relative;
-      box-shadow:0 0 60px rgba(80,80,200,0.25),0 24px 60px rgba(0,0,0,0.7);">
-      <div class="announcement-title" style="font-size:20px;font-weight:700;margin-bottom:6px;color:#74b9ff;">Announcement</div>
-      <div class="announcement-subtitle" style="font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:14px;"></div>
-      <div class="announcement-body" style="font-size:14px;line-height:1.6;color:rgba(255,255,255,0.85);margin-bottom:20px;"></div>
-      <button id="closeAnnouncementBtn" style="
-        width:100%;padding:10px;border-radius:8px;font-size:13px;font-weight:600;
-        letter-spacing:1px;background:rgba(100,100,255,0.15);
-        border:1px solid rgba(100,100,255,0.4);color:#a0a0ff;cursor:pointer;
-        transition:all 0.2s;" onmouseover="this.style.background='rgba(100,100,255,0.25)'"
-        onmouseout="this.style.background='rgba(100,100,255,0.15)'">CLOSE</button>
-    </div>
-  </div>
-
-
 
 </body>
 </html>

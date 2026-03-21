@@ -8,10 +8,14 @@ const bcrypt  = require('bcrypt');
 const jwt     = require('jsonwebtoken');
 const { query } = require('../config/db');
 const { requireAuth } = require('../middleware/auth');
+const { validateUsername } = require('../middleware/validation');
 const { updateProgress, isWhitelisted } = require('../models/user');
 const { syncSkins } = require('../models/inventory');
+const { isValidSkinId } = require('./crates');
 
 const SALT_ROUNDS = 12;
+const MAX_COIN_DELTA_PER_SAVE  = 10000;  // flag if delta > this
+const MAX_COIN_DELTA_HARD_REJECT = 50000; // reject if delta > this
 
 function signToken(uid, username, isAdmin = false) {
   return jwt.sign(
@@ -34,6 +38,12 @@ router.post('/signup', async (req, res) => {
   }
   if (password.length < 6) {
     return res.status(400).json({ error: 'Password must be at least 6 characters' });
+  }
+
+  // Server-side profanity + format filter (mirrors client anticheat.js)
+  const nameCheck = validateUsername(username);
+  if (!nameCheck.ok) {
+    return res.status(400).json({ error: nameCheck.reason });
   }
 
   try {
@@ -181,6 +191,20 @@ router.post('/progress', requireAuth, async (req, res) => {
     if (totalCoins < 0 || totalCoins > 10_000_000)  return res.status(400).json({ error: 'Invalid coins' });
     if (currentXp  < 0 || currentXp  > 10_000_000) return res.status(400).json({ error: 'Invalid XP' });
 
+    // ── Coin delta validation ─────────────────────────────────────
+    // Prevents client-side coin manipulation via DevTools.
+    const { rows: currentRows } = await query('SELECT total_coins FROM users WHERE uid = $1', [req.user.uid]);
+    if (currentRows[0]) {
+      const delta = Math.floor(totalCoins) - currentRows[0].total_coins;
+      if (delta > MAX_COIN_DELTA_HARD_REJECT) {
+        console.warn(`[Auth] COIN DELTA REJECT: uid=${req.user.uid} delta=${delta} (max=${MAX_COIN_DELTA_HARD_REJECT})`);
+        return res.status(400).json({ error: 'Coin delta too large' });
+      }
+      if (delta > MAX_COIN_DELTA_PER_SAVE) {
+        console.warn(`[Auth] COIN DELTA FLAG: uid=${req.user.uid} delta=${delta}`);
+      }
+    }
+
     const updated = await updateProgress(req.user.uid, {
       highScore:  Math.floor(highScore),
       totalCoins: Math.floor(totalCoins),
@@ -189,10 +213,17 @@ router.post('/progress', requireAuth, async (req, res) => {
 
     if (!updated) return res.status(404).json({ error: 'User not found' });
 
-    // Sync client-side skins (crate opens, shop purchases) to the DB.
+    // Sync client-side skins to the DB — with whitelist validation.
     // Only appends — never removes — so marketplace/admin grants are never lost.
+    // Reject any skin ID that doesn't match a known valid skin.
     if (Array.isArray(ownedSkins) && ownedSkins.length > 0) {
-      const valid = ownedSkins.filter(s => typeof s === 'string' && s.length > 0 && s.length <= 120);
+      const valid = ownedSkins.filter(s =>
+        typeof s === 'string' && s.length > 0 && s.length <= 120 && isValidSkinId(s)
+      );
+      const rejected = ownedSkins.length - valid.length;
+      if (rejected > 0) {
+        console.warn(`[Auth] Skin whitelist rejected ${rejected} invalid skin IDs for uid=${req.user.uid}`);
+      }
       if (valid.length > 0) await syncSkins(req.user.uid, valid);
     }
 

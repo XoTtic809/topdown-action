@@ -12,6 +12,7 @@ const SESSION_TIMEOUT_MINS = 10;
 const OFFER_EXPIRE_DAYS    = 7;
 const MAX_SKINS_PER_OFFER  = 6;        // each side can offer up to 6 skins
 const MAX_COINS_PER_OFFER  = 100_000;
+const PEER_TRADE_TAX_RATE  = 0.05;     // 5% tax on coins received in peer trades
 
 // ── Non-tradeable skin enforcement ──────────────────────────────────────────
 // These skins are permanently blocked from all peer trades (server-authoritative).
@@ -142,6 +143,37 @@ router.get('/notifications', requireAuth, async (req, res) => {
   }
 });
 
+// ── Trade Rate Limiting ───────────────────────────────────────────────────────
+const TRADE_SESSION_COOLDOWN_MS = 60_000;    // 60s between session requests per user
+const TRADE_PAIR_COOLDOWN_MS   = 300_000;    // 5min between accepted trades for same user pair
+const _tradeSessionTimestamps  = new Map();  // uid -> last request timestamp
+const _tradePairTimestamps     = new Map();  // "uidA:uidB" -> last completed timestamp
+
+function _checkTradeRateLimit(uid) {
+  const last = _tradeSessionTimestamps.get(uid) || 0;
+  if (Date.now() - last < TRADE_SESSION_COOLDOWN_MS) {
+    const remaining = Math.ceil((TRADE_SESSION_COOLDOWN_MS - (Date.now() - last)) / 1000);
+    return `Please wait ${remaining}s before requesting another trade`;
+  }
+  _tradeSessionTimestamps.set(uid, Date.now());
+  return null;
+}
+
+function _checkPairRateLimit(uidA, uidB) {
+  const key = [uidA, uidB].sort().join(':');
+  const last = _tradePairTimestamps.get(key) || 0;
+  if (Date.now() - last < TRADE_PAIR_COOLDOWN_MS) {
+    const remaining = Math.ceil((TRADE_PAIR_COOLDOWN_MS - (Date.now() - last)) / 1000);
+    return `Please wait ${remaining}s before trading with this player again`;
+  }
+  return null;
+}
+
+function _recordPairTrade(uidA, uidB) {
+  const key = [uidA, uidB].sort().join(':');
+  _tradePairTimestamps.set(key, Date.now());
+}
+
 // ── Live Trade Sessions ───────────────────────────────────────────────────────
 
 // POST /api/trades/session/request — initiate a live trade
@@ -150,6 +182,10 @@ router.post('/session/request', requireAuth, async (req, res) => {
   const { targetUid } = req.body;
   if (!targetUid) return res.status(400).json({ error: 'targetUid required' });
   if (targetUid === req.user.uid) return res.status(400).json({ error: 'Cannot trade with yourself' });
+
+  // Rate limit: 60s between session requests
+  const rateLimitErr = _checkTradeRateLimit(req.user.uid);
+  if (rateLimitErr) return res.status(429).json({ error: rateLimitErr });
 
   try {
     // Check target exists
@@ -325,6 +361,10 @@ router.post('/session/:id/cancel', requireAuth, async (req, res) => {
 
 // ── Atomic live trade commit ──────────────────────────────────────────────────
 async function _commitLiveTrade(sessionId, session, res) {
+  // Pair rate limiting
+  const pairErr = _checkPairRateLimit(session.initiator_id, session.target_id);
+  if (pairErr) return res.status(429).json({ error: pairErr });
+
   try {
     await withTransaction(async (client) => {
       // Lock both user rows in alphabetical uid order to prevent deadlocks
@@ -377,19 +417,23 @@ async function _commitLiveTrade(sessionId, session, res) {
       const targetsNewSkins    = [...newTargetSkins, ...s.initiator_skins];
 
       // Apply skin swap — reset active_skin to 'agent' if the equipped skin was traded away
+      // 5% tax on received coins (both sides)
+      const initiatorReceives = Math.floor(s.target_coins * (1 - PEER_TRADE_TAX_RATE));
+      const targetReceives    = Math.floor(s.initiator_coins * (1 - PEER_TRADE_TAX_RATE));
+
       await client.query(
         `UPDATE users SET owned_skins = $2, total_coins = total_coins - $3 + $4,
          active_skin = CASE WHEN NOT (active_skin = ANY($2::text[])) THEN 'agent' ELSE active_skin END,
          updated_at = NOW()
          WHERE uid = $1`,
-        [session.initiator_id, initiatorsNewSkins, s.initiator_coins, s.target_coins]
+        [session.initiator_id, initiatorsNewSkins, s.initiator_coins, initiatorReceives]
       );
       await client.query(
         `UPDATE users SET owned_skins = $2, total_coins = total_coins - $3 + $4,
          active_skin = CASE WHEN NOT (active_skin = ANY($2::text[])) THEN 'agent' ELSE active_skin END,
          updated_at = NOW()
          WHERE uid = $1`,
-        [session.target_id, targetsNewSkins, s.target_coins, s.initiator_coins]
+        [session.target_id, targetsNewSkins, s.target_coins, targetReceives]
       );
 
       // Mark session done
@@ -408,6 +452,9 @@ async function _commitLiveTrade(sessionId, session, res) {
           s.initiator_skins,    s.target_skins,
           s.initiator_coins,    s.target_coins]);
     });
+
+    // Record pair trade for rate limiting
+    _recordPairTrade(session.initiator_id, session.target_id);
 
     // Re-fetch final session state
     const { rows } = await query(`SELECT * FROM trade_sessions WHERE id = $1`, [sessionId]);
@@ -537,6 +584,10 @@ router.post('/offer/:id/cancel', requireAuth, async (req, res) => {
 
 // ── Atomic offer commit ───────────────────────────────────────────────────────
 async function _commitOfferTrade(offerId, offer, res) {
+  // Pair rate limiting
+  const pairErr = _checkPairRateLimit(offer.sender_id, offer.receiver_id);
+  if (pairErr) return res.status(429).json({ error: pairErr });
+
   try {
     await withTransaction(async (client) => {
       // Lock in alphabetical order
@@ -585,17 +636,21 @@ async function _commitOfferTrade(offerId, offer, res) {
       const newSenderSkins   = [...removeSkinsCopy(senderUser.owned_skins, o.sender_skins), ...o.receiver_skins];
       const newReceiverSkins = [...removeSkinsCopy(receiverUser.owned_skins, o.receiver_skins), ...o.sender_skins];
 
+      // 5% tax on received coins (both sides)
+      const senderReceives   = Math.floor(o.receiver_coins * (1 - PEER_TRADE_TAX_RATE));
+      const receiverReceives = Math.floor(o.sender_coins * (1 - PEER_TRADE_TAX_RATE));
+
       await client.query(
         `UPDATE users SET owned_skins = $2, total_coins = total_coins - $3 + $4,
          active_skin = CASE WHEN NOT (active_skin = ANY($2::text[])) THEN 'agent' ELSE active_skin END,
          updated_at = NOW() WHERE uid = $1`,
-        [offer.sender_id, newSenderSkins, o.sender_coins, o.receiver_coins]
+        [offer.sender_id, newSenderSkins, o.sender_coins, senderReceives]
       );
       await client.query(
         `UPDATE users SET owned_skins = $2, total_coins = total_coins - $3 + $4,
          active_skin = CASE WHEN NOT (active_skin = ANY($2::text[])) THEN 'agent' ELSE active_skin END,
          updated_at = NOW() WHERE uid = $1`,
-        [offer.receiver_id, newReceiverSkins, o.receiver_coins, o.sender_coins]
+        [offer.receiver_id, newReceiverSkins, o.receiver_coins, receiverReceives]
       );
 
       await client.query(`UPDATE trade_offers SET status = 'accepted' WHERE id = $1`, [offerId]);
@@ -610,6 +665,9 @@ async function _commitOfferTrade(offerId, offer, res) {
           o.sender_skins, o.receiver_skins,
           o.sender_coins, o.receiver_coins]);
     });
+
+    // Record pair trade for rate limiting
+    _recordPairTrade(offer.sender_id, offer.receiver_id);
 
     return res.json({ ok: true, status: 'accepted' });
 

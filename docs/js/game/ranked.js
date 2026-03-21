@@ -215,7 +215,7 @@ async function loadRankedProfile() {
       _rankedStreak  = data.streak || 0;
       updateRankedBadge();
     }
-  } catch (_) {}
+  } catch (e) { console.warn('[Ranked] profile load:', e); }
 }
 
 /* ── Boss schedule per tier + wave ───────────────────────────── */
@@ -311,7 +311,7 @@ async function endRankedRun(won) {
       body: JSON.stringify({ wavesCleared: _rankedWavesCleared, rpDelta, won }),
     });
     if (resp.ok) result = await resp.json();
-  } catch (_) {}
+  } catch (e) { console.warn('[Ranked] submit:', e); }
 
   // ── Update local profile ──────────────────────────────────────
   if (result && result.tier) {

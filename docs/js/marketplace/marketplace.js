@@ -1,5 +1,5 @@
 // marketplace.js — Core marketplace logic, REST API (no Firestore)
-// Coin-based P2P skin trading with 10% tax, atomic server-side transactions.
+// Coin-based P2P skin trading with 8% tax + 2% listing fee, atomic server-side transactions.
 //
 // Module boundaries:
 //   marketplace.js     → all API calls, validation, state
@@ -28,7 +28,8 @@ const SHOP_UPDATE_TIMESTAMP_MS = new Date('2026-02-18T12:45:00Z').getTime();
 // ════════════════════════════════════════════════════════════
 
 const MARKETPLACE_CONFIG = Object.freeze({
-  TAX_RATE:                0.10,   // 10% of sale price is removed from economy
+  TAX_RATE:                0.08,   // 8% of sale price is removed from economy
+  LISTING_FEE_RATE:        0.02,   // 2% non-refundable listing fee (deducted at list time)
   MAX_LISTINGS_PER_PLAYER: 5,
   LISTING_EXPIRY_DAYS:     7,
   MIN_ACCOUNT_AGE_DAYS:    7,
@@ -42,6 +43,7 @@ const MARKETPLACE_CONFIG = Object.freeze({
 // Icon skins come from a 1,000-coin crate so their trade range is 500–4,000.
 const RARITY_PRICING = Object.freeze({
   common:    { floor: 100,   ceiling: 500,   label: 'Common',    color: '#78b7ff' },
+  uncommon:  { floor: 200,   ceiling: 1000,  label: 'Uncommon',  color: '#a4d65e' },
   rare:      { floor: 500,   ceiling: 2000,  label: 'Rare',      color: '#ff78b7' },
   epic:      { floor: 2000,  ceiling: 8000,  label: 'Epic',      color: '#ff9d47' },
   legendary: { floor: 8000,  ceiling: 25000, label: 'Legendary', color: '#ffd700' },
@@ -146,7 +148,7 @@ function getMutatedPriceLimits(skinId) {
   const mult = MUTATION_CONFIG[mutation].priceMultiplier;
   return {
     floor:   Math.floor(base.floor   * mult),
-    ceiling: Math.floor(base.ceiling * mult),
+    ceiling: Math.floor(base.ceiling * Math.min(mult, 3.0)),
     label:   `${base.label} [${MUTATION_CONFIG[mutation].label}]`,
     color:   MUTATION_CONFIG[mutation].color,
   };

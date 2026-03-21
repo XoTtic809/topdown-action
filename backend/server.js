@@ -106,6 +106,7 @@ app.use('/api/reports',            require('./routes/reports'));
 app.use('/api/chat',               require('./routes/chat'));
 app.use('/api/ranked',             require('./routes/ranked'));
 app.use('/api/trades',             require('./routes/trades'));
+app.use('/api/crates',             require('./routes/crates'));
 
 app.post('/api/marketplace/buy',    writeLimiter);
 app.post('/api/marketplace/list',   writeLimiter);
