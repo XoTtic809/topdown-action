@@ -12,7 +12,7 @@ const RANKED_CONFIG = {
     rpGainBase:12, rpLoss:7,
     enemyTypes:['normal','fast'],
     miniBossInterval:0, bigBossInterval:0,
-    desc:'Learn the basics. Waves are short and enemies are gentle.',
+    desc:'Easy waves, weak enemies. Just getting started.',
   },
   silver: {
     label:'Silver', icon:'🥈', color:'#aaaacc',
@@ -22,7 +22,7 @@ const RANKED_CONFIG = {
     rpGainBase:18, rpLoss:10,
     enemyTypes:['normal','fast','tank'],
     miniBossInterval:0, bigBossInterval:0, lastWaveBoss:1,
-    desc:'Slightly tougher enemies. A mini-boss awaits on the final wave.',
+    desc:'Tougher enemies, boss on the last wave.',
   },
   gold: {
     label:'Gold', icon:'🥇', color:'#ffd700',
@@ -32,7 +32,7 @@ const RANKED_CONFIG = {
     rpGainBase:22, rpLoss:13,
     enemyTypes:['normal','fast','tank','shooter'],
     miniBossInterval:5, bigBossInterval:0,
-    desc:'Shooters join the fight. Mini-bosses every 5 waves.',
+    desc:'Shooters show up. Mini-boss every 5 waves.',
   },
   platinum: {
     label:'Platinum', icon:'💠', color:'#00e8c0',
@@ -42,7 +42,7 @@ const RANKED_CONFIG = {
     rpGainBase:28, rpLoss:18,
     enemyTypes:['fast','tank','shooter','enforcer'],
     miniBossInterval:5, bigBossInterval:15,
-    desc:'Enforcers appear. Mini-bosses every 5 waves, big boss at wave 15.',
+    desc:'Enforcers + big boss at wave 15.',
   },
   diamond: {
     label:'Diamond', icon:'💎', color:'#4488FF',
@@ -52,7 +52,7 @@ const RANKED_CONFIG = {
     rpGainBase:38, rpLoss:25,
     enemyTypes:['fast','tank','shooter','enforcer'],
     miniBossInterval:4, bigBossInterval:10,
-    desc:'High HP, fast AI. Mini-bosses every 4 waves, big boss every 10.',
+    desc:'Tanky, fast enemies. Bosses everywhere.',
   },
   master: {
     label:'Master', icon:'👑', color:'#AA33FF',
@@ -62,7 +62,7 @@ const RANKED_CONFIG = {
     rpGainBase:48, rpLoss:30,
     enemyTypes:['tank','shooter','enforcer'],
     miniBossInterval:3, bigBossInterval:8,
-    desc:'No divisions. Aggressive enemies. Mini-bosses every 3 waves.',
+    desc:'No divisions. Mini-boss every 3 waves.',
   },
   grandmaster: {
     label:'Grandmaster', icon:'🔱', color:'#ef5350',
@@ -72,7 +72,7 @@ const RANKED_CONFIG = {
     rpGainBase:62, rpLoss:35,
     enemyTypes:['shooter','enforcer'],
     miniBossInterval:0, bigBossInterval:6,
-    desc:'Elite threats only. Big bosses every 6 waves. 300 RP to reach Apex.',
+    desc:'Only elites. Big boss every 6 waves. 300 RP to hit Apex.',
   },
   apex: {
     label:'Apex', icon:'⚡', color:'#ff9800',
@@ -82,7 +82,7 @@ const RANKED_CONFIG = {
     rpGainBase:78, rpLoss:40,
     enemyTypes:['shooter','enforcer'],
     miniBossInterval:0, bigBossInterval:5,
-    desc:'Top 100. Legendary bosses every 5 waves. Endurance is everything.',
+    desc:'Top 100 players. Boss every 5 waves. Pure survival.',
   },
   sovereign: {
     label:'Sovereign', icon:'♛', color:'#ffffff',
@@ -92,7 +92,7 @@ const RANKED_CONFIG = {
     rpGainBase:90, rpLoss:45,
     enemyTypes:['shooter','enforcer'],
     miniBossInterval:0, bigBossInterval:4,
-    desc:'Rank #1. The ultimate challenge. You stand alone at the top.',
+    desc:'The #1 player. You own this leaderboard.',
   },
 };
 
