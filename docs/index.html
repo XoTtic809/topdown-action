@@ -347,6 +347,18 @@
             <button class="inv-filter" data-filter="icon">ICON</button>
             <button class="inv-filter" data-filter="mutated">✦ MUTATED</button>
           </div>
+          <div class="inv-sort-row">
+            <span class="inv-sort-label">SORT</span>
+            <select id="invSortSelect" class="inv-sort-select">
+              <option value="rarity-desc">Rarity ↓ (High first)</option>
+              <option value="rarity-asc">Rarity ↑ (Low first)</option>
+              <option value="name-asc">Name A → Z</option>
+              <option value="name-desc">Name Z → A</option>
+              <option value="value-desc">Value ↓ (Most valuable)</option>
+              <option value="value-asc">Value ↑ (Least valuable)</option>
+              <option value="count-desc">Count ↓ (Most copies)</option>
+            </select>
+          </div>
         </div>
         <div id="invGrid" class="inv-grid"></div>
         <div id="invEmpty" class="inv-empty hidden">

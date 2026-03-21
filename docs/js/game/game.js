@@ -8507,6 +8507,7 @@ document.querySelectorAll('.shop-tab').forEach(tab => {
 // ══════════════════════════════════════════════════════════════
 
 let _invFilter = 'all';
+let _invSort   = 'rarity-desc';
 let _tryingSkin = null;
 let _realEquippedSkin = null;
 
@@ -8520,6 +8521,11 @@ function initInventoryTab() {
       _renderInventory();
     };
   });
+  const sortSel = document.getElementById('invSortSelect');
+  if (sortSel) {
+    sortSel.value = _invSort;
+    sortSel.onchange = () => { _invSort = sortSel.value; _renderInventory(); };
+  }
 }
 
 function _renderInventory() {
@@ -8540,8 +8546,8 @@ function _renderInventory() {
   if (totalEl) totalEl.textContent = `${totalCount} skin${totalCount !== 1 ? 's' : ''}`;
   if (mutEl)  { mutEl.textContent = `${mutatedCount} mutated`; mutEl.style.display = mutatedCount > 0 ? '' : 'none'; }
 
-  // Deduplicate and sort: equipped first → rarity order → name
-  const rarityOrder = { mythic: 0, legendary: 1, epic: 2, rare: 3, common: 4, icon: 5 };
+  // Deduplicate
+  const rarityOrder = { mythic: 0, legendary: 1, epic: 2, rare: 3, uncommon: 4, common: 5, icon: 6 };
   const seen = new Set();
   const entries = [];
   for (const skinId of ownedSkins) {
@@ -8549,14 +8555,41 @@ function _renderInventory() {
     seen.add(skinId);
     entries.push({ skinId, count: countMap[skinId] });
   }
+
+  // Helper: get skin value (price) for sorting
+  const getSkinValue = (skinId) => {
+    const { baseSkinId } = typeof parseMutatedSkinId === 'function'
+      ? parseMutatedSkinId(skinId) : { baseSkinId: skinId };
+    const s = SKINS.find(sk => sk.id === baseSkinId);
+    return s ? (s.price || 0) : 0;
+  };
+  const getSkinName = (skinId) => {
+    const { baseSkinId } = typeof parseMutatedSkinId === 'function'
+      ? parseMutatedSkinId(skinId) : { baseSkinId: skinId };
+    const s = SKINS.find(sk => sk.id === baseSkinId);
+    return s ? s.name : baseSkinId;
+  };
+
   entries.sort((a, b) => {
+    // Equipped skin always first
     if (a.skinId === activeSkin) return -1;
     if (b.skinId === activeSkin) return 1;
+
     const ra = typeof getSkinRarity === 'function' ? (getSkinRarity(a.skinId) || 'common') : 'common';
     const rb = typeof getSkinRarity === 'function' ? (getSkinRarity(b.skinId) || 'common') : 'common';
-    const oa = rarityOrder[ra] ?? 6;
-    const ob = rarityOrder[rb] ?? 6;
-    return oa !== ob ? oa - ob : a.skinId.localeCompare(b.skinId);
+    const oa = rarityOrder[ra] ?? 7;
+    const ob = rarityOrder[rb] ?? 7;
+
+    switch (_invSort) {
+      case 'rarity-desc': return oa !== ob ? oa - ob : a.skinId.localeCompare(b.skinId);
+      case 'rarity-asc':  return oa !== ob ? ob - oa : a.skinId.localeCompare(b.skinId);
+      case 'name-asc':    return getSkinName(a.skinId).localeCompare(getSkinName(b.skinId));
+      case 'name-desc':   return getSkinName(b.skinId).localeCompare(getSkinName(a.skinId));
+      case 'value-desc':  return getSkinValue(b.skinId) - getSkinValue(a.skinId) || oa - ob;
+      case 'value-asc':   return getSkinValue(a.skinId) - getSkinValue(b.skinId) || oa - ob;
+      case 'count-desc':  return b.count - a.count || oa - ob;
+      default:            return oa !== ob ? oa - ob : a.skinId.localeCompare(b.skinId);
+    }
   });
 
   // Apply filter

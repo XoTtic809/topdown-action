@@ -4149,6 +4149,36 @@ canvas {
 .inv-filter.active { background: rgba(255,255,255,0.12); color: #fff; border-color: rgba(255,255,255,0.35); }
 .inv-filter[data-filter="mutated"].active { background: rgba(153,51,255,0.2); color: #cc77ff; border-color: #9933ff; }
 
+.inv-sort-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.inv-sort-label {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  color: rgba(255,255,255,0.35);
+}
+
+.inv-sort-select {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 8px;
+  color: rgba(255,255,255,0.75);
+  font-family: 'Orbitron', sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 4px 8px;
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.inv-sort-select:hover { border-color: rgba(255,255,255,0.3); }
+.inv-sort-select option { background: #0d1525; color: #dbe7ff; }
+
 .inv-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(148px, 1fr));
