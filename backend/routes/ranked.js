@@ -4,7 +4,7 @@ const router  = express.Router();
 const { query, withTransaction } = require('../config/db');
 const { requireAuth } = require('../middleware/auth');
 
-const TIER_ORDER = ['bronze','silver','gold','platinum','diamond','master','grandmaster','apex'];
+const TIER_ORDER = ['bronze','silver','gold','platinum','diamond','master','grandmaster','apex','sovereign'];
 const TIER_CONFIG = {
   bronze:      { rpPerDiv: 100, hasDivisions: true  },
   silver:      { rpPerDiv: 100, hasDivisions: true  },
@@ -14,6 +14,7 @@ const TIER_CONFIG = {
   master:      { rpPerDiv: 200, hasDivisions: false },
   grandmaster: { rpPerDiv: 300, hasDivisions: false },
   apex:        { rpPerDiv: null, hasDivisions: false },
+  sovereign:   { rpPerDiv: null, hasDivisions: false },
 };
 
 // GET /api/ranked/profile
@@ -207,7 +208,7 @@ router.get('/admin/leaderboard', requireAuth, requireAdmin, async (req, res) => 
       FROM ranked_profiles rp
       JOIN users u ON u.uid = rp.uid
       ORDER BY
-        ARRAY_POSITION(ARRAY['bronze','silver','gold','platinum','diamond','master','grandmaster','apex']::TEXT[], rp.tier) DESC,
+        ARRAY_POSITION(ARRAY['bronze','silver','gold','platinum','diamond','master','grandmaster','apex','sovereign']::TEXT[], rp.tier) DESC,
         rp.division ASC,
         rp.rp DESC
       LIMIT $1
@@ -229,7 +230,7 @@ router.get('/leaderboard', async (req, res) => {
       JOIN users u ON u.uid = rp.uid
       WHERE u.is_banned = FALSE
       ORDER BY
-        ARRAY_POSITION(ARRAY['bronze','silver','gold','platinum','diamond','master','grandmaster','apex']::TEXT[], rp.tier) DESC,
+        ARRAY_POSITION(ARRAY['bronze','silver','gold','platinum','diamond','master','grandmaster','apex','sovereign']::TEXT[], rp.tier) DESC,
         rp.division ASC,
         rp.rp DESC
       LIMIT $1

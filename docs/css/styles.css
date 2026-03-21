@@ -1049,6 +1049,7 @@ canvas {
 .rank-badge-svg {
   display: inline-flex;
   align-items: center;
+  flex-direction: column;
   flex-shrink: 0;
 }
 
@@ -1061,6 +1062,39 @@ canvas {
 .rank-badge-svg:hover svg {
   filter: drop-shadow(0 2px 8px rgba(0,0,0,0.7)) brightness(1.08);
 }
+
+/* ── Rank badge animations (Apex + Sovereign) ─────────────── */
+@keyframes rank-apex-spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+@keyframes rank-apex-pulse {
+  0%, 100% { opacity: 0.7; }
+  50%      { opacity: 1; }
+}
+.rank-apex-ring  { animation: rank-apex-spin 8s linear infinite; transform-origin: 40px 46px; }
+.rank-apex-pulse { animation: rank-apex-pulse 2s ease-in-out infinite; }
+
+@keyframes rank-sov-spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+@keyframes rank-sov-spin-rev {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(-360deg); }
+}
+@keyframes rank-sov-pulse {
+  0%, 100% { opacity: 0.15; }
+  50%      { opacity: 0.55; }
+}
+@keyframes rank-sov-shimmer {
+  0%, 100% { opacity: 0.6; }
+  50%      { opacity: 1; }
+}
+.rank-sov-ring-outer { animation: rank-sov-spin     12s linear infinite; transform-origin: 40px 44px; }
+.rank-sov-ring-inner { animation: rank-sov-spin-rev  8s linear infinite; transform-origin: 40px 44px; }
+.rank-sov-shimmer    { animation: rank-sov-shimmer   3s ease-in-out infinite; }
+.rank-sov-pulse      { animation: rank-sov-pulse     2.5s ease-in-out infinite; }
 
 .lb-ranked-score {
   display: flex;
