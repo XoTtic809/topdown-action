@@ -436,12 +436,13 @@ async function displayLeaderboard(filter = 'allTime') {
       const clr = cfg ? cfg.color : '#aaa';
       const badgeHtml = typeof rankBadgeSvg === 'function'
         ? `<div class="lb-rank-badge">${rankBadgeSvg(entry.tier, entry.division)}</div>` : '';
+      const sovClass = entry.tier === 'sovereign' ? ' sovereign-name' : '';
       el.innerHTML = `
         <div class="rank">${i + 1}</div>
         ${badgeHtml}
-        <div class="leaderboard-name">${entry.username}</div>
+        <div class="leaderboard-name${sovClass}">${entry.username}</div>
         <div class="leaderboard-score lb-ranked-score">
-          <span style="color:${clr};font-weight:700;">${lbl}</span>
+          <span class="${sovClass}" style="color:${clr};font-weight:700;">${lbl}</span>
           <span class="lb-ranked-rp">${entry.rp} RP</span>
         </div>
       `;

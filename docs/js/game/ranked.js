@@ -640,6 +640,8 @@ function updateRankedHUD() {
 
 /* ── Mode-card badge (home screen) ───────────────────────────── */
 function updateRankedBadge() {
+  const isSov = _rankedProfile.tier === 'sovereign';
+
   // In-game HUD badge
   const badge = document.getElementById('rankedModeBadge');
   if (badge) {
@@ -647,6 +649,7 @@ function updateRankedBadge() {
     const lbl = rankLabel(_rankedProfile.tier, _rankedProfile.division);
     badge.textContent = `${cfg.icon} ${lbl}`;
     badge.style.color = cfg.color;
+    badge.classList.toggle('sovereign-name', isSov);
   }
 
   // Home screen rank display
@@ -660,9 +663,37 @@ function updateRankedBadge() {
     icon.innerHTML = rankBadgeSvg(_rankedProfile.tier, _rankedProfile.division);
     lbl.textContent  = label;
     lbl.style.color  = cfg.color;
+    lbl.classList.toggle('sovereign-name', isSov);
     if (rp) rp.textContent = `${_rankedProfile.rp} RP`;
     row.style.display = '';
   }
+}
+
+/* ── Rank index grid population ─────────────────────────────── */
+function populateRankIndex() {
+  const grid = document.getElementById('rankIndexGrid');
+  if (!grid) return;
+
+  const tierLabels = {
+    bronze: 'Tier I', silver: 'Tier II', gold: 'Tier III',
+    platinum: 'Tier IV', diamond: 'Tier V', master: 'Tier VI',
+    grandmaster: 'Tier VII', apex: 'Top 100', sovereign: 'Rank #1',
+  };
+
+  grid.innerHTML = RANKED_TIERS.map(tier => {
+    const cfg = RANKED_CONFIG[tier];
+    const badge = rankBadgeSvg(tier, null);
+    const nameClass = tier === 'sovereign' ? ' sovereign-name' : '';
+    return `
+      <div class="rank-index-card">
+        <div class="rank-index-card-badge">${badge}</div>
+        <div class="rank-index-card-divider"></div>
+        <div class="rank-index-card-name${nameClass}" style="color:${cfg.color}">${cfg.label}</div>
+        <div class="rank-index-card-tier">${tierLabels[tier] || ''}</div>
+        <div class="rank-index-card-desc">${cfg.desc}</div>
+      </div>
+    `;
+  }).join('');
 }
 
 /* ── Auto-load profile on page ready ────────────────────────── */
@@ -671,6 +702,7 @@ document.addEventListener('DOMContentLoaded', () => {
   setTimeout(() => {
     if (typeof getToken === 'function' && getToken()) loadRankedProfile();
   }, 600);
+  populateRankIndex();
 });
 
 /* ── Public API ──────────────────────────────────────────────── */

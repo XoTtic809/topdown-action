@@ -1108,6 +1108,16 @@ canvas {
 .rank-sov-shimmer    { animation: rank-sov-shimmer   3s ease-in-out infinite; }
 .rank-sov-pulse      { animation: rank-sov-pulse     2.5s ease-in-out infinite; }
 
+/* ── Sovereign name shimmer (black ↔ white fade) ──────────── */
+@keyframes sov-name-fade {
+  0%, 100% { color: #ffffff; }
+  50%      { color: #555555; }
+}
+.sovereign-name {
+  animation: sov-name-fade 3s ease-in-out infinite;
+  font-weight: 700;
+}
+
 .lb-ranked-score {
   display: flex;
   flex-direction: column;
@@ -1163,6 +1173,126 @@ canvas {
 .hs-rank-rp {
   font-size: 11px;
   color: var(--muted);
+}
+
+.hs-view-ranks-btn {
+  margin-left: auto;
+  padding: 4px 10px;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--muted);
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+  white-space: nowrap;
+}
+.hs-view-ranks-btn:hover {
+  background: rgba(255,255,255,0.12);
+  color: #fff;
+}
+
+/* ── Rank Index Overlay ───────────────────────────────────── */
+.rank-index-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,0.85);
+  backdrop-filter: blur(6px);
+}
+.rank-index-overlay.hidden { display: none; }
+
+.rank-index-box {
+  width: 90%;
+  max-width: 700px;
+  max-height: 85vh;
+  overflow-y: auto;
+  background: #0d1117;
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 12px;
+  padding: 28px 24px 20px;
+}
+
+.rank-index-header {
+  text-align: center;
+  margin-bottom: 24px;
+}
+.rank-index-title {
+  font-size: 18px;
+  font-weight: 900;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  color: #fff;
+  margin: 0;
+}
+.rank-index-sub {
+  font-size: 11px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.35);
+  margin-top: 6px;
+}
+
+.rank-index-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+.rank-index-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 8px;
+  padding: 18px 12px 14px;
+  transition: border-color 0.2s, background 0.2s;
+}
+.rank-index-card:hover {
+  background: rgba(255,255,255,0.06);
+  border-color: rgba(255,255,255,0.15);
+}
+
+.rank-index-card-name {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.rank-index-card-tier {
+  font-size: 9px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.35);
+}
+
+.rank-index-card-desc {
+  font-size: 10px;
+  color: rgba(255,255,255,0.45);
+  text-align: center;
+  line-height: 1.4;
+}
+
+.rank-index-card-divider {
+  width: 30px;
+  height: 1px;
+  background: rgba(255,255,255,0.12);
+}
+
+.rank-index-close {
+  display: block;
+  margin: 0 auto;
+  padding: 8px 32px;
 }
 
 .loading-spinner {
