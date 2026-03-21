@@ -266,63 +266,106 @@ function _checkPityOverride(crateId, rolledRarity) {
   return null; // no override
 }
 
-function openCrate(crateId) {
+function _updatePityCounters(crateId, rarity) {
+  if (!_pityState[crateId]) _pityState[crateId] = { sinceHighRarity: 0, sinceMythic: 0 };
+  const ps = _pityState[crateId];
+  const isHighRarity = (rarity === 'legendary' || rarity === 'mythic');
+  if (isHighRarity) ps.sinceHighRarity = 0; else ps.sinceHighRarity++;
+  const isMythic = (rarity === 'mythic' || rarity === 'ob_mythic' || rarity === 'ob_ultra');
+  if (isMythic) ps.sinceMythic = 0; else ps.sinceMythic++;
+  _savePityState();
+}
+
+async function openCrate(crateId) {
   const crate = CRATES.find(c => c.id === crateId);
   if (!crate) return null;
-  
+
   // Check if player has free crates from battle pass
   let hasFreeCrate = false;
   if (typeof battlePassData !== 'undefined' && battlePassData.crateInventory) {
     if (battlePassData.crateInventory[crateId] > 0) {
       hasFreeCrate = true;
-      battlePassData.crateInventory[crateId]--;
-      console.log(`📦 Using free ${crateId} from inventory`);
-      
-      // Save battle pass data after using free crate
-      if (typeof saveBattlePassData === 'function') {
-        saveBattlePassData();
-      }
     }
   }
-  
-  // Only charge coins if not using a free crate
-  if (!hasFreeCrate) {
-    // Check if player has enough coins
-    if (playerCoins < crate.price) {
-      showCrateMessage('Not enough coins!', true);
+
+  if (!hasFreeCrate && playerCoins < crate.price) {
+    showCrateMessage('Not enough coins!', true);
+    return null;
+  }
+
+  const isLoggedIn = typeof currentUser !== 'undefined' && currentUser
+    && !(typeof isGuest !== 'undefined' && isGuest);
+
+  // ── Server-authoritative crate open for logged-in paid crates ──
+  if (isLoggedIn && !hasFreeCrate) {
+    try {
+      const token = typeof getToken === 'function' ? getToken() : localStorage.getItem('topdown_token');
+      const resp = await fetch(`${API_BASE}/crates/open`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ crateId }),
+      });
+      if (!resp.ok) {
+        const err = await resp.json().catch(() => ({}));
+        showCrateMessage(err.error || 'Failed to open crate', true);
+        return null;
+      }
+      const data = await resp.json();
+
+      // Update local state from server response
+      playerCoins = data.newBalance;
+      if (!ownedSkins.includes(data.skinId)) ownedSkins.push(data.skinId);
+      saveCoins();
+
+      // Update pity tracking from server result
+      _updatePityCounters(crateId, data.rarity);
+
+      const skin = SKINS.find(s => s.id === data.baseSkinId);
+      return {
+        crate,
+        rewards: [{
+          skin: skin || { id: data.baseSkinId, name: data.baseSkinId, color: '#888' },
+          skinId: data.skinId,
+          rarity: data.rarity,
+          isDuplicate: data.isDuplicate || false,
+          coinValue: data.coinRefund || 0,
+          mutation: data.mutation || null,
+        }],
+      };
+    } catch (e) {
+      showCrateMessage('Network error opening crate', true);
       return null;
     }
-    
-    // Deduct coins
+  }
+
+  // ── Client-side fallback for guests / free BP crates ──
+  if (hasFreeCrate) {
+    battlePassData.crateInventory[crateId]--;
+    console.log(`📦 Using free ${crateId} from inventory`);
+    if (typeof saveBattlePassData === 'function') saveBattlePassData();
+  } else {
     playerCoins -= crate.price;
     saveCoins();
   }
-  
+
   // Roll for exactly 1 item
   const rewards = [];
-  
-  // DEV: Force THE CREATOR if flag is set
   let rarity, skinId;
-  
+
   if (crateId === 'icon-crate' && typeof devForceCreatorFlag !== 'undefined' && devForceCreatorFlag) {
-    // Force THE CREATOR
     rarity = 'creator';
     skinId = 'icon_the_creator';
-    devForceCreatorFlag = false; // Reset flag after use
-    console.log('👑 DEV FORCE: THE CREATOR guaranteed in this crate!');
+    devForceCreatorFlag = false;
   } else {
-    // Normal random roll with pity timer check
     rarity = rollRarity(crate);
     const pityOverride = _checkPityOverride(crateId, rarity);
     if (pityOverride) rarity = pityOverride;
     skinId = getRandomSkinFromRarity(rarity, crateId);
   }
-  
+
   const skin = SKINS.find(s => s.id === skinId);
 
   if (skin) {
-    // ── Mutation roll ────────────────────────────────────────
-    // Icon skins and the creator skin don't get mutations (too rare already)
     let mutation = null;
     if (typeof MUTATION_CONFIG !== 'undefined' && !skin.iconSkin && skinId !== 'icon_the_creator') {
       const roll = Math.random();
@@ -333,45 +376,27 @@ function openCrate(crateId) {
       }
     }
 
-    // The final inventory ID — mutated skins are distinct items
     const finalSkinId = mutation ? `${skinId}__${mutation}` : skinId;
-
-    // Duplicate detection — refund partial crate cost if already owned
     const isDuplicate = ownedSkins.includes(finalSkinId);
     let coinValue = 0;
     if (isDuplicate) {
       const DUPE_REFUND_RATES = {
-        common: 0.25, uncommon: 0.25,
-        rare: 0.35,
+        common: 0.25, uncommon: 0.25, rare: 0.35,
         epic: 0.50, ob_epic: 0.50,
         legendary: 0.60, ob_legendary: 0.60,
         mythic: 0.60, ob_mythic: 0.60, ob_ultra: 0.60,
       };
-      const refundRate = DUPE_REFUND_RATES[rarity] || 0.25;
-      coinValue = Math.floor(crate.price * refundRate);
+      coinValue = Math.floor(crate.price * (DUPE_REFUND_RATES[rarity] || 0.25));
       playerCoins += coinValue;
     }
 
-    // Always add to inventory (duplicates useful for trade-ups)
     ownedSkins.push(finalSkinId);
-
-    rewards.push({
-      skin,
-      skinId: finalSkinId,
-      rarity,
-      isDuplicate,
-      coinValue,
-      mutation,
-    });
+    rewards.push({ skin, skinId: finalSkinId, rarity, isDuplicate, coinValue, mutation });
   }
-  
+
   saveCoins();
   saveSkins();
-  
-  return {
-    crate,
-    rewards
-  };
+  return { crate, rewards };
 }
 
 let isOpeningCrate = false;
@@ -432,10 +457,10 @@ function showCrateConfirm(crate, costText, onConfirm) {
   overlay.addEventListener('click', e => { if (e.target === overlay) close(); });
 }
 
-function showCrateOpeningAnimation(crateId) {
+async function showCrateOpeningAnimation(crateId) {
   if (isOpeningCrate) return;
-  
-  const result = openCrate(crateId);
+
+  const result = await openCrate(crateId);
   if (!result) return;
   
   isOpeningCrate = true;
@@ -1426,75 +1451,116 @@ function _closeTuPicker() {
   _tuOpenSlotIndex = null;
 }
 
-function _executeTuTradeUp() {
+async function _executeTuTradeUp() {
   const filled = _tuSlots.filter(Boolean);
   if (filled.length < 10) return;
 
   const nextRarity = TRADEUP_RARITY_NEXT[_tuSelectedRarity];
   if (!nextRarity) return;
 
-  // Deduct trade-up coin cost
   const cost = TRADEUP_COSTS[_tuSelectedRarity] || 0;
-  if (cost > 0) {
-    if (typeof playerCoins === 'undefined' || playerCoins < cost) {
+  if (cost > 0 && (typeof playerCoins === 'undefined' || playerCoins < cost)) {
+    const msg = document.getElementById('tuMsg');
+    if (msg) { msg.textContent = `Not enough coins! Need ${cost.toLocaleString()}`; msg.style.color = '#ff4444'; }
+    return;
+  }
+
+  const isLoggedIn = typeof currentUser !== 'undefined' && currentUser
+    && !(typeof isGuest !== 'undefined' && isGuest);
+
+  let outputBase, mutation, finalId;
+
+  // ── Server-authoritative trade-up for logged-in users ──
+  if (isLoggedIn) {
+    try {
+      const token = typeof getToken === 'function' ? getToken() : localStorage.getItem('topdown_token');
+      const resp = await fetch(`${API_BASE}/crates/tradeup`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ inputSkins: [..._tuSlots], inputRarity: _tuSelectedRarity }),
+      });
+      if (!resp.ok) {
+        const err = await resp.json().catch(() => ({}));
+        const msg = document.getElementById('tuMsg');
+        if (msg) { msg.textContent = err.error || 'Trade-up failed'; msg.style.color = '#ff4444'; }
+        return;
+      }
+      const data = await resp.json();
+
+      // Update local state from server response
+      playerCoins = data.newBalance;
+      outputBase = data.outputBase;
+      mutation = data.mutation || null;
+      finalId = data.outputSkinId;
+
+      // Rebuild local ownedSkins: remove inputs, add output
+      const toRemove = [..._tuSlots];
+      const newOwned = [...ownedSkins];
+      for (const skinId of toRemove) {
+        const idx = newOwned.indexOf(skinId);
+        if (idx !== -1) newOwned.splice(idx, 1);
+      }
+      newOwned.push(finalId);
+      ownedSkins.length = 0;
+      ownedSkins.push(...newOwned);
+      saveCoins();
+    } catch (e) {
       const msg = document.getElementById('tuMsg');
-      if (msg) { msg.textContent = `Not enough coins! Need ${cost.toLocaleString()}`; msg.style.color = '#ff4444'; }
+      if (msg) { msg.textContent = 'Network error'; msg.style.color = '#ff4444'; }
       return;
     }
-    playerCoins -= cost;
-    if (typeof saveCoins === 'function') saveCoins();
-  }
-
-  // Remove the 10 skins from ownedSkins (one of each slot entry)
-  const toRemove = [..._tuSlots];
-  const newOwned = [...ownedSkins];
-  for (const skinId of toRemove) {
-    const idx = newOwned.indexOf(skinId);
-    if (idx !== -1) newOwned.splice(idx, 1);
-  }
-  ownedSkins.length = 0;
-  ownedSkins.push(...newOwned);
-
-  // Pick random skin from next rarity pool
-  const pool = SKIN_RARITIES[nextRarity] || [];
-  if (pool.length === 0) return;
-  const outputBase = pool[Math.floor(Math.random() * pool.length)];
-
-  // Mutation roll with boost
-  const mutatedCount = _tuSlots.filter(s => s && s.includes('__')).length;
-  const boostFlat    = mutatedCount * 0.03; // +3% per mutated input
-  let mutation = null;
-  if (typeof MUTATION_CONFIG !== 'undefined') {
-    const roll = Math.random();
-    let cumulative = 0;
-    for (const [type, cfg] of Object.entries(MUTATION_CONFIG)) {
-      cumulative += cfg.chance + boostFlat / Object.keys(MUTATION_CONFIG).length;
-      if (roll < cumulative) { mutation = type; break; }
+  } else {
+    // ── Client-side fallback for guests ──
+    if (cost > 0) {
+      playerCoins -= cost;
+      if (typeof saveCoins === 'function') saveCoins();
     }
+
+    const toRemove = [..._tuSlots];
+    const newOwned = [...ownedSkins];
+    for (const skinId of toRemove) {
+      const idx = newOwned.indexOf(skinId);
+      if (idx !== -1) newOwned.splice(idx, 1);
+    }
+    ownedSkins.length = 0;
+    ownedSkins.push(...newOwned);
+
+    const pool = SKIN_RARITIES[nextRarity] || [];
+    if (pool.length === 0) return;
+    outputBase = pool[Math.floor(Math.random() * pool.length)];
+
+    const mutatedCount = _tuSlots.filter(s => s && s.includes('__')).length;
+    const boostFlat = mutatedCount * 0.03;
+    mutation = null;
+    if (typeof MUTATION_CONFIG !== 'undefined') {
+      const roll = Math.random();
+      let cumulative = 0;
+      for (const [type, cfg] of Object.entries(MUTATION_CONFIG)) {
+        cumulative += cfg.chance + boostFlat / Object.keys(MUTATION_CONFIG).length;
+        if (roll < cumulative) { mutation = type; break; }
+      }
+    }
+
+    finalId = mutation ? `${outputBase}__${mutation}` : outputBase;
+    ownedSkins.push(finalId);
+
+    if (typeof saveUserDataToFirebase === 'function') saveUserDataToFirebase('critical');
+    else if (typeof saveCoins === 'function') saveCoins();
   }
-
-  const finalId = mutation ? `${outputBase}__${mutation}` : outputBase;
-  ownedSkins.push(finalId);
-
-  if (typeof saveUserDataToFirebase === 'function') saveUserDataToFirebase('critical');
-  else if (typeof saveCoins === 'function') saveCoins();
 
   // Show result message
-  const skin    = (typeof SKINS !== 'undefined') ? SKINS.find(s => s.id === outputBase) : null;
-  const mc      = mutation && typeof MUTATION_CONFIG !== 'undefined' ? MUTATION_CONFIG[mutation] : null;
+  const skin = (typeof SKINS !== 'undefined') ? SKINS.find(s => s.id === outputBase) : null;
+  const mc = mutation && typeof MUTATION_CONFIG !== 'undefined' ? MUTATION_CONFIG[mutation] : null;
   const skinName = mc ? `${skin?.name || outputBase} [${mc.label}]` : (skin?.name || outputBase);
-  const msg     = document.getElementById('tuMsg');
+  const msg = document.getElementById('tuMsg');
   if (msg) {
     msg.textContent = `✨ Got: ${skinName}!`;
     msg.style.color = mc ? mc.color : '#6bff7b';
   }
 
-  // Reset slots
   _tuSlots = new Array(10).fill(null);
   _renderTuSlots();
   _updateTuBtn();
-
-  // Refresh inventory badge
   if (typeof _renderInventory === 'function') _renderInventory();
 }
 

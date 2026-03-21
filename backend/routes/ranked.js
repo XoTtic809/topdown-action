@@ -6,15 +6,15 @@ const { requireAuth } = require('../middleware/auth');
 
 const TIER_ORDER = ['bronze','silver','gold','platinum','diamond','master','grandmaster','apex','sovereign'];
 const TIER_CONFIG = {
-  bronze:      { rpPerDiv: 25,   hasDivisions: true  },
-  silver:      { rpPerDiv: 30,   hasDivisions: true  },
-  gold:        { rpPerDiv: 40,   hasDivisions: true  },
-  platinum:    { rpPerDiv: 50,   hasDivisions: true  },
-  diamond:     { rpPerDiv: 75,   hasDivisions: true  },
-  master:      { rpPerDiv: 150,  hasDivisions: false },
-  grandmaster: { rpPerDiv: 200,  hasDivisions: false },
-  apex:        { rpPerDiv: null,  hasDivisions: false },
-  sovereign:   { rpPerDiv: null,  hasDivisions: false },
+  bronze:      { rpPerDiv: 25,   hasDivisions: true,  rpGain: 25, rpLoss: 5  },
+  silver:      { rpPerDiv: 30,   hasDivisions: true,  rpGain: 24, rpLoss: 6  },
+  gold:        { rpPerDiv: 40,   hasDivisions: true,  rpGain: 22, rpLoss: 8  },
+  platinum:    { rpPerDiv: 50,   hasDivisions: true,  rpGain: 22, rpLoss: 10 },
+  diamond:     { rpPerDiv: 75,   hasDivisions: true,  rpGain: 30, rpLoss: 18 },
+  master:      { rpPerDiv: 150,  hasDivisions: false, rpGain: 45, rpLoss: 25 },
+  grandmaster: { rpPerDiv: 200,  hasDivisions: false, rpGain: 55, rpLoss: 30 },
+  apex:        { rpPerDiv: null,  hasDivisions: false, rpGain: 78, rpLoss: 40 },
+  sovereign:   { rpPerDiv: null,  hasDivisions: false, rpGain: 90, rpLoss: 45 },
 };
 
 // GET /api/ranked/profile
@@ -32,11 +32,13 @@ router.get('/profile', requireAuth, async (req, res) => {
 
 // POST /api/ranked/submit
 router.post('/submit', requireAuth, async (req, res) => {
-  const { wavesCleared, rpDelta, won } = req.body;
-  if (typeof wavesCleared !== 'number' || typeof rpDelta !== 'number' || typeof won !== 'boolean') {
+  const { wavesCleared, won } = req.body;
+  if (typeof wavesCleared !== 'number' || typeof won !== 'boolean') {
     return res.status(400).json({ error: 'Invalid submission' });
   }
-  if (Math.abs(rpDelta) > 500) return res.status(400).json({ error: 'RP delta out of range' });
+  if (wavesCleared < 0 || wavesCleared > 200) {
+    return res.status(400).json({ error: 'Invalid waves cleared' });
+  }
 
   try {
     const uid = req.user.uid;
@@ -56,6 +58,17 @@ router.post('/submit', requireAuth, async (req, res) => {
 
       // Sovereign players are treated as Apex for RP math
       const effectiveTier = tier === 'sovereign' ? 'apex' : tier;
+      const tierCfg = TIER_CONFIG[effectiveTier] || TIER_CONFIG.bronze;
+
+      // ── Server-side RP calculation ─────────────────────────────
+      let rpDelta;
+      if (won) {
+        const base = tierCfg.rpGain + (Math.max(wavesCleared, 1) - 1) * 4;
+        const streakMult = 1 + Math.min(streak * 0.1, 0.5); // up to +50% at 5-streak
+        rpDelta = Math.round(base * streakMult);
+      } else {
+        rpDelta = -tierCfg.rpLoss;
+      }
 
       // Promotion protection: first loss after promotion costs 0 RP
       let actualDelta = rpDelta;

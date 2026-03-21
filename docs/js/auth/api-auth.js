@@ -314,8 +314,8 @@ async function executeSave() {
       return;
     }
 
-    // Coin sanity clamp
-    const MAX_COINS_PER_SAVE = 300000;
+    // Coin sanity clamp — matches server MAX_COIN_DELTA_HARD_REJECT
+    const MAX_COINS_PER_SAVE = 15000;
     if (playerCoins - lastSubmittedData.coins > MAX_COINS_PER_SAVE) {
       console.warn('[Save] Coin increase clamped');
       playerCoins = lastSubmittedData.coins + MAX_COINS_PER_SAVE;

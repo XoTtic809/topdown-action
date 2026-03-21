@@ -14,8 +14,9 @@ const { syncSkins } = require('../models/inventory');
 const { isValidSkinId } = require('./crates');
 
 const SALT_ROUNDS = 12;
-const MAX_COIN_DELTA_PER_SAVE  = 10000;  // flag if delta > this
-const MAX_COIN_DELTA_HARD_REJECT = 50000; // reject if delta > this
+const MAX_COIN_DELTA_PER_SAVE  = 6000;   // flag if delta > this (~max from a long wave session)
+const MAX_COIN_DELTA_HARD_REJECT = 15000; // reject if delta > this
+const MAX_XP_DELTA_PER_SAVE   = 20000;   // reject if XP increase > this per save
 
 function signToken(uid, username, isAdmin = false) {
   return jwt.sign(
@@ -191,17 +192,25 @@ router.post('/progress', requireAuth, async (req, res) => {
     if (totalCoins < 0 || totalCoins > 10_000_000)  return res.status(400).json({ error: 'Invalid coins' });
     if (currentXp  < 0 || currentXp  > 10_000_000) return res.status(400).json({ error: 'Invalid XP' });
 
-    // ── Coin delta validation ─────────────────────────────────────
-    // Prevents client-side coin manipulation via DevTools.
-    const { rows: currentRows } = await query('SELECT total_coins FROM users WHERE uid = $1', [req.user.uid]);
+    // ── Coin + XP delta validation ────────────────────────────────
+    // Prevents client-side manipulation via DevTools.
+    const { rows: currentRows } = await query(
+      'SELECT total_coins, current_xp FROM users WHERE uid = $1', [req.user.uid]
+    );
     if (currentRows[0]) {
-      const delta = Math.floor(totalCoins) - currentRows[0].total_coins;
-      if (delta > MAX_COIN_DELTA_HARD_REJECT) {
-        console.warn(`[Auth] COIN DELTA REJECT: uid=${req.user.uid} delta=${delta} (max=${MAX_COIN_DELTA_HARD_REJECT})`);
+      const coinDelta = Math.floor(totalCoins) - currentRows[0].total_coins;
+      if (coinDelta > MAX_COIN_DELTA_HARD_REJECT) {
+        console.warn(`[Auth] COIN DELTA REJECT: uid=${req.user.uid} delta=${coinDelta} (max=${MAX_COIN_DELTA_HARD_REJECT})`);
         return res.status(400).json({ error: 'Coin delta too large' });
       }
-      if (delta > MAX_COIN_DELTA_PER_SAVE) {
-        console.warn(`[Auth] COIN DELTA FLAG: uid=${req.user.uid} delta=${delta}`);
+      if (coinDelta > MAX_COIN_DELTA_PER_SAVE) {
+        console.warn(`[Auth] COIN DELTA FLAG: uid=${req.user.uid} delta=${coinDelta}`);
+      }
+
+      const xpDelta = Math.floor(currentXp) - (currentRows[0].current_xp || 0);
+      if (xpDelta > MAX_XP_DELTA_PER_SAVE) {
+        console.warn(`[Auth] XP DELTA REJECT: uid=${req.user.uid} delta=${xpDelta} (max=${MAX_XP_DELTA_PER_SAVE})`);
+        return res.status(400).json({ error: 'XP delta too large' });
       }
     }
 

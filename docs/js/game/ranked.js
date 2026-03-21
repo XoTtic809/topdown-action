@@ -512,14 +512,14 @@ async function endRankedRun(won) {
     _rankedStreak = 0;
   }
 
-  // ── Submit to backend ─────────────────────────────────────────
+  // ── Submit to backend (server calculates RP) ─────────────────
   let result = null;
   try {
     const token = typeof getToken === 'function' ? getToken() : localStorage.getItem('topdown_token');
     const resp  = await fetch(`${API_BASE}/ranked/submit`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-      body: JSON.stringify({ wavesCleared: _rankedWavesCleared, rpDelta, won }),
+      body: JSON.stringify({ wavesCleared: _rankedWavesCleared, won }),
     });
     if (resp.ok) result = await resp.json();
   } catch (e) { console.warn('[Ranked] submit:', e); }
@@ -534,9 +534,12 @@ async function endRankedRun(won) {
     if (result.promo_protect) _rankedPromoProtect = true;
   }
 
+  // Use server-calculated rpDelta if available, otherwise fall back to client estimate
+  const serverRpDelta = result ? result.rp_delta : rpDelta;
+
   updateRankedBadge();
-  showRankedEndOverlay({ rpDelta, won, result, wavesCleared: _rankedWavesCleared, targetWaves });
-  return { rpDelta, won, result, wavesCleared: _rankedWavesCleared };
+  showRankedEndOverlay({ rpDelta: serverRpDelta, won, result, wavesCleared: _rankedWavesCleared, targetWaves });
+  return { rpDelta: serverRpDelta, won, result, wavesCleared: _rankedWavesCleared };
 }
 
 /* ── Run-end overlay ─────────────────────────────────────────── */

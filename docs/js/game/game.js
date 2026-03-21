@@ -8873,7 +8873,7 @@ let devDifficultyMultiplier = 1.0;
 // admin panel dev tab functions
 
 function devSpawnEnemy(type) {
-  if (!running) return;
+  if (!isAdmin || !running) return;
   const cx = canvas.width / 2, cy = canvas.height / 2;
   const x = Math.max(20, Math.min(canvas.width - 20, cx + (Math.random() - 0.5) * 300));
   const y = Math.max(20, Math.min(canvas.height - 20, cy + (Math.random() - 0.5) * 300));
@@ -8882,7 +8882,7 @@ function devSpawnEnemy(type) {
 }
 
 function devSpawnPowerup(type) {
-  if (!running) return;
+  if (!isAdmin || !running) return;
   const x = Math.max(20, Math.min(canvas.width - 20, player.x + (Math.random() - 0.5) * 200));
   const y = Math.max(20, Math.min(canvas.height - 20, player.y + (Math.random() - 0.5) * 200));
   spawnPowerUp(x, y, type);
@@ -8890,7 +8890,7 @@ function devSpawnPowerup(type) {
 }
 
 function devTeleport() {
-  if (!running) return;
+  if (!isAdmin || !running) return;
   const x = parseFloat(document.getElementById('devTeleportX').value) || canvas.width / 2;
   const y = parseFloat(document.getElementById('devTeleportY').value) || canvas.height / 2;
   player.x = Math.max(player.r, Math.min(canvas.width - player.r, x));
@@ -8899,6 +8899,7 @@ function devTeleport() {
 }
 
 function devSetDifficulty() {
+  if (!isAdmin) return;
   const val = parseFloat(document.getElementById('devDifficulty').value);
   if (!isNaN(val) && val > 0) {
     devDifficultyMultiplier = val;
@@ -8907,6 +8908,7 @@ function devSetDifficulty() {
 }
 
 function devResetUpgrades() {
+  if (!isAdmin) return;
   if (player) {
     player.weaponLevel = 1;
     player.maxHpLevel  = 1;
@@ -8920,6 +8922,7 @@ function devResetUpgrades() {
 }
 
 function devUnlockAllSkins() {
+  if (!isAdmin) return;
   if (typeof SKINS !== 'undefined') {
     const mutations = Object.keys(MUTATION_CONFIG);
     SKINS.forEach(s => {
@@ -8944,12 +8947,14 @@ function devUnlockAllSkins() {
 let devForceCreatorFlag = false;
 
 function devForceCreatorNext() {
+  if (!isAdmin) return;
   devForceCreatorFlag = true;
   showAdminMessage('✨ Next Icon Crate will give THE CREATOR!', false);
   console.log('👑 CREATOR FORCE ENABLED: Next Icon Crate opening will guarantee THE CREATOR');
 }
 
 function devUnlockCreator() {
+  if (!isAdmin) return;
   if (!ownedSkins.includes('icon_the_creator')) {
     ownedSkins.push('icon_the_creator');
     if (typeof saveUserDataToFirebase === 'function') saveUserDataToFirebase();
@@ -8968,6 +8973,7 @@ function devUnlockCreator() {
 }
 
 function devRemoveCreator() {
+  if (!isAdmin) return;
   const index = ownedSkins.indexOf('icon_the_creator');
   if (index > -1) {
     ownedSkins.splice(index, 1);
@@ -8994,6 +9000,7 @@ function devRemoveCreator() {
 }
 
 function devCheckCreatorStatus() {
+  if (!isAdmin) return;
   const owned = ownedSkins.includes('icon_the_creator');
   const equipped = activeSkin === 'icon_the_creator';
   
@@ -9017,6 +9024,7 @@ function devCheckCreatorStatus() {
 }
 
 function devEquipCreator() {
+  if (!isAdmin) return;
  // Unlock if not owned
   if (!ownedSkins.includes('icon_the_creator')) {
     ownedSkins.push('icon_the_creator');
@@ -9041,6 +9049,7 @@ function devEquipCreator() {
 }
 
 function devSimulateCreatorPulls() {
+  if (!isAdmin) return;
   const numPulls = parseInt(document.getElementById('devSimulatePulls').value) || 100;
   
  // Simulate pulls with 0.5% chance
@@ -9073,17 +9082,19 @@ function devSimulateCreatorPulls() {
 // in-game overlay dev functions
 
 function devSpawnEnemyOverlay() {
+  if (!isAdmin) return;
   const type = document.getElementById('ovEnemyType').value;
   devSpawnEnemy(type);
 }
 
 function devSpawnPowerupOverlay() {
+  if (!isAdmin) return;
   const type = document.getElementById('ovPowerupType').value;
   devSpawnPowerup(type);
 }
 
 function devTeleportOverlay() {
-  if (!running) return;
+  if (!isAdmin || !running) return;
   const x = parseFloat(document.getElementById('ovTeleportX').value) || canvas.width / 2;
   const y = parseFloat(document.getElementById('ovTeleportY').value) || canvas.height / 2;
   player.x = Math.max(player.r, Math.min(canvas.width - player.r, x));
@@ -9091,6 +9102,7 @@ function devTeleportOverlay() {
 }
 
 function devSetDifficultyOverlay() {
+  if (!isAdmin) return;
   const val = parseFloat(document.getElementById('ovDifficulty').value);
   if (!isNaN(val) && val > 0) devDifficultyMultiplier = val;
 }
