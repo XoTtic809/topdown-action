@@ -303,30 +303,15 @@ function openCrate(crateId) {
 
     // The final inventory ID — mutated skins are distinct items
     const finalSkinId = mutation ? `${skinId}__${mutation}` : skinId;
-    const isDuplicate = ownedSkins.includes(finalSkinId);
-    let coinValue = 0;
-
-    if (isDuplicate) {
-      // Convert duplicate to coins; mutations are worth more
-      const rarityValues = {
-        common: 25, uncommon: 50, rare: 100, epic: 200,
-        legendary: 400, mythic: 750, icon: 150, creator: 1000,
-        ob_epic: 500, ob_legendary: 1000, ob_mythic: 2000, ob_ultra: 4000,
-      };
-      const baseValue  = rarityValues[rarity] || 50;
-      const mutMult    = mutation && MUTATION_CONFIG[mutation] ? MUTATION_CONFIG[mutation].priceMultiplier : 1;
-      coinValue = Math.round(baseValue * mutMult);
-      playerCoins += coinValue;
-    } else {
-      ownedSkins.push(finalSkinId);
-    }
+    // Always add to inventory — duplicates stack (no coin refund)
+    ownedSkins.push(finalSkinId);
 
     rewards.push({
       skin,
       skinId: finalSkinId,
       rarity,
-      isDuplicate,
-      coinValue,
+      isDuplicate: false,
+      coinValue: 0,
       mutation,
     });
   }
@@ -341,6 +326,62 @@ function openCrate(crateId) {
 }
 
 let isOpeningCrate = false;
+
+// ── Confirmation dialog before opening a crate ───────────────────────────────
+function showCrateConfirm(crate, costText, onConfirm) {
+  // Remove any existing confirm dialog
+  const existing = document.getElementById('crateConfirmOverlay');
+  if (existing) existing.remove();
+
+  const overlay = document.createElement('div');
+  overlay.id = 'crateConfirmOverlay';
+  overlay.style.cssText = `
+    position:fixed;inset:0;background:rgba(0,0,0,0.75);
+    display:flex;align-items:center;justify-content:center;
+    z-index:10000;backdrop-filter:blur(4px);
+  `;
+
+  const box = document.createElement('div');
+  box.style.cssText = `
+    background:linear-gradient(135deg,#0d1525 0%,#0a0f1e 100%);
+    border:1px solid ${crate.color || '#4a9eff'}60;
+    border-radius:16px;padding:28px 32px;text-align:center;
+    max-width:320px;width:90%;
+    box-shadow:0 0 40px ${crate.color || '#4a9eff'}30;
+    font-family:'Orbitron',sans-serif;
+  `;
+
+  box.innerHTML = `
+    <div style="font-size:32px;margin-bottom:10px">${crate.icon || '📦'}</div>
+    <div style="font-size:15px;font-weight:700;color:#dbe7ff;letter-spacing:1px;margin-bottom:6px">
+      Open ${crate.name}?
+    </div>
+    <div style="font-size:12px;color:${crate.color || '#4a9eff'};margin-bottom:22px;letter-spacing:0.5px">
+      Cost: ${costText}
+    </div>
+    <div style="display:flex;gap:10px;justify-content:center">
+      <button id="crateConfirmYes" style="
+        background:${crate.color || '#4a9eff'}22;border:1px solid ${crate.color || '#4a9eff'};
+        color:#dbe7ff;padding:9px 28px;border-radius:8px;cursor:pointer;
+        font-family:'Orbitron',sans-serif;font-size:11px;font-weight:700;letter-spacing:1px;
+        transition:background 0.15s;
+      ">OPEN</button>
+      <button id="crateConfirmNo" style="
+        background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.12);
+        color:rgba(219,231,255,0.55);padding:9px 28px;border-radius:8px;cursor:pointer;
+        font-family:'Orbitron',sans-serif;font-size:11px;font-weight:700;letter-spacing:1px;
+      ">CANCEL</button>
+    </div>
+  `;
+
+  overlay.appendChild(box);
+  document.body.appendChild(overlay);
+
+  const close = () => overlay.remove();
+  document.getElementById('crateConfirmYes').onclick = () => { close(); onConfirm(); };
+  document.getElementById('crateConfirmNo').onclick  = close;
+  overlay.addEventListener('click', e => { if (e.target === overlay) close(); });
+}
 
 function showCrateOpeningAnimation(crateId) {
   if (isOpeningCrate) return;
@@ -572,12 +613,7 @@ function showCrateOpeningAnimation(crateId) {
     displayCrateResults(result);
     
     // Final celebration sound
-    const reward = winningItem;
-    if (!reward.isDuplicate) {
-      cratePlaySound('win');
-    } else {
-      cratePlaySound('coin');
-    }
+    cratePlaySound('win');
   }, totalAnimationTime);
 }
 
@@ -716,20 +752,15 @@ function displayCrateResults(result) {
   
   const status = document.createElement('div');
   status.className = 'crate-reward-status large-status';
-  if (reward.isDuplicate) {
-    status.innerHTML = `<div style="font-size: 24px; margin-bottom: 8px;">💰</div>Duplicate! Converted to ${reward.coinValue} coins`;
-    status.style.color = '#ffd93d';
+  // Special unlock message for THE CREATOR
+  if (reward.skin.id === 'icon_the_creator') {
+    status.innerHTML = `<div style="font-size: 36px; margin-bottom: 12px;">👑</div><div style="font-size: 20px; font-weight: 900; margin-bottom: 6px; background: linear-gradient(90deg, #ffd700, #ffffff, #ff69b4, #00ffff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">YOU HAVE UNLOCKED THE CREATOR!</div><div style="font-size: 14px; color: rgba(255,255,255,0.8); margin-top: 8px;">The ultimate power has been bestowed upon you.</div>`;
+    status.style.textAlign = 'center';
   } else {
-    // Special unlock message for THE CREATOR
-    if (reward.skin.id === 'icon_the_creator') {
-      status.innerHTML = `<div style="font-size: 36px; margin-bottom: 12px;">👑</div><div style="font-size: 20px; font-weight: 900; margin-bottom: 6px; background: linear-gradient(90deg, #ffd700, #ffffff, #ff69b4, #00ffff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">YOU HAVE UNLOCKED THE CREATOR!</div><div style="font-size: 14px; color: rgba(255,255,255,0.8); margin-top: 8px;">The ultimate power has been bestowed upon you.</div>`;
-      status.style.textAlign = 'center';
-    } else {
-      status.innerHTML = `<div style="font-size: 32px; margin-bottom: 8px;">✨</div>NEW SKIN UNLOCKED!`;
-      status.style.color = '#6bff7b';
-      status.style.fontWeight = '700';
-      status.style.fontSize = '18px';
-    }
+    status.innerHTML = `<div style="font-size: 32px; margin-bottom: 8px;">✨</div>SKIN ADDED TO INVENTORY!`;
+    status.style.color = '#6bff7b';
+    status.style.fontWeight = '700';
+    status.style.fontSize = '18px';
   }
   
   info.appendChild(name);
@@ -743,23 +774,7 @@ function displayCrateResults(result) {
   
   // Update summary
   const summary = document.getElementById('crateSummary');
-  if (reward.isDuplicate) {
-    summary.innerHTML = `
-      <div class="crate-summary-stat">
-        <span class="crate-summary-label">Result:</span>
-        <span class="crate-summary-value" style="color: #ffd93d;">Duplicate</span>
-      </div>
-      <div class="crate-summary-stat">
-        <span class="crate-summary-label">Coins Refunded:</span>
-        <span class="crate-summary-value">🪙 ${reward.coinValue}</span>
-      </div>
-      <div class="crate-summary-stat">
-        <span class="crate-summary-label">Your Balance:</span>
-        <span class="crate-summary-value">🪙 ${playerCoins}</span>
-      </div>
-    `;
-  } else {
-    summary.innerHTML = `
+  summary.innerHTML = `
       <div class="crate-summary-stat">
         <span class="crate-summary-label">Result:</span>
         <span class="crate-summary-value" style="color: #6bff7b;">New Skin!</span>
@@ -1043,7 +1058,12 @@ function initCratesTab() {
       btn.disabled = playerCoins < crate.price;
     }
     
-    btn.onclick = () => showCrateOpeningAnimation(crate.id);
+    btn.onclick = () => {
+      const isFree = typeof battlePassData !== 'undefined'
+        && battlePassData.crateInventory?.[crate.id] > 0;
+      const costText = isFree ? 'FREE' : `${crate.price.toLocaleString()} coins`;
+      showCrateConfirm(crate, costText, () => showCrateOpeningAnimation(crate.id));
+    };
 
     card.appendChild(icon);
     card.appendChild(name);
