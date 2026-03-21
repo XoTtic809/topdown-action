@@ -69,15 +69,16 @@ router.post('/submit', requireAuth, async (req, res) => {
       let tierChanged     = false;
       let divisionChanged = false;
 
-      // ── Promotion ─────────────────────────────────────────────
+      // ── Promotion (loops to handle excess RP from rebalances) ──
       // Sovereign is never reached via normal promotion — capped at Apex.
-      if (cfg.rpPerDiv !== null && rp >= cfg.rpPerDiv) {
-        rp -= cfg.rpPerDiv;
-        if (cfg.hasDivisions && division > 1) {
+      let curCfg = TIER_CONFIG[tier === 'sovereign' ? 'apex' : tier] || TIER_CONFIG.bronze;
+      while (curCfg.rpPerDiv !== null && rp >= curCfg.rpPerDiv) {
+        rp -= curCfg.rpPerDiv;
+        if (curCfg.hasDivisions && division > 1) {
           division--;           // e.g. V(5) → IV(4)
           divisionChanged = true;
         } else {
-          const idx = TIER_ORDER.indexOf(effectiveTier);
+          const idx = TIER_ORDER.indexOf(tier === 'sovereign' ? 'apex' : tier);
           // Cap promotion at Apex (index 7). Sovereign (index 8) is auto-assigned.
           if (idx < TIER_ORDER.indexOf('apex')) {
             const nextTier = TIER_ORDER[idx + 1];
@@ -89,9 +90,11 @@ router.post('/submit', requireAuth, async (req, res) => {
             divisionChanged = true;
             promo_protect   = true;
           } else {
-            rp = Math.min(rp + cfg.rpPerDiv, 9999); // Apex: accumulate
+            rp = Math.min(rp + curCfg.rpPerDiv, 9999); // Apex: accumulate
+            break;
           }
         }
+        curCfg = TIER_CONFIG[tier === 'sovereign' ? 'apex' : tier] || TIER_CONFIG.bronze;
       }
 
       // ── Demotion ──────────────────────────────────────────────
