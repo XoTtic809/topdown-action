@@ -202,7 +202,7 @@ function rankBadgeSvg(tier, division) {
         <linearGradient id="${uid}-gem" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#AADDFF" stop-opacity="0.9"/><stop offset="50%" stop-color="#4499FF" stop-opacity="0.5"/><stop offset="100%" stop-color="#0044BB" stop-opacity="0.9"/></linearGradient>
         <linearGradient id="${uid}-bar" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#0044BB" stop-opacity="0"/><stop offset="50%" stop-color="#4488FF" stop-opacity="0.8"/><stop offset="100%" stop-color="#0044BB" stop-opacity="0"/></linearGradient>
         <radialGradient id="${uid}-aura" cx="50%" cy="45%" r="50%"><stop offset="0%" stop-color="#2255FF" stop-opacity="0.2"/><stop offset="100%" stop-color="#2255FF" stop-opacity="0"/></radialGradient>
-        <filter id="${uid}-sh"><feDropShadow dx="0" dy="0" stdDeviation="8" flood-color="#1060FF" flood-opacity="0.5"/><feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#000830" flood-opacity="0.9"/></filter>
+        <filter id="${uid}-sh"><feDropShadow dx="0" dy="1" stdDeviation="2" flood-color="#1060FF" flood-opacity="0.4"/></filter>
         <filter id="${uid}-gl"><feGaussianBlur stdDeviation="3" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
         <filter id="${uid}-gl2"><feGaussianBlur stdDeviation="5" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
       </defs>
@@ -239,7 +239,7 @@ function rankBadgeSvg(tier, division) {
         <linearGradient id="${uid}-crown" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#DD77FF"/><stop offset="50%" stop-color="#9922CC"/><stop offset="100%" stop-color="#660099"/></linearGradient>
         <linearGradient id="${uid}-bar" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#7700CC" stop-opacity="0"/><stop offset="50%" stop-color="#AA33FF" stop-opacity="0.8"/><stop offset="100%" stop-color="#7700CC" stop-opacity="0"/></linearGradient>
         <radialGradient id="${uid}-aura" cx="50%" cy="45%" r="50%"><stop offset="0%" stop-color="#6600AA" stop-opacity="0.25"/><stop offset="100%" stop-color="#6600AA" stop-opacity="0"/></radialGradient>
-        <filter id="${uid}-sh"><feDropShadow dx="0" dy="0" stdDeviation="10" flood-color="#8800CC" flood-opacity="0.5"/><feDropShadow dx="0" dy="4" stdDeviation="5" flood-color="#000020" flood-opacity="0.9"/></filter>
+        <filter id="${uid}-sh"><feDropShadow dx="0" dy="1" stdDeviation="2" flood-color="#8800CC" flood-opacity="0.4"/></filter>
         <filter id="${uid}-gl"><feGaussianBlur stdDeviation="4" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
       </defs>
       <path d="M40 3 L50 10 L58 6 L60 14 L68 10 L70 20 L76 24 L76 54 Q74 76 55 85 L40 89 L25 85 Q6 76 4 54 L4 24 L10 20 L12 10 L20 14 L22 6 L30 10 Z" fill="url(#${uid}-body)" filter="url(#${uid}-sh)"/>
@@ -269,7 +269,7 @@ function rankBadgeSvg(tier, division) {
         <linearGradient id="${uid}-body" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#2A0608"/><stop offset="50%" stop-color="#150203"/><stop offset="100%" stop-color="#0A0000"/></linearGradient>
         <linearGradient id="${uid}-gold" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#FFD060"/><stop offset="50%" stop-color="#C07A00"/><stop offset="100%" stop-color="#8A4A00"/></linearGradient>
         <linearGradient id="${uid}-red" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#FF4444"/><stop offset="60%" stop-color="#CC0000"/><stop offset="100%" stop-color="#880000"/></linearGradient>
-        <filter id="${uid}-sh"><feDropShadow dx="0" dy="0" stdDeviation="10" flood-color="#CC0000" flood-opacity="0.4"/><feDropShadow dx="0" dy="5" stdDeviation="6" flood-color="#000000" flood-opacity="0.95"/></filter>
+        <filter id="${uid}-sh"><feDropShadow dx="0" dy="1" stdDeviation="2" flood-color="#CC0000" flood-opacity="0.35"/></filter>
         <filter id="${uid}-gl"><feGaussianBlur stdDeviation="3" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
       </defs>
       <path d="M40 2 L52 7 L60 4 L64 12 L74 14 L76 24 L78 54 Q76 78 56 86 L40 90 L24 86 Q4 78 2 54 L4 24 L6 14 L16 12 L20 4 L28 7 Z" fill="url(#${uid}-body)" filter="url(#${uid}-sh)"/>
@@ -297,7 +297,7 @@ function rankBadgeSvg(tier, division) {
         <linearGradient id="${uid}-bar" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#FF6600" stop-opacity="0"/><stop offset="50%" stop-color="#FF9900" stop-opacity="0.9"/><stop offset="100%" stop-color="#FF6600" stop-opacity="0"/></linearGradient>
         <radialGradient id="${uid}-aura" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#FF9900" stop-opacity="0.35"/><stop offset="100%" stop-color="#FF9900" stop-opacity="0"/></radialGradient>
         <radialGradient id="${uid}-eg" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#FF6600" stop-opacity="0.3"/><stop offset="100%" stop-color="#FF6600" stop-opacity="0"/></radialGradient>
-        <filter id="${uid}-sh"><feDropShadow dx="0" dy="0" stdDeviation="12" flood-color="#FF8800" flood-opacity="0.6"/><feDropShadow dx="0" dy="6" stdDeviation="8" flood-color="#000000" flood-opacity="1"/></filter>
+        <filter id="${uid}-sh"><feDropShadow dx="0" dy="1" stdDeviation="2" flood-color="#FF8800" flood-opacity="0.4"/></filter>
         <filter id="${uid}-gl"><feGaussianBlur stdDeviation="2" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
         <filter id="${uid}-gl2"><feGaussianBlur stdDeviation="4" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
       </defs>
@@ -343,7 +343,7 @@ function rankBadgeSvg(tier, division) {
         <radialGradient id="${uid}-aura" cx="50%" cy="45%" r="55%"><stop offset="0%" stop-color="#ffffff" stop-opacity="0.18"/><stop offset="100%" stop-color="#ffffff" stop-opacity="0"/></radialGradient>
         <linearGradient id="${uid}-bar" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#ffffff" stop-opacity="0"/><stop offset="50%" stop-color="#ffffff" stop-opacity="0.7"/><stop offset="100%" stop-color="#ffffff" stop-opacity="0"/></linearGradient>
         <linearGradient id="${uid}-num" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#ffffff"/><stop offset="50%" stop-color="#cccccc"/><stop offset="100%" stop-color="#999999"/></linearGradient>
-        <filter id="${uid}-sh"><feDropShadow dx="0" dy="0" stdDeviation="14" flood-color="#ffffff" flood-opacity="0.45"/><feDropShadow dx="0" dy="6" stdDeviation="8" flood-color="#000000" flood-opacity="1"/></filter>
+        <filter id="${uid}-sh"><feDropShadow dx="0" dy="1" stdDeviation="2" flood-color="#ffffff" flood-opacity="0.35"/></filter>
         <filter id="${uid}-gl"><feGaussianBlur stdDeviation="2.5" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
         <filter id="${uid}-gl2"><feGaussianBlur stdDeviation="5" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
         <filter id="${uid}-gl3"><feGaussianBlur stdDeviation="7" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
