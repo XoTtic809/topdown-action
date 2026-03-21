@@ -6,15 +6,15 @@ const { requireAuth } = require('../middleware/auth');
 
 const TIER_ORDER = ['bronze','silver','gold','platinum','diamond','master','grandmaster','apex','sovereign'];
 const TIER_CONFIG = {
-  bronze:      { rpPerDiv: 100, hasDivisions: true  },
-  silver:      { rpPerDiv: 100, hasDivisions: true  },
-  gold:        { rpPerDiv: 100, hasDivisions: true  },
-  platinum:    { rpPerDiv: 100, hasDivisions: true  },
-  diamond:     { rpPerDiv: 100, hasDivisions: true  },
-  master:      { rpPerDiv: 200, hasDivisions: false },
-  grandmaster: { rpPerDiv: 300, hasDivisions: false },
-  apex:        { rpPerDiv: null, hasDivisions: false },
-  sovereign:   { rpPerDiv: null, hasDivisions: false },
+  bronze:      { rpPerDiv: 25,   hasDivisions: true  },
+  silver:      { rpPerDiv: 30,   hasDivisions: true  },
+  gold:        { rpPerDiv: 40,   hasDivisions: true  },
+  platinum:    { rpPerDiv: 50,   hasDivisions: true  },
+  diamond:     { rpPerDiv: 75,   hasDivisions: true  },
+  master:      { rpPerDiv: 150,  hasDivisions: false },
+  grandmaster: { rpPerDiv: 200,  hasDivisions: false },
+  apex:        { rpPerDiv: null,  hasDivisions: false },
+  sovereign:   { rpPerDiv: null,  hasDivisions: false },
 };
 
 // GET /api/ranked/profile
