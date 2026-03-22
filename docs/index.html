@@ -2091,9 +2091,22 @@
             <!-- Grant All -->
             <div class="dev-card">
               <div class="dev-card-label">🎁 Grant All Unlocks</div>
-              <div style="font-size:11px;color:rgba(255,255,255,0.55);margin-bottom:6px;">Backgrounds, borders, titles &amp; badges</div>
+              <div style="font-size:11px;color:rgba(255,255,255,0.55);margin-bottom:6px;">Every background, border, title, badge, name color &amp; glow</div>
               <div class="dev-row">
                 <button class="admin-btn success" onclick="devGrantAllProfileUnlocks()">GRANT ALL</button>
+              </div>
+            </div>
+
+            <!-- Grant by Category -->
+            <div class="dev-card">
+              <div class="dev-card-label">📂 Grant by Category</div>
+              <div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:4px;">
+                <button class="admin-btn" style="font-size:10px;padding:5px 9px;" onclick="devGrantCategory('background')">Backgrounds</button>
+                <button class="admin-btn" style="font-size:10px;padding:5px 9px;" onclick="devGrantCategory('border')">Borders</button>
+                <button class="admin-btn" style="font-size:10px;padding:5px 9px;" onclick="devGrantCategory('title')">Titles</button>
+                <button class="admin-btn" style="font-size:10px;padding:5px 9px;" onclick="devGrantCategory('badge')">Badges</button>
+                <button class="admin-btn" style="font-size:10px;padding:5px 9px;background:linear-gradient(135deg,#002838,#004860);" onclick="devGrantCategory('name_color')">Name Colors</button>
+                <button class="admin-btn" style="font-size:10px;padding:5px 9px;background:linear-gradient(135deg,#1a0030,#3a0060);" onclick="devGrantCategory('glow')">Glows</button>
               </div>
             </div>
 
@@ -2109,8 +2122,11 @@
             <!-- Grant Specific -->
             <div class="dev-card">
               <div class="dev-card-label">🔑 Grant Specific Unlock</div>
+              <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-bottom:6px;">Loaded from server on tab open</div>
               <div class="dev-row">
-                <input type="text" id="devUnlockId" class="admin-input" placeholder="e.g. bg_galaxy" style="flex:1;min-width:0;">
+                <select id="devUnlockId" class="admin-input" style="flex:1;min-width:0;">
+                  <option value="">Loading…</option>
+                </select>
                 <button class="admin-btn success" onclick="devGrantSpecificUnlock()">GRANT</button>
               </div>
             </div>
@@ -2119,7 +2135,9 @@
             <div class="dev-card">
               <div class="dev-card-label">🗑️ Revoke Specific Unlock</div>
               <div class="dev-row">
-                <input type="text" id="devRevokeId" class="admin-input" placeholder="e.g. bg_galaxy" style="flex:1;min-width:0;">
+                <select id="devRevokeId" class="admin-input" style="flex:1;min-width:0;">
+                  <option value="">Loading…</option>
+                </select>
                 <button class="admin-btn danger" onclick="devRevokeSpecificUnlock()">REVOKE</button>
               </div>
             </div>

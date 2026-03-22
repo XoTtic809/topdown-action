@@ -9157,12 +9157,61 @@ function devUnlockAllSkins() {
 
 // ── Profile unlock dev helpers ──────────────────────────────────────────────
 
+let _adminProfileTabLoaded = false;
+
+async function initAdminProfileTab() {
+  if (_adminProfileTabLoaded) return;
+  _adminProfileTabLoaded = true;
+  try {
+    const unlockables = await apiGet('/profile/unlockables');
+    const TYPE_LABELS = {
+      background: 'Backgrounds', border: 'Borders', title: 'Titles',
+      badge: 'Badges', name_color: 'Name Colors', glow: 'Glows',
+    };
+    const groups = {};
+    for (const u of unlockables) {
+      if (!groups[u.type]) groups[u.type] = [];
+      groups[u.type].push(u);
+    }
+    ['devUnlockId', 'devRevokeId'].forEach(selectId => {
+      const sel = document.getElementById(selectId);
+      if (!sel) return;
+      sel.innerHTML = '';
+      for (const [type, items] of Object.entries(groups)) {
+        const og = document.createElement('optgroup');
+        og.label = TYPE_LABELS[type] || type;
+        items.forEach(u => {
+          const opt = document.createElement('option');
+          opt.value = u.id;
+          opt.textContent = u.name + ' — ' + u.id;
+          og.appendChild(opt);
+        });
+        sel.appendChild(og);
+      }
+    });
+  } catch (e) {
+    console.error('[Admin] initAdminProfileTab error:', e.message);
+  }
+}
+
 async function devGrantAllProfileUnlocks() {
   if (!isAdmin || !currentUser) return;
   try {
     const data = await apiPost('/admin/rotation/profile/grant-all-unlocks', {});
     if (data.error) { showAdminMessage('Error: ' + data.error, true); return; }
     showAdminMessage(`✅ Granted ${data.granted} profile unlockables to your account`, false);
+  } catch (e) {
+    showAdminMessage('Error: ' + e.message, true);
+  }
+}
+
+async function devGrantCategory(type) {
+  if (!isAdmin || !currentUser) return;
+  try {
+    const data = await apiPost('/admin/rotation/profile/grant-all-unlocks', { type });
+    if (data.error) { showAdminMessage('Error: ' + data.error, true); return; }
+    const label = { background:'backgrounds', border:'borders', title:'titles', badge:'badges', name_color:'name colors', glow:'glows' }[type] || type;
+    showAdminMessage(`✅ Granted ${data.granted} ${label}`, false);
   } catch (e) {
     showAdminMessage('Error: ' + e.message, true);
   }
@@ -9182,11 +9231,11 @@ async function devGrantS1Champion() {
 async function devGrantSpecificUnlock() {
   if (!isAdmin || !currentUser) return;
   const id = (document.getElementById('devUnlockId')?.value || '').trim();
-  if (!id) { showAdminMessage('Enter an unlockable ID', true); return; }
+  if (!id) { showAdminMessage('Select an unlockable to grant', true); return; }
   try {
     const data = await apiPost('/admin/rotation/profile/grant-unlock', { unlockableId: id });
     if (data.error) { showAdminMessage('Error: ' + data.error, true); return; }
-    showAdminMessage(`✅ Granted: ${data.name} (${data.unlockableId})`, false);
+    showAdminMessage(`✅ Granted: ${data.name} (${id})`, false);
   } catch (e) {
     showAdminMessage('Error: ' + e.message, true);
   }
@@ -9195,7 +9244,7 @@ async function devGrantSpecificUnlock() {
 async function devRevokeSpecificUnlock() {
   if (!isAdmin || !currentUser) return;
   const id = (document.getElementById('devRevokeId')?.value || '').trim();
-  if (!id) { showAdminMessage('Enter an unlockable ID to revoke', true); return; }
+  if (!id) { showAdminMessage('Select an unlockable to revoke', true); return; }
   try {
     const data = await apiPost('/admin/rotation/profile/revoke-unlock', { unlockableId: id });
     if (data.error) { showAdminMessage('Error: ' + data.error, true); return; }

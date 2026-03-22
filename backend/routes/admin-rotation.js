@@ -270,9 +270,12 @@ router.post('/schedule/cancel', requireAuth, requireAdmin, async (req, res) => {
 // Grant a custom title to a specific player.
 // Grant all profile unlockables to self (or a target user)
 router.post('/profile/grant-all-unlocks', requireAuth, requireAdmin, async (req, res) => {
-  const uid = req.body.targetUid || req.user.uid;
+  const uid  = req.body.targetUid || req.user.uid;
+  const type = req.body.type || null;
   try {
-    const { rows: unlockables } = await query('SELECT id FROM card_unlockables');
+    const { rows: unlockables } = type
+      ? await query('SELECT id FROM card_unlockables WHERE type = $1', [type])
+      : await query('SELECT id FROM card_unlockables');
     await Promise.all(unlockables.map(u =>
       query('INSERT INTO player_unlocks (uid, unlockable_id) VALUES ($1,$2) ON CONFLICT DO NOTHING', [uid, u.id])
     ));
