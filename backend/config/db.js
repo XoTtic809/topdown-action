@@ -375,28 +375,49 @@ async function initSchema() {
       -- Seed card_unlockables (backgrounds)
       INSERT INTO card_unlockables (id, type, name, unlock_condition, preview_css) VALUES
         ('bg_default',    'background', 'Dark Grid',      'default',          'linear-gradient(135deg,#0a1628,#1a2a44)'),
-        ('bg_bronze',     'background', 'Bronze',         'reach_bronze',     'linear-gradient(135deg,#3d2011,#7a4a22,#3d2011)'),
-        ('bg_silver',     'background', 'Silver',         'reach_silver',     'linear-gradient(135deg,#1a2030,#4a6080,#1a2030)'),
-        ('bg_gold',       'background', 'Gold',           'reach_gold',       'linear-gradient(135deg,#2a1a00,#c0900a,#2a1a00)'),
-        ('bg_platinum',   'background', 'Platinum',       'reach_platinum',   'linear-gradient(135deg,#0d1f2d,#2a6080,#0d1f2d)'),
+        ('bg_bronze',     'background', 'Bronze',         'reach_bronze',     'linear-gradient(135deg,#281008,#6a3010,#9a5020,#6a3010,#281008)'),
+        ('bg_silver',     'background', 'Silver',         'reach_silver',     'linear-gradient(135deg,#141e2a,#2a4055,#527890,#2a4055,#141e2a)'),
+        ('bg_gold',       'background', 'Gold',           'reach_gold',       'linear-gradient(135deg,#1a1000,#4a2c00,#9a7010,#4a2c00,#1a1000)'),
+        ('bg_platinum',   'background', 'Platinum',       'reach_platinum',   'linear-gradient(135deg,#0e1c2a,#1e3a55,#407898,#1e3a55,#0e1c2a)'),
         ('bg_diamond',    'background', 'Diamond',        'reach_diamond',    'linear-gradient(135deg,#050d1a,#0a3a6a,#1a6aaa,#0a3a6a,#050d1a)'),
-        ('bg_galaxy',     'background', 'Galaxy',         'reach_apex',       'radial-gradient(ellipse at top,#1a0a3a,#050a1a)'),
-        ('bg_sovereign',  'background', 'Sovereign Aura', 'reach_sovereign',  'conic-gradient(from 0deg,#0a0a20,#1a1050,#3a2080,#1a1050,#0a0a20)'),
-        ('bg_inferno',    'background', 'Inferno',        'survive_30_waves', 'linear-gradient(135deg,#1a0500,#5a1500,#1a0500)'),
-        ('bg_collector',  'background', 'Collector',      'own_50_skins',     'linear-gradient(135deg,#0a1a0a,#1a3a1a,#0a4a0a)'),
-        ('bg_whale',      'background', 'Big Spender',    'spend_100k_coins', 'linear-gradient(135deg,#0a1528,#1a3558,#0a1528)'),
-        ('bg_veteran',    'background', 'Veteran',        'play_500_games',   'linear-gradient(135deg,#1a1a1a,#2a2a2a,#3a3a3a,#2a2a2a)'),
-        ('bg_seasonal_s1','background', 'Season 1',       'seasonal_s1',      'linear-gradient(135deg,#1a0a28,#3a1a48,#1a0a28)'),
-        ('bg_neon',       'background', 'Neon City',      'own_neon_skin',     'linear-gradient(135deg,#001020,#002840,#001828)'),
-        ('bg_frost',      'background', 'Frost',          'own_frost_skin',    'linear-gradient(135deg,#050d18,#0a1a28,#051018)'),
-        ('bg_void',       'background', 'The Void',       'own_void_skin',     'radial-gradient(ellipse at center,#0d0020,#050010,#000)'),
-        ('bg_midnight',   'background', 'Midnight',       'play_100_games',    'linear-gradient(135deg,#050515,#0a0a30,#050515)'),
-        ('bg_crimson',    'background', 'Crimson',        'spend_25k_coins',   'linear-gradient(135deg,#150505,#2a0808,#150505)'),
-        ('bg_ocean',      'background', 'Deep Ocean',     'complete_15_trades','linear-gradient(135deg,#020d10,#041820,#021018)'),
-        ('bg_aurora',     'background', 'Aurora',         'reach_diamond',     'linear-gradient(135deg,#050d18,#0a2040,#102850)'),
-        ('bg_matrix',     'background', 'Matrix',         'play_1000_games',   'linear-gradient(135deg,#020a02,#051205,#020a02)'),
-        ('bg_ember',      'background', 'Ember',          'survive_25_waves',  'linear-gradient(135deg,#1a0800,#2a1200,#3a1500)')
+        ('bg_galaxy',     'background', 'Galaxy',         'reach_apex',       'radial-gradient(ellipse at 35% 40%,#3a1a6a,#1a083a 45%,#060515 80%)'),
+        ('bg_sovereign',  'background', 'Sovereign Aura', 'reach_sovereign',  'conic-gradient(from 0deg,#0a0820,#1c1060,#402090,#1c1060,#0a0820)'),
+        ('bg_inferno',    'background', 'Inferno',        'survive_30_waves', 'linear-gradient(135deg,#1a0300,#601000,#aa2400,#601000,#1a0300)'),
+        ('bg_collector',  'background', 'Collector',      'own_50_skins',     'linear-gradient(135deg,#051005,#0e3010,#1e5a22,#0e3010,#051005)'),
+        ('bg_whale',      'background', 'Big Spender',    'spend_100k_coins', 'linear-gradient(135deg,#060f1e,#0d2848,#1a4888,#0d2848,#060f1e)'),
+        ('bg_veteran',    'background', 'Veteran',        'play_500_games',   'linear-gradient(135deg,#181818,#282828,#383838,#282828)'),
+        ('bg_seasonal_s1','background', 'Season 1',       'seasonal_s1',      'linear-gradient(135deg,#100820,#281050,#481888,#281050,#100820)'),
+        ('bg_neon',       'background', 'Neon City',      'own_neon_skin',     'radial-gradient(ellipse at 35% 35%,#004899,#002250 45%,#000e20 80%)'),
+        ('bg_frost',      'background', 'Frost',          'own_frost_skin',    'linear-gradient(135deg,#0a1c28,#1a3e55,#2e6888,#1a3e55,#0a1c28)'),
+        ('bg_void',       'background', 'The Void',       'own_void_skin',     'radial-gradient(ellipse at center,#1c0048,#090018 55%,#020008 100%)'),
+        ('bg_midnight',   'background', 'Midnight',       'play_100_games',    'linear-gradient(135deg,#060618,#0f0f40,#1c1c62,#0f0f40,#060618)'),
+        ('bg_crimson',    'background', 'Crimson',        'spend_25k_coins',   'linear-gradient(135deg,#180008,#480015,#7a0025,#480015,#180008)'),
+        ('bg_ocean',      'background', 'Deep Ocean',     'complete_15_trades','linear-gradient(135deg,#010e1a,#023c58,#056578,#023c58,#010e1a)'),
+        ('bg_aurora',     'background', 'Aurora',         'reach_diamond',     'linear-gradient(135deg,#071630,#0a3545,#0c4838,#183462,#071630)'),
+        ('bg_matrix',     'background', 'Matrix',         'play_1000_games',   'linear-gradient(135deg,#001800,#004000,#006800,#004000,#001800)'),
+        ('bg_ember',      'background', 'Ember',          'survive_25_waves',  'linear-gradient(135deg,#1c0300,#601200,#a02200,#601200,#1c0300)')
       ON CONFLICT (id) DO NOTHING;
+
+      -- Migrate: update background preview_css to polished versions
+      UPDATE card_unlockables SET preview_css='linear-gradient(135deg,#281008,#6a3010,#9a5020,#6a3010,#281008)'  WHERE id='bg_bronze';
+      UPDATE card_unlockables SET preview_css='linear-gradient(135deg,#141e2a,#2a4055,#527890,#2a4055,#141e2a)'  WHERE id='bg_silver';
+      UPDATE card_unlockables SET preview_css='linear-gradient(135deg,#1a1000,#4a2c00,#9a7010,#4a2c00,#1a1000)'  WHERE id='bg_gold';
+      UPDATE card_unlockables SET preview_css='linear-gradient(135deg,#0e1c2a,#1e3a55,#407898,#1e3a55,#0e1c2a)'  WHERE id='bg_platinum';
+      UPDATE card_unlockables SET preview_css='radial-gradient(ellipse at 35% 40%,#3a1a6a,#1a083a 45%,#060515 80%)' WHERE id='bg_galaxy';
+      UPDATE card_unlockables SET preview_css='conic-gradient(from 0deg,#0a0820,#1c1060,#402090,#1c1060,#0a0820)' WHERE id='bg_sovereign';
+      UPDATE card_unlockables SET preview_css='linear-gradient(135deg,#1a0300,#601000,#aa2400,#601000,#1a0300)'  WHERE id='bg_inferno';
+      UPDATE card_unlockables SET preview_css='linear-gradient(135deg,#051005,#0e3010,#1e5a22,#0e3010,#051005)'  WHERE id='bg_collector';
+      UPDATE card_unlockables SET preview_css='linear-gradient(135deg,#060f1e,#0d2848,#1a4888,#0d2848,#060f1e)'  WHERE id='bg_whale';
+      UPDATE card_unlockables SET preview_css='linear-gradient(135deg,#100820,#281050,#481888,#281050,#100820)'  WHERE id='bg_seasonal_s1';
+      UPDATE card_unlockables SET preview_css='radial-gradient(ellipse at 35% 35%,#004899,#002250 45%,#000e20 80%)' WHERE id='bg_neon';
+      UPDATE card_unlockables SET preview_css='linear-gradient(135deg,#0a1c28,#1a3e55,#2e6888,#1a3e55,#0a1c28)'  WHERE id='bg_frost';
+      UPDATE card_unlockables SET preview_css='radial-gradient(ellipse at center,#1c0048,#090018 55%,#020008 100%)' WHERE id='bg_void';
+      UPDATE card_unlockables SET preview_css='linear-gradient(135deg,#060618,#0f0f40,#1c1c62,#0f0f40,#060618)'  WHERE id='bg_midnight';
+      UPDATE card_unlockables SET preview_css='linear-gradient(135deg,#180008,#480015,#7a0025,#480015,#180008)'  WHERE id='bg_crimson';
+      UPDATE card_unlockables SET preview_css='linear-gradient(135deg,#010e1a,#023c58,#056578,#023c58,#010e1a)'  WHERE id='bg_ocean';
+      UPDATE card_unlockables SET preview_css='linear-gradient(135deg,#071630,#0a3545,#0c4838,#183462,#071630)'  WHERE id='bg_aurora';
+      UPDATE card_unlockables SET preview_css='linear-gradient(135deg,#001800,#004000,#006800,#004000,#001800)'  WHERE id='bg_matrix';
+      UPDATE card_unlockables SET preview_css='linear-gradient(135deg,#1c0300,#601200,#a02200,#601200,#1c0300)'  WHERE id='bg_ember';
 
       -- Seed card_unlockables (borders)
       INSERT INTO card_unlockables (id, type, name, unlock_condition, preview_css) VALUES
