@@ -67,7 +67,8 @@ async function ensureProfileExists(uid) {
   );
   await query(`
     INSERT INTO player_unlocks (uid, unlockable_id) VALUES
-      ($1,'bg_default'), ($1,'border_default'), ($1,'title_newcomer')
+      ($1,'bg_default'), ($1,'border_default'), ($1,'title_newcomer'),
+      ($1,'name_default'), ($1,'glow_none'), ($1,'glow_default')
     ON CONFLICT DO NOTHING
   `, [uid]);
 }
@@ -92,7 +93,7 @@ async function buildProfileResponse(uid, isOwn) {
     card_accent_color: '#4a9eff', card_title: null, title_override: null,
     showcase_skin: null, showcase_badge_1: null, showcase_badge_2: null,
     showcase_badge_3: null, bio: null, custom_title_text: null,
-    card_visibility: 'public',
+    card_visibility: 'public', name_color: 'name_default', card_glow: 'glow_default',
   };
 
   const stats  = statsRes.rows[0] || {};
@@ -133,6 +134,8 @@ async function buildProfileResponse(uid, isOwn) {
       showcaseBadge3:  profile.showcase_badge_3,
       bio:             profile.bio,
       cardVisibility:  profile.card_visibility,
+      nameColor:       profile.name_color  || 'name_default',
+      cardGlow:        profile.card_glow   || 'glow_default',
     },
     stats: {
       totalGames:          stats.total_games || 0,
@@ -230,6 +233,7 @@ router.post('/update', requireAuth, async (req, res) => {
   const {
     cardBackground, cardBorder, cardAccentColor, cardTitle,
     showcaseSkin, showcaseBadges, bio, cardVisibility,
+    nameColor, cardGlow,
   } = req.body;
 
   try {
@@ -284,6 +288,16 @@ router.post('/update', requireAuth, async (req, res) => {
       return res.status(400).json({ error: 'Invalid visibility option' });
     }
 
+    // Validate nameColor
+    if (nameColor !== undefined) {
+      if (!unlocked.has(nameColor)) return res.status(403).json({ error: 'Name color not unlocked' });
+    }
+
+    // Validate cardGlow
+    if (cardGlow !== undefined) {
+      if (!unlocked.has(cardGlow)) return res.status(403).json({ error: 'Card glow not unlocked' });
+    }
+
     // Sanitize bio
     const cleanBio = bio !== undefined ? sanitizeBio(bio) : undefined;
 
@@ -312,6 +326,8 @@ router.post('/update', requireAuth, async (req, res) => {
     }
     if (cleanBio        !== undefined) addField('bio',                cleanBio);
     if (cardVisibility  !== undefined) addField('card_visibility',    cardVisibility);
+    if (nameColor       !== undefined) addField('name_color',         nameColor);
+    if (cardGlow        !== undefined) addField('card_glow',          cardGlow);
 
     await query(`
       INSERT INTO player_profiles (uid) VALUES ($1) ON CONFLICT DO NOTHING

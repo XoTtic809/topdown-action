@@ -25,6 +25,10 @@ var PC_BACKGROUNDS = {
   'bg_midnight':   'linear-gradient(135deg,#050515 0%,#0a0a30 50%,#050515 100%)',
   'bg_crimson':    'linear-gradient(135deg,#150505 0%,#2a0808 50%,#150505 100%)',
   'bg_ocean':      'linear-gradient(135deg,#020d10 0%,#04202a 50%,#021018 100%)',
+  // Animated backgrounds (ANIMATED: prefix → apply CSS class instead of inline bg)
+  'bg_aurora':     'ANIMATED:pc-bg-aurora',
+  'bg_matrix':     'ANIMATED:pc-bg-matrix',
+  'bg_ember':      'ANIMATED:pc-bg-ember',
 };
 
 // ── Border CSS lookup ────────────────────────────────────────────────────────
@@ -58,6 +62,9 @@ var PC_TITLE_DISPLAY = {
   'title_unbreakable':  'Never Dies',
   'title_number_one':   'Him.',
   'title_custom':       null, // uses custom_title_text from API
+  'title_sigma':        'Sigma',
+  'title_sweat':        'Tryhard',
+  'title_rich':         'Made of Money',
 };
 
 // ── Badge display data ───────────────────────────────────────────────────────
@@ -75,6 +82,30 @@ var PC_BADGE_DISPLAY = {
   'badge_century':        { icon: '🎮', name: 'Century',         bg: 'linear-gradient(135deg,#101828,#204060)' },
   'badge_hot_streak':     { icon: '🔥', name: 'Hot Streak',      bg: 'linear-gradient(135deg,#300000,#a03000)' },
   'badge_s1_champion':    { icon: '🏆', name: 'S1 Champion',     bg: 'linear-gradient(135deg,#302000,#c07000)' },
+  'badge_veteran':        { icon: '⚔️',  name: 'Veteran',         bg: 'linear-gradient(135deg,#1a1a1a,#3a3020)' },
+  'badge_high_roller':    { icon: '💰', name: 'High Roller',     bg: 'linear-gradient(135deg,#1a1000,#5a3a00)' },
+  'badge_streak_pro':     { icon: '⚡', name: 'Streak Lord',     bg: 'linear-gradient(135deg,#0a0a20,#2a1a60)' },
+};
+
+// ── Name color lookup ─────────────────────────────────────────────────────────
+var PC_NAME_COLORS = {
+  'name_default':   '#e8eaf6',
+  'name_gold':      '#ffd700',
+  'name_neon':      '#00e5ff',
+  'name_crimson':   '#ff2d55',
+  'name_emerald':   '#00e676',
+  'name_rainbow':   'ANIMATED:pc-name-rainbow',
+  'name_sovereign': 'ANIMATED:pc-name-sovereign',
+};
+
+// ── Card glow lookup (box-shadow value, or ANIMATED: prefix for CSS class) ──
+var PC_GLOW_STYLES = {
+  'glow_none':    'none',
+  'glow_default': '0 0 22px rgba(88,166,255,0.35), 0 0 44px rgba(88,166,255,0.12)',
+  'glow_gold':    '0 0 22px rgba(255,215,0,0.45), 0 0 44px rgba(255,215,0,0.15)',
+  'glow_red':     '0 0 22px rgba(255,45,85,0.45),  0 0 44px rgba(255,45,85,0.15)',
+  'glow_green':   '0 0 22px rgba(0,230,118,0.45),  0 0 44px rgba(0,230,118,0.15)',
+  'glow_rainbow': 'ANIMATED:pc-glow-rainbow',
 };
 
 // ── Title CSS class ──────────────────────────────────────────────────────────
@@ -123,9 +154,23 @@ function renderProfileCard(data, containerEl, opts) {
 
   var p     = data.profile;
   var s     = data.stats || {};
-  var bgCss = PC_BACKGROUNDS[p.cardBackground] || PC_BACKGROUNDS['bg_default'];
-  var brdCss= PC_BORDERS[p.cardBorder]         || PC_BORDERS['border_default'];
+  var bgRaw  = PC_BACKGROUNDS[p.cardBackground] || PC_BACKGROUNDS['bg_default'];
+  var bgIsAnim = typeof bgRaw === 'string' && bgRaw.startsWith('ANIMATED:');
+  var bgCss    = bgIsAnim ? 'linear-gradient(135deg,#0a1628,#1a2a44)' : bgRaw;
+  var bgClass  = bgIsAnim ? (' ' + bgRaw.replace('ANIMATED:', '')) : '';
+
+  var brdCss= PC_BORDERS[p.cardBorder] || PC_BORDERS['border_default'];
   var accent= p.cardAccentColor || '#4a9eff';
+
+  var glowRaw    = PC_GLOW_STYLES[p.cardGlow] || PC_GLOW_STYLES['glow_default'];
+  var glowIsAnim = typeof glowRaw === 'string' && glowRaw.startsWith('ANIMATED:');
+  var glowClass  = glowIsAnim ? (' ' + glowRaw.replace('ANIMATED:', '')) : '';
+  var glowStyle  = glowIsAnim ? '' : (glowRaw === 'none' ? 'box-shadow:none;' : 'box-shadow:0 12px 40px rgba(0,0,0,0.7),' + glowRaw + ';');
+
+  var ncRaw    = PC_NAME_COLORS[p.nameColor] || PC_NAME_COLORS['name_default'];
+  var ncIsAnim = typeof ncRaw === 'string' && ncRaw.startsWith('ANIMATED:');
+  var ncClass  = ncIsAnim ? (' ' + ncRaw.replace('ANIMATED:', '')) : '';
+  var ncStyle  = ncIsAnim ? '' : ('color:' + ncRaw + ';');
 
   var titleId   = p.displayTitle || 'title_newcomer';
   var titleText = titleId === 'title_custom' && p.displayTitleText
@@ -203,13 +248,13 @@ function renderProfileCard(data, containerEl, opts) {
   var accentBar = '<div class="pc-accent-bar" style="background:linear-gradient(90deg,transparent 0%,' + accent + '55 20%,' + accent + 'cc 50%,' + accent + '55 80%,transparent 100%)"></div>';
 
   containerEl.innerHTML =
-    '<div class="pc-card' + (compact ? ' pc-compact' : '') + borderClass + '" ' +
-         'style="background:' + bgCss + ';border:' + brdCss + '">' +
+    '<div class="pc-card' + (compact ? ' pc-compact' : '') + borderClass + bgClass + glowClass + '" ' +
+         'style="background:' + bgCss + ';border:' + brdCss + ';' + glowStyle + '">' +
       accentBar +
       '<div class="pc-header">' +
         '<div class="' + skinId + ' pc-skin-showcase" id="' + skinId + '"></div>' +
         '<div class="pc-identity">' +
-          '<div class="pc-username">' + _escapeHtml(data.username || '') + '</div>' +
+          '<div class="pc-username' + ncClass + '" style="' + ncStyle + '">' + _escapeHtml(data.username || '') + '</div>' +
           rankHtml +
           '<div class="' + titleClass + '" style="color:' + accent + '">' + _escapeHtml(titleText) + '</div>' +
         '</div>' +
@@ -424,6 +469,8 @@ function _renderCustomizer(box, profileData, unlockables) {
     showcaseSkin:    profileData.profile.showcaseSkin    || null,
     bio:             profileData.profile.bio             || '',
     cardVisibility:  profileData.profile.cardVisibility  || 'public',
+    nameColor:       profileData.profile.nameColor       || 'name_default',
+    cardGlow:        profileData.profile.cardGlow        || 'glow_default',
     showcaseBadges:  [
       profileData.profile.showcaseBadge1 || null,
       profileData.profile.showcaseBadge2 || null,
@@ -432,10 +479,12 @@ function _renderCustomizer(box, profileData, unlockables) {
   };
 
   // Categorize unlockables
-  var bgs     = unlockables.filter(function(u) { return u.type === 'background'; });
-  var borders = unlockables.filter(function(u) { return u.type === 'border'; });
-  var titles  = unlockables.filter(function(u) { return u.type === 'title'; });
-  var badges  = unlockables.filter(function(u) { return u.type === 'badge'; });
+  var bgs        = unlockables.filter(function(u) { return u.type === 'background'; });
+  var borders    = unlockables.filter(function(u) { return u.type === 'border'; });
+  var titles     = unlockables.filter(function(u) { return u.type === 'title'; });
+  var badges     = unlockables.filter(function(u) { return u.type === 'badge'; });
+  var nameColors = unlockables.filter(function(u) { return u.type === 'name_color'; });
+  var glows      = unlockables.filter(function(u) { return u.type === 'glow'; });
 
   // User's owned skins — read from localStorage (where game.js stores them)
   var ownedSkins = [];
@@ -456,6 +505,8 @@ function _renderCustomizer(box, profileData, unlockables) {
     previewData.profile.displayTitle    = pending.cardTitle || profileData.profile.titleOverride || 'title_newcomer';
     previewData.profile.showcaseSkin    = pending.showcaseSkin;
     previewData.profile.bio             = pending.bio;
+    previewData.profile.nameColor       = pending.nameColor;
+    previewData.profile.cardGlow        = pending.cardGlow;
     var previewEl = document.getElementById('pcCustomizerPreviewCard');
     if (previewEl) renderProfileCard(previewData, previewEl, {});
   }
@@ -553,6 +604,45 @@ function _renderCustomizer(box, profileData, unlockables) {
     return html || '<div class="pc-no-badges">No badges unlocked yet — keep playing!</div>';
   }
 
+  function makeNameColorList() {
+    return nameColors.map(function(nc) {
+      var sel  = pending.nameColor === nc.id ? ' pc-selected' : '';
+      var lock = !nc.unlocked ? ' pc-locked' : '';
+      var tooltip = !nc.unlocked ? ' title="' + _escapeHtml(nc.unlock_condition) + '"' : '';
+      var ncVal = PC_NAME_COLORS[nc.id];
+      var isAnim = typeof ncVal === 'string' && ncVal.startsWith('ANIMATED:');
+      var swatchClass = nc.id === 'name_rainbow' ? ' pc-nc-rainbow' : nc.id === 'name_sovereign' ? ' pc-nc-sovereign' : '';
+      var swatchStyle = (!isAnim && ncVal) ? 'background:' + ncVal + ';' : '';
+      var nameStyle   = (!isAnim && ncVal) ? 'color:' + ncVal + ';font-weight:700' : '';
+      return '<div class="pc-selector-row' + sel + lock + '"' + tooltip + ' data-nc-id="' + nc.id + '">' +
+             '<div class="pc-nc-swatch' + swatchClass + '" style="' + swatchStyle + '"></div>' +
+             '<span style="' + nameStyle + '">' + _escapeHtml(nc.name) + '</span>' +
+             (!nc.unlocked ? ' 🔒' : '') +
+             '</div>';
+    }).join('');
+  }
+
+  function makeGlowList() {
+    return glows.map(function(g) {
+      var sel  = pending.cardGlow === g.id ? ' pc-selected' : '';
+      var lock = !g.unlocked ? ' pc-locked' : '';
+      var tooltip = !g.unlocked ? ' title="' + _escapeHtml(g.unlock_condition) + '"' : '';
+      var gVal = PC_GLOW_STYLES[g.id];
+      var isAnim = typeof gVal === 'string' && gVal.startsWith('ANIMATED:');
+      var swatchStyle = '';
+      if (!isAnim && gVal && gVal !== 'none') {
+        // extract color from box-shadow for swatch
+        var m = gVal.match(/rgba\([^)]+\)/g);
+        swatchStyle = m ? 'box-shadow:' + m[0].replace(/0\.[\d]+\)/, '0.7)') + ' 0 0 8px;background:transparent' : '';
+      }
+      return '<div class="pc-selector-row' + sel + lock + '"' + tooltip + ' data-glow-id="' + g.id + '">' +
+             '<div class="pc-glow-swatch" style="' + swatchStyle + '"></div>' +
+             _escapeHtml(g.name) +
+             (!g.unlocked ? ' 🔒' : '') +
+             '</div>';
+    }).join('');
+  }
+
   box.innerHTML =
     '<div class="pc-customizer-preview">' +
       '<h3>Preview</h3>' +
@@ -599,6 +689,18 @@ function _renderCustomizer(box, profileData, unlockables) {
             return '<div class="pc-color-preset' + sel + '" data-color="' + c + '" style="background:' + c + '" title="' + c + '"></div>';
           }).join('') +
         '</div>' +
+      '</div>' +
+
+      // Name Color
+      '<div class="pc-ctrl-section">' +
+        '<div class="pc-ctrl-label">Name Color</div>' +
+        '<div class="pc-selector-list" id="pcNameColorList">' + makeNameColorList() + '</div>' +
+      '</div>' +
+
+      // Card Glow
+      '<div class="pc-ctrl-section">' +
+        '<div class="pc-ctrl-label">Card Glow</div>' +
+        '<div class="pc-selector-list" id="pcGlowList">' + makeGlowList() + '</div>' +
       '</div>' +
 
       // Showcase skin
@@ -780,6 +882,32 @@ function _renderCustomizer(box, profileData, unlockables) {
     });
   }
 
+  // Name Color
+  var nameColorList = document.getElementById('pcNameColorList');
+  if (nameColorList) {
+    nameColorList.addEventListener('click', function(e) {
+      var item = e.target.closest('[data-nc-id]');
+      if (!item || item.classList.contains('pc-locked')) return;
+      pending.nameColor = item.dataset.ncId;
+      nameColorList.querySelectorAll('[data-nc-id]').forEach(function(el) { el.classList.remove('pc-selected'); });
+      item.classList.add('pc-selected');
+      rebuildPreview();
+    });
+  }
+
+  // Card Glow
+  var glowList = document.getElementById('pcGlowList');
+  if (glowList) {
+    glowList.addEventListener('click', function(e) {
+      var item = e.target.closest('[data-glow-id]');
+      if (!item || item.classList.contains('pc-locked')) return;
+      pending.cardGlow = item.dataset.glowId;
+      glowList.querySelectorAll('[data-glow-id]').forEach(function(el) { el.classList.remove('pc-selected'); });
+      item.classList.add('pc-selected');
+      rebuildPreview();
+    });
+  }
+
   // Skin grid select
   var skinGridEl = document.getElementById('pcSkinGrid');
   if (skinGridEl) {
@@ -831,6 +959,8 @@ function _renderCustomizer(box, profileData, unlockables) {
         showcaseBadges:  pending.showcaseBadges,
         bio:             pending.bio,
         cardVisibility:  pending.cardVisibility,
+        nameColor:       pending.nameColor,
+        cardGlow:        pending.cardGlow,
       }).then(function(res) {
         if (res.success) {
           var custOverlay = document.getElementById('pcCustomizerOverlay');

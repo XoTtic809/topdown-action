@@ -829,3 +829,88 @@
 
 /* ── Badge icon (shared) ─────────────────────────────────────────────────── */
 .pc-badge-icon { line-height: 1; pointer-events: none; }
+
+/* ── Animated backgrounds ────────────────────────────────────────────────── */
+@keyframes pc-aurora-shift {
+  0%   { filter: hue-rotate(0deg)   brightness(1); }
+  33%  { filter: hue-rotate(35deg)  brightness(1.08); }
+  66%  { filter: hue-rotate(-20deg) brightness(0.95); }
+  100% { filter: hue-rotate(50deg)  brightness(1.12); }
+}
+.pc-bg-aurora {
+  background: linear-gradient(135deg,#050d18 0%,#0a2040 30%,#102850 50%,#0a1830 80%,#050d18 100%);
+  animation: pc-aurora-shift 7s ease-in-out infinite alternate;
+}
+
+@keyframes pc-matrix-pulse {
+  0%, 100% { filter: brightness(1) saturate(1); }
+  50%       { filter: brightness(1.25) saturate(1.4) hue-rotate(5deg); }
+}
+.pc-bg-matrix {
+  background: linear-gradient(135deg,#020a02 0%,#051205 50%,#020a02 100%);
+  animation: pc-matrix-pulse 4s ease-in-out infinite;
+}
+
+@keyframes pc-ember-glow {
+  0%, 100% { filter: brightness(1) saturate(1); }
+  50%       { filter: brightness(1.35) saturate(1.3); }
+}
+.pc-bg-ember {
+  background: linear-gradient(135deg,#1a0800 0%,#2a1200 40%,#3a1500 60%,#1a0800 100%);
+  animation: pc-ember-glow 3s ease-in-out infinite;
+}
+
+/* ── Name color animations ───────────────────────────────────────────────── */
+@keyframes pc-name-rainbow {
+  0%   { color: #ff4a6a; }
+  16%  { color: #ffcc00; }
+  33%  { color: #4aff9e; }
+  50%  { color: #00e5ff; }
+  66%  { color: #cc44ff; }
+  83%  { color: #ff6a00; }
+  100% { color: #ff4a6a; }
+}
+.pc-username.pc-name-rainbow { animation: pc-name-rainbow 3s linear infinite; }
+
+@keyframes pc-name-sovereign {
+  0%, 100% { color: #ffd700; text-shadow: 0 0 8px rgba(192,160,0,0.7); }
+  50%       { color: #ffe84d; text-shadow: 0 0 16px rgba(255,215,0,0.9), 0 0 28px rgba(192,144,0,0.5); }
+}
+.pc-username.pc-name-sovereign { animation: pc-name-sovereign 2.2s ease-in-out infinite; }
+
+/* ── Card glow styles (applied via inline box-shadow on .pc-card) ────────── */
+@keyframes pc-glow-rainbow {
+  0%   { box-shadow: 0 12px 40px rgba(0,0,0,0.7), 0 0 22px rgba(255,74,106,0.45); }
+  16%  { box-shadow: 0 12px 40px rgba(0,0,0,0.7), 0 0 22px rgba(255,204,0,0.45); }
+  33%  { box-shadow: 0 12px 40px rgba(0,0,0,0.7), 0 0 22px rgba(74,255,158,0.45); }
+  50%  { box-shadow: 0 12px 40px rgba(0,0,0,0.7), 0 0 22px rgba(0,229,255,0.45); }
+  66%  { box-shadow: 0 12px 40px rgba(0,0,0,0.7), 0 0 22px rgba(204,68,255,0.45); }
+  83%  { box-shadow: 0 12px 40px rgba(0,0,0,0.7), 0 0 22px rgba(255,106,0,0.45); }
+  100% { box-shadow: 0 12px 40px rgba(0,0,0,0.7), 0 0 22px rgba(255,74,106,0.45); }
+}
+.pc-card.pc-glow-rainbow { animation: pc-glow-rainbow 3s linear infinite; }
+
+/* ── Name color swatches in customizer ───────────────────────────────────── */
+.pc-nc-swatch {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  border: 2px solid rgba(255,255,255,0.15);
+}
+.pc-nc-swatch.pc-nc-rainbow {
+  background: conic-gradient(#ff4a6a,#ffcc00,#4aff9e,#00e5ff,#cc44ff,#ff6a00,#ff4a6a);
+}
+.pc-nc-swatch.pc-nc-sovereign {
+  background: linear-gradient(135deg,#c0a000,#ffd700,#c09000);
+}
+
+/* ── Glow preview swatches ───────────────────────────────────────────────── */
+.pc-glow-swatch {
+  width: 32px;
+  height: 18px;
+  border-radius: 5px;
+  flex-shrink: 0;
+  background: rgba(88,166,255,0.05);
+  border: 1px solid rgba(255,255,255,0.08);
+}

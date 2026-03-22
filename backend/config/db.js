@@ -339,6 +339,9 @@ async function initSchema() {
         updated_at        TIMESTAMPTZ NOT NULL DEFAULT NOW()
       );
 
+      ALTER TABLE player_profiles ADD COLUMN IF NOT EXISTS name_color TEXT NOT NULL DEFAULT 'name_default';
+      ALTER TABLE player_profiles ADD COLUMN IF NOT EXISTS card_glow  TEXT NOT NULL DEFAULT 'glow_default';
+
       CREATE TABLE IF NOT EXISTS player_stats (
         uid                    TEXT PRIMARY KEY REFERENCES users(uid) ON DELETE CASCADE,
         total_games            INTEGER NOT NULL DEFAULT 0,
@@ -389,7 +392,10 @@ async function initSchema() {
         ('bg_void',       'background', 'The Void',       'own_void_skin',     'radial-gradient(ellipse at center,#0d0020,#050010,#000)'),
         ('bg_midnight',   'background', 'Midnight',       'play_100_games',    'linear-gradient(135deg,#050515,#0a0a30,#050515)'),
         ('bg_crimson',    'background', 'Crimson',        'spend_25k_coins',   'linear-gradient(135deg,#150505,#2a0808,#150505)'),
-        ('bg_ocean',      'background', 'Deep Ocean',     'complete_15_trades','linear-gradient(135deg,#020d10,#041820,#021018)')
+        ('bg_ocean',      'background', 'Deep Ocean',     'complete_15_trades','linear-gradient(135deg,#020d10,#041820,#021018)'),
+        ('bg_aurora',     'background', 'Aurora',         'reach_diamond',     'linear-gradient(135deg,#050d18,#0a2040,#102850)'),
+        ('bg_matrix',     'background', 'Matrix',         'play_1000_games',   'linear-gradient(135deg,#020a02,#051205,#020a02)'),
+        ('bg_ember',      'background', 'Ember',          'survive_25_waves',  'linear-gradient(135deg,#1a0800,#2a1200,#3a1500)')
       ON CONFLICT (id) DO NOTHING;
 
       -- Seed card_unlockables (borders)
@@ -421,7 +427,10 @@ async function initSchema() {
         ('title_dedicated',    'title', 'Terminally Online', 'play_1000_games',      ''),
         ('title_unbreakable',  'title', 'Built Different',   'win_20_ranked_streak', ''),
         ('title_number_one',   'title', 'Him.',              'hold_number_one',      'text-shadow:0 0 8px #fff,0 0 16px rgba(255,255,255,0.5)'),
-        ('title_custom',       'title', 'Custom',            'admin_granted',        '')
+        ('title_custom',       'title', 'Custom',            'admin_granted',        ''),
+        ('title_sigma',        'title', 'Sigma',             'win_15_ranked_streak', ''),
+        ('title_sweat',        'title', 'Tryhard',           'play_2000_games',      ''),
+        ('title_rich',         'title', 'Made of Money',     'spend_200k_coins',     '')
       ON CONFLICT (id) DO NOTHING;
 
       -- Seed card_unlockables (badges)
@@ -438,7 +447,31 @@ async function initSchema() {
         ('badge_market_shark',   'badge', 'Market Shark',   'Complete 10+ trades',                  'linear-gradient(135deg,#001020,#003050)'),
         ('badge_century',        'badge', 'Century',        'Play 100+ total games',                'linear-gradient(135deg,#101828,#204060)'),
         ('badge_hot_streak',     'badge', 'Hot Streak',     'Win 5+ ranked games in a row',         'linear-gradient(135deg,#300000,#a03000)'),
-        ('badge_s1_champion',    'badge', 'S1 Champion',    'Reach Battle Pass Tier 50 (Season 1)', 'linear-gradient(135deg,#302000,#c07000)')
+        ('badge_s1_champion',    'badge', 'S1 Champion',    'Reach Battle Pass Tier 50 (Season 1)', 'linear-gradient(135deg,#302000,#c07000)'),
+        ('badge_veteran',        'badge', 'Veteran',        'Play 500+ total games',                'linear-gradient(135deg,#1a1a1a,#3a3020)'),
+        ('badge_high_roller',    'badge', 'High Roller',    'Spend 100k+ coins on skins',           'linear-gradient(135deg,#1a1000,#5a3a00)'),
+        ('badge_streak_pro',     'badge', 'Streak Lord',    'Win 15 ranked games in a row',         'linear-gradient(135deg,#0a0a20,#2a1a60)')
+      ON CONFLICT (id) DO NOTHING;
+
+      -- Seed card_unlockables (name colors)
+      INSERT INTO card_unlockables (id, type, name, unlock_condition, preview_css) VALUES
+        ('name_default',   'name_color', 'White',         'default',               '#e8eaf6'),
+        ('name_gold',      'name_color', 'Gold',          'reach_gold',            '#ffd700'),
+        ('name_neon',      'name_color', 'Neon',          'own_neon_skin',         '#00e5ff'),
+        ('name_crimson',   'name_color', 'Crimson',       'spend_50k_coins',       '#ff2d55'),
+        ('name_emerald',   'name_color', 'Emerald',       'clear_500_waves',       '#00e676'),
+        ('name_rainbow',   'name_color', 'Rainbow',       'own_30_skins',          'conic-gradient(#ff4a6a,#ffcc00,#4aff9e,#00e5ff,#cc44ff,#ff6a00,#ff4a6a)'),
+        ('name_sovereign', 'name_color', 'Sovereign Gold','reach_sovereign',       'linear-gradient(135deg,#c0a000,#ffd700)')
+      ON CONFLICT (id) DO NOTHING;
+
+      -- Seed card_unlockables (glows)
+      INSERT INTO card_unlockables (id, type, name, unlock_condition, preview_css) VALUES
+        ('glow_none',    'glow', 'No Glow',     'default',          'none'),
+        ('glow_default', 'glow', 'Blue Glow',   'default',          '0 0 22px rgba(88,166,255,0.35)'),
+        ('glow_gold',    'glow', 'Gold Glow',   'reach_gold',       '0 0 22px rgba(255,215,0,0.45)'),
+        ('glow_red',     'glow', 'Red Glow',    'spend_50k_coins',  '0 0 22px rgba(255,45,85,0.45)'),
+        ('glow_green',   'glow', 'Green Glow',  'clear_500_waves',  '0 0 22px rgba(0,230,118,0.45)'),
+        ('glow_rainbow', 'glow', 'Rainbow Glow','reach_sovereign',  'conic-gradient(#ff4a6a,#ffcc00,#4aff9e,#00e5ff,#cc44ff,#ff6a00,#ff4a6a)')
       ON CONFLICT (id) DO NOTHING;
     `);
     console.log('[DB] Schema ready');

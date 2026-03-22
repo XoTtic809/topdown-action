@@ -82,6 +82,36 @@ const UNLOCK_CONDITIONS = {
   'badge_century':        (u,s,r) => (s.total_games||0) >= 100,
   'badge_hot_streak':     (u,s,r) => (s.best_win_streak||0) >= 5,
   // badge_s1_champion: granted via battle pass claiming
+  'badge_veteran':     (u,s,r) => (s.total_games||0) >= 500,
+  'badge_high_roller': (u,s,r) => (s.total_coins_spent||0) >= 100000,
+  'badge_streak_pro':  (u,s,r) => (s.best_win_streak||0) >= 15,
+
+  // New titles
+  'title_sigma':       (u,s,r) => (s.best_win_streak||0) >= 15,
+  'title_sweat':       (u,s,r) => (s.total_games||0) >= 2000,
+  'title_rich':        (u,s,r) => (s.total_coins_spent||0) >= 200000,
+
+  // Animated backgrounds
+  'bg_aurora':         (u,s,r) => TIER_ORDER.indexOf(r.peak_tier||'bronze') >= TIER_ORDER.indexOf('diamond'),
+  'bg_matrix':         (u,s,r) => (s.total_games||0) >= 1000,
+  'bg_ember':          (u,s,r,ctx) => (ctx.wavesCleared||0) >= 25,
+
+  // Name colors
+  'name_default':      () => true,
+  'name_gold':         (u,s,r) => TIER_ORDER.indexOf(r.peak_tier||'bronze') >= TIER_ORDER.indexOf('gold'),
+  'name_neon':         (u,s,r) => (u.owned_skins||[]).some(id => id.startsWith('neon_') || id === 'c_neon'),
+  'name_crimson':      (u,s,r) => (s.total_coins_spent||0) >= 50000,
+  'name_emerald':      (u,s,r) => (s.total_waves_cleared||0) >= 500,
+  'name_rainbow':      (u,s,r) => (u.owned_skins||[]).length >= 30,
+  'name_sovereign':    (u,s,r) => r.peak_tier === 'sovereign',
+
+  // Card glows
+  'glow_none':         () => true,
+  'glow_default':      () => true,
+  'glow_gold':         (u,s,r) => TIER_ORDER.indexOf(r.peak_tier||'bronze') >= TIER_ORDER.indexOf('gold'),
+  'glow_red':          (u,s,r) => (s.total_coins_spent||0) >= 50000,
+  'glow_green':        (u,s,r) => (s.total_waves_cleared||0) >= 500,
+  'glow_rainbow':      (u,s,r) => r.peak_tier === 'sovereign',
 };
 
 /**
