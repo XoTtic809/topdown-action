@@ -18,6 +18,13 @@ var PC_BACKGROUNDS = {
   'bg_whale':      'linear-gradient(135deg,#0a1528 0%,#1a3558 50%,#0a1528 100%)',
   'bg_veteran':    'linear-gradient(135deg,#1a1a1a 0%,#2a2a2a 40%,#3a3a3a 60%,#2a2a2a 100%)',
   'bg_seasonal_s1':'linear-gradient(135deg,#1a0a28 0%,#3a1a48 50%,#1a0a28 100%)',
+  // New crate-themed backgrounds
+  'bg_neon':       'linear-gradient(135deg,#001020 0%,#002840 50%,#001828 100%)',
+  'bg_frost':      'linear-gradient(135deg,#050d18 0%,#0d2030 50%,#050d18 100%)',
+  'bg_void':       'radial-gradient(ellipse at center,#0d0020 0%,#050010 60%,#000 100%)',
+  'bg_midnight':   'linear-gradient(135deg,#050515 0%,#0a0a30 50%,#050515 100%)',
+  'bg_crimson':    'linear-gradient(135deg,#150505 0%,#2a0808 50%,#150505 100%)',
+  'bg_ocean':      'linear-gradient(135deg,#020d10 0%,#04202a 50%,#021018 100%)',
 };
 
 // ── Border CSS lookup ────────────────────────────────────────────────────────
@@ -30,6 +37,11 @@ var PC_BORDERS = {
   'border_prismatic':      '2px solid #ff6eb4',
   'border_champion':       '3px solid #ffd700',
   'border_oblivion':       '2px solid rgba(180,0,255,0.8)',
+  // New animated glow borders
+  'border_neon':           '2px solid rgba(0,229,255,0.8)',
+  'border_fire':           '2px solid rgba(255,100,0,0.8)',
+  'border_ice':            '2px solid rgba(160,216,234,0.8)',
+  'border_void':           '2px solid rgba(140,0,255,0.8)',
 };
 
 // ── Title display text ───────────────────────────────────────────────────────
@@ -118,6 +130,10 @@ function renderProfileCard(data, containerEl, opts) {
   if (p.cardBorder === 'border_animated_pulse') borderClass = ' pc-border-animated-pulse';
   if (p.cardBorder === 'border_prismatic')       borderClass = ' pc-border-prismatic';
   if (p.cardBorder === 'border_oblivion')        borderClass = ' pc-border-oblivion';
+  if (p.cardBorder === 'border_neon')            borderClass = ' pc-border-neon';
+  if (p.cardBorder === 'border_fire')            borderClass = ' pc-border-fire';
+  if (p.cardBorder === 'border_ice')             borderClass = ' pc-border-ice';
+  if (p.cardBorder === 'border_void')            borderClass = ' pc-border-void';
 
   var rankHtml = '';
   if (typeof rankBadgeSvg === 'function' && data.stats && data.stats.currentRank) {
@@ -152,15 +168,16 @@ function renderProfileCard(data, containerEl, opts) {
   var badgesHtml = '';
   if (!compact) {
     var badgeSlots = [p.showcaseBadge1, p.showcaseBadge2, p.showcaseBadge3];
-    var badgeSlotsHtml = badgeSlots.map(function(bid) {
-      var disp = bid && PC_BADGE_DISPLAY[bid];
-      if (disp) {
+    var filledBadges = badgeSlots.filter(function(bid) { return bid && PC_BADGE_DISPLAY[bid]; });
+    if (filledBadges.length > 0) {
+      var badgePills = filledBadges.map(function(bid) {
+        var disp = PC_BADGE_DISPLAY[bid];
         return '<div class="pc-badge" style="background:' + disp.bg + '" title="' + _escapeHtml(disp.name) + '">' +
-               '<span class="pc-badge-icon">' + disp.icon + '</span></div>';
-      }
-      return '<div class="pc-badge pc-badge-empty" title="Empty badge slot"></div>';
-    }).join('');
-    badgesHtml = '<div class="pc-badges">' + badgeSlotsHtml + '</div>';
+               '<span class="pc-badge-icon">' + disp.icon + '</span>' +
+               '<span class="pc-badge-name">' + _escapeHtml(disp.name) + '</span></div>';
+      }).join('');
+      badgesHtml = '<div class="pc-badges">' + badgePills + '</div>';
+    }
   }
 
   var footerHtml = !compact
@@ -176,9 +193,12 @@ function renderProfileCard(data, containerEl, opts) {
     ? 'pc-skin-compact-' + uid
     : 'pc-skin-' + uid;
 
+  var accentBar = '<div class="pc-accent-bar" style="background:linear-gradient(90deg,transparent 0%,' + accent + '55 20%,' + accent + 'cc 50%,' + accent + '55 80%,transparent 100%)"></div>';
+
   containerEl.innerHTML =
     '<div class="pc-card' + (compact ? ' pc-compact' : '') + borderClass + '" ' +
          'style="background:' + bgCss + ';border:' + brdCss + '">' +
+      accentBar +
       '<div class="pc-header">' +
         '<div class="' + skinId + ' pc-skin-showcase" id="' + skinId + '"></div>' +
         '<div class="pc-identity">' +
@@ -342,10 +362,15 @@ function _renderCustomizer(box, profileData, unlockables) {
   var titles  = unlockables.filter(function(u) { return u.type === 'title'; });
   var badges  = unlockables.filter(function(u) { return u.type === 'badge'; });
 
-  // User's owned skins
-  var ownedSkins = profileData.stats && profileData.stats.ownedSkinsCount > 0
-    ? (window._currentUser && window._currentUser.ownedSkins || [])
-    : [];
+  // User's owned skins — read from localStorage (where game.js stores them)
+  var ownedSkins = [];
+  try {
+    var _lsVal = localStorage.getItem('ownedSkins');
+    if (_lsVal) ownedSkins = JSON.parse(_lsVal);
+  } catch (e) {}
+  if (!ownedSkins.length && window._currentUser && Array.isArray(window._currentUser.ownedSkins)) {
+    ownedSkins = window._currentUser.ownedSkins;
+  }
 
   function rebuildPreview() {
     var previewData = JSON.parse(JSON.stringify(profileData));
@@ -368,11 +393,13 @@ function _renderCustomizer(box, profileData, unlockables) {
     return filtered.map(function(bg) {
       var sel  = pending.cardBackground === bg.id ? ' pc-selected' : '';
       var lock = !bg.unlocked ? ' pc-locked' : '';
-      var tooltip = !bg.unlocked ? ' title="' + _escapeHtml(bg.unlock_condition) + '"' : '';
+      var tooltip = !bg.unlocked ? ' title="' + _escapeHtml(bg.name) + ' — ' + _escapeHtml(bg.unlock_condition) + '"' : ' title="' + _escapeHtml(bg.name) + '"';
       return '<div class="pc-selector-item' + sel + lock + '" ' +
              'style="background:' + bg.preview_css + '"' + tooltip +
              ' data-bg-id="' + bg.id + '">' +
-             (!bg.unlocked ? '<div class="pc-locked-icon">🔒<span>' + _escapeHtml(bg.name) + '</span></div>' : '') +
+             (!bg.unlocked
+               ? '<div class="pc-locked-icon">🔒<span>' + _escapeHtml(bg.name) + '</span></div>'
+               : '<span class="pc-item-name">' + _escapeHtml(bg.name) + '</span>') +
              '</div>';
     }).join('');
   }
@@ -491,6 +518,12 @@ function _renderCustomizer(box, profileData, unlockables) {
           '<input type="color" class="pc-color-input" id="pcAccentColor" value="' + _escapeHtml(pending.cardAccentColor) + '">' +
           '<span class="pc-color-hex" id="pcColorHex">' + _escapeHtml(pending.cardAccentColor) + '</span>' +
         '</div>' +
+        '<div class="pc-color-presets" id="pcColorPresets">' +
+          ['#4a9eff','#ff4a6a','#4aff9e','#ffcc00','#ff6a00','#cc44ff','#00e5ff','#ff44cc','#ffffff','#7fffaa'].map(function(c) {
+            var sel = pending.cardAccentColor === c ? ' pc-selected' : '';
+            return '<div class="pc-color-preset' + sel + '" data-color="' + c + '" style="background:' + c + '" title="' + c + '"></div>';
+          }).join('') +
+        '</div>' +
       '</div>' +
 
       // Showcase skin
@@ -531,26 +564,26 @@ function _renderCustomizer(box, profileData, unlockables) {
   // Initial preview render
   rebuildPreview();
 
-  // Populate skin grid from current user's owned skins
+  // Populate skin grid
   var skinGrid = document.getElementById('pcSkinGrid');
-  if (skinGrid && window._currentUser && Array.isArray(window._currentUser.ownedSkins)) {
-    var skins = window._currentUser.ownedSkins;
-    if (skins.length === 0) {
+  if (skinGrid) {
+    // Filter out mutation variants — show base skins only
+    var baseSkins = ownedSkins.filter(function(sid) { return !sid.includes('__'); });
+    if (baseSkins.length === 0) {
       skinGrid.innerHTML = '<div style="font-size:12px;color:rgba(255,255,255,0.4);grid-column:1/-1">No skins owned yet.</div>';
     } else {
-      skinGrid.innerHTML = skins.map(function(sid) {
+      skinGrid.innerHTML = baseSkins.map(function(sid) {
         var sel = pending.showcaseSkin === sid ? ' pc-selected' : '';
-        return '<div class="pc-skin-cell' + sel + '" data-skin-id="' + _escapeHtml(sid) + '"></div>';
+        return '<div class="pc-skin-cell' + sel + '" data-skin-id="' + _escapeHtml(sid) + '" title="' + _escapeHtml(sid) + '"></div>';
       }).join('');
-      skins.forEach(function(sid) {
+      baseSkins.forEach(function(sid) {
         var el = skinGrid.querySelector('[data-skin-id="' + sid + '"]');
         if (el && typeof applyRichSkinPreview === 'function') {
-          applyRichSkinPreview(el, sid, null);
+          var skinData = typeof SKINS !== 'undefined' ? SKINS.find(function(s) { return s.id === sid; }) : null;
+          applyRichSkinPreview(el, sid, skinData ? skinData.color : null);
         }
       });
     }
-  } else {
-    if (skinGrid) skinGrid.innerHTML = '<div style="font-size:12px;color:rgba(255,255,255,0.4);grid-column:1/-1">Skin data unavailable.</div>';
   }
 
   // ── Event Wiring ──────────────────────────────────────────────────────────
@@ -649,6 +682,25 @@ function _renderCustomizer(box, profileData, unlockables) {
     colorInput.addEventListener('input', function() {
       pending.cardAccentColor = this.value;
       if (colorHex) colorHex.textContent = this.value;
+      // Deselect presets
+      var presets = document.getElementById('pcColorPresets');
+      if (presets) presets.querySelectorAll('.pc-color-preset').forEach(function(el) { el.classList.remove('pc-selected'); });
+      rebuildPreview();
+    });
+  }
+
+  // Accent color presets
+  var colorPresets = document.getElementById('pcColorPresets');
+  if (colorPresets) {
+    colorPresets.addEventListener('click', function(e) {
+      var dot = e.target.closest('[data-color]');
+      if (!dot) return;
+      var c = dot.dataset.color;
+      pending.cardAccentColor = c;
+      if (colorInput) colorInput.value = c;
+      if (colorHex) colorHex.textContent = c;
+      colorPresets.querySelectorAll('.pc-color-preset').forEach(function(el) { el.classList.remove('pc-selected'); });
+      dot.classList.add('pc-selected');
       rebuildPreview();
     });
   }

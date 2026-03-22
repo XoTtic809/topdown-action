@@ -383,7 +383,13 @@ async function initSchema() {
         ('bg_collector',  'background', 'Collector',      'own_50_skins',     'linear-gradient(135deg,#0a1a0a,#1a3a1a,#0a4a0a)'),
         ('bg_whale',      'background', 'Big Spender',    'spend_100k_coins', 'linear-gradient(135deg,#0a1528,#1a3558,#0a1528)'),
         ('bg_veteran',    'background', 'Veteran',        'play_500_games',   'linear-gradient(135deg,#1a1a1a,#2a2a2a,#3a3a3a,#2a2a2a)'),
-        ('bg_seasonal_s1','background', 'Season 1',       'seasonal_s1',      'linear-gradient(135deg,#1a0a28,#3a1a48,#1a0a28)')
+        ('bg_seasonal_s1','background', 'Season 1',       'seasonal_s1',      'linear-gradient(135deg,#1a0a28,#3a1a48,#1a0a28)'),
+        ('bg_neon',       'background', 'Neon City',      'own_neon_skin',     'linear-gradient(135deg,#001020,#002840,#001828)'),
+        ('bg_frost',      'background', 'Frost',          'own_frost_skin',    'linear-gradient(135deg,#050d18,#0a1a28,#051018)'),
+        ('bg_void',       'background', 'The Void',       'own_void_skin',     'radial-gradient(ellipse at center,#0d0020,#050010,#000)'),
+        ('bg_midnight',   'background', 'Midnight',       'play_100_games',    'linear-gradient(135deg,#050515,#0a0a30,#050515)'),
+        ('bg_crimson',    'background', 'Crimson',        'spend_25k_coins',   'linear-gradient(135deg,#150505,#2a0808,#150505)'),
+        ('bg_ocean',      'background', 'Deep Ocean',     'complete_15_trades','linear-gradient(135deg,#020d10,#041820,#021018)')
       ON CONFLICT (id) DO NOTHING;
 
       -- Seed card_unlockables (borders)
@@ -395,7 +401,11 @@ async function initSchema() {
         ('border_animated_pulse',  'border', 'Pulse',     'win_10_ranked_streak',  '2px solid rgba(88,166,255,0.8)'),
         ('border_prismatic',       'border', 'Prismatic', 'own_prismatic_skin',    '2px solid transparent'),
         ('border_champion',        'border', 'Champion',  'top10_season_end',      '3px solid #ffd700'),
-        ('border_oblivion',        'border', 'Oblivion',  'own_oblivion_skin',     '2px solid rgba(180,0,255,0.8)')
+        ('border_oblivion',        'border', 'Oblivion',  'own_oblivion_skin',     '2px solid rgba(180,0,255,0.8)'),
+        ('border_neon',            'border', 'Neon',      'own_neon_skin',          '2px solid rgba(0,229,255,0.8)'),
+        ('border_fire',            'border', 'Infernal',  'survive_20_waves',       '2px solid rgba(255,100,0,0.8)'),
+        ('border_ice',             'border', 'Frost',     'own_frost_skin',         '2px solid rgba(160,216,234,0.8)'),
+        ('border_void',            'border', 'Void',      'own_void_skin',          '2px solid rgba(140,0,255,0.8)')
       ON CONFLICT (id) DO NOTHING;
 
       -- Seed card_unlockables (titles)

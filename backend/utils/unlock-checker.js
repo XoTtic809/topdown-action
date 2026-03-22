@@ -59,6 +59,20 @@ const UNLOCK_CONDITIONS = {
   'badge_rank_platinum':  (u,s,r) => TIER_ORDER.indexOf(r.peak_tier||'bronze') >= TIER_ORDER.indexOf('platinum'),
   'badge_rank_diamond':   (u,s,r) => TIER_ORDER.indexOf(r.peak_tier||'bronze') >= TIER_ORDER.indexOf('diamond'),
   'badge_rank_apex':      (u,s,r) => ['apex','sovereign'].includes(r.peak_tier),
+  // New backgrounds
+  'bg_neon':     (u,s,r) => (u.owned_skins||[]).some(id => id.startsWith('neon_')),
+  'bg_frost':    (u,s,r) => (u.owned_skins||[]).some(id => id.startsWith('frost_')),
+  'bg_void':     (u,s,r) => (u.owned_skins||[]).some(id => id.startsWith('void_')),
+  'bg_midnight': (u,s,r) => (s.total_games||0) >= 100,
+  'bg_crimson':  (u,s,r) => (s.total_coins_spent||0) >= 25000,
+  'bg_ocean':    (u,s,r) => (s.total_trades_completed||0) >= 15,
+
+  // New borders
+  'border_neon': (u,s,r) => (u.owned_skins||[]).some(id => id.startsWith('neon_')),
+  'border_fire': (u,s,r,ctx) => (ctx.wavesCleared||0) >= 20,
+  'border_ice':  (u,s,r) => (u.owned_skins||[]).some(id => id.startsWith('frost_')),
+  'border_void': (u,s,r) => (u.owned_skins||[]).some(id => id.startsWith('void_')),
+
   // Badges — achievement
   'badge_wave_master':    (u,s,r,ctx) => (ctx.wavesCleared||0) >= 30,
   'badge_mythic_pull':    (u,s,r,ctx) => ctx.rolledRarity === 'mythic',
