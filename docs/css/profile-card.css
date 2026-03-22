@@ -189,6 +189,96 @@
   color: rgba(255,255,255,0.25);
 }
 
+.pc-badge-icon {
+  font-size: 20px;
+  line-height: 1;
+  pointer-events: none;
+}
+
+/* ── Customizer badge picker ─────────────────────────────────────────────── */
+.pc-cust-badge-slots {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.pc-cust-badge-slot {
+  width: 48px;
+  height: 48px;
+  border-radius: 10px;
+  background: rgba(88,166,255,0.06);
+  border: 1px dashed rgba(88,166,255,0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  cursor: pointer;
+  transition: border-color 0.15s;
+  position: relative;
+}
+
+.pc-cust-badge-slot.pc-cust-badge-filled {
+  border-style: solid;
+  border-color: rgba(255,255,255,0.2);
+}
+
+.pc-cust-badge-slot.pc-cust-badge-filled:hover {
+  border-color: rgba(255,80,80,0.6);
+}
+
+.pc-cust-badge-slot.pc-badge-empty::after {
+  content: '+';
+  font-size: 18px;
+  color: rgba(255,255,255,0.2);
+}
+
+.pc-cust-badge-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.pc-cust-badge-option {
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: border-color 0.15s, transform 0.1s;
+  position: relative;
+}
+
+.pc-cust-badge-option:hover {
+  transform: scale(1.1);
+  border-color: rgba(255,255,255,0.3);
+}
+
+.pc-cust-badge-option.pc-selected {
+  border-color: #4a9eff;
+  box-shadow: 0 0 8px rgba(74,158,255,0.5);
+}
+
+.pc-cust-badge-option.pc-locked {
+  cursor: default;
+}
+
+.pc-badge-lock {
+  position: absolute;
+  bottom: 2px;
+  right: 2px;
+  font-size: 10px;
+}
+
+.pc-no-badges {
+  font-size: 11px;
+  color: rgba(255,255,255,0.35);
+  padding: 8px 0;
+}
+
 /* ── Stats grid ──────────────────────────────────────────────────────────── */
 .pc-divider {
   height: 1px;

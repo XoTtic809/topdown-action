@@ -48,6 +48,23 @@ var PC_TITLE_DISPLAY = {
   'title_custom':       null, // uses custom_title_text from API
 };
 
+// ── Badge display data ───────────────────────────────────────────────────────
+var PC_BADGE_DISPLAY = {
+  'badge_rank_silver':    { icon: '🥈', name: 'Silver Ranked',   bg: 'linear-gradient(135deg,#1a2030,#4a6080)' },
+  'badge_rank_gold':      { icon: '🥇', name: 'Gold Ranked',     bg: 'linear-gradient(135deg,#3a2000,#c09020)' },
+  'badge_rank_platinum':  { icon: '💠', name: 'Platinum Ranked', bg: 'linear-gradient(135deg,#0d1f2d,#2a6080)' },
+  'badge_rank_diamond':   { icon: '💎', name: 'Diamond Ranked',  bg: 'linear-gradient(135deg,#050d1a,#1a6aaa)' },
+  'badge_rank_apex':      { icon: '👑', name: 'Apex Ranked',     bg: 'linear-gradient(135deg,#1a0040,#6a20c0)' },
+  'badge_wave_master':    { icon: '🌊', name: 'Wave Master',     bg: 'linear-gradient(135deg,#0a2040,#1a5080)' },
+  'badge_mythic_pull':    { icon: '✨', name: 'Mythic Pull',     bg: 'linear-gradient(135deg,#200040,#8000cc)' },
+  'badge_oblivion_club':  { icon: '🌑', name: 'Oblivion Club',   bg: 'linear-gradient(135deg,#050010,#1a0040)' },
+  'badge_skin_collector': { icon: '🎨', name: 'Skin Collector',  bg: 'linear-gradient(135deg,#001a20,#005060)' },
+  'badge_market_shark':   { icon: '🤝', name: 'Market Shark',    bg: 'linear-gradient(135deg,#001020,#003050)' },
+  'badge_century':        { icon: '🎮', name: 'Century',         bg: 'linear-gradient(135deg,#101828,#204060)' },
+  'badge_hot_streak':     { icon: '🔥', name: 'Hot Streak',      bg: 'linear-gradient(135deg,#300000,#a03000)' },
+  'badge_s1_champion':    { icon: '🏆', name: 'S1 Champion',     bg: 'linear-gradient(135deg,#302000,#c07000)' },
+};
+
 // ── Title CSS class ──────────────────────────────────────────────────────────
 var PC_TITLE_CSS_CLASS = {
   'title_sovereign':   'pc-title-sovereign',
@@ -132,13 +149,19 @@ function renderProfileCard(data, containerEl, opts) {
       '</div>';
   }
 
-  var badgesHtml = !compact
-    ? '<div class="pc-badges">' +
-        '<div class="pc-badge pc-badge-empty" title="Badges coming soon"></div>' +
-        '<div class="pc-badge pc-badge-empty" title="Badges coming soon"></div>' +
-        '<div class="pc-badge pc-badge-empty" title="Badges coming soon"></div>' +
-      '</div>'
-    : '';
+  var badgesHtml = '';
+  if (!compact) {
+    var badgeSlots = [p.showcaseBadge1, p.showcaseBadge2, p.showcaseBadge3];
+    var badgeSlotsHtml = badgeSlots.map(function(bid) {
+      var disp = bid && PC_BADGE_DISPLAY[bid];
+      if (disp) {
+        return '<div class="pc-badge" style="background:' + disp.bg + '" title="' + _escapeHtml(disp.name) + '">' +
+               '<span class="pc-badge-icon">' + disp.icon + '</span></div>';
+      }
+      return '<div class="pc-badge pc-badge-empty" title="Empty badge slot"></div>';
+    }).join('');
+    badgesHtml = '<div class="pc-badges">' + badgeSlotsHtml + '</div>';
+  }
 
   var footerHtml = !compact
     ? '<div class="pc-footer">Account age: ' + (s.accountAgeDays || 0) + ' day' + (s.accountAgeDays !== 1 ? 's' : '') + '</div>'
@@ -304,12 +327,18 @@ function _renderCustomizer(box, profileData, unlockables) {
     showcaseSkin:    profileData.profile.showcaseSkin    || null,
     bio:             profileData.profile.bio             || '',
     cardVisibility:  profileData.profile.cardVisibility  || 'public',
+    showcaseBadges:  [
+      profileData.profile.showcaseBadge1 || null,
+      profileData.profile.showcaseBadge2 || null,
+      profileData.profile.showcaseBadge3 || null,
+    ],
   };
 
   // Categorize unlockables
   var bgs     = unlockables.filter(function(u) { return u.type === 'background'; });
   var borders = unlockables.filter(function(u) { return u.type === 'border'; });
   var titles  = unlockables.filter(function(u) { return u.type === 'title'; });
+  var badges  = unlockables.filter(function(u) { return u.type === 'badge'; });
 
   // User's owned skins
   var ownedSkins = profileData.stats && profileData.stats.ownedSkinsCount > 0
@@ -380,6 +409,46 @@ function _renderCustomizer(box, profileData, unlockables) {
     }).join('');
   }
 
+  function makeBadgeSlotsHtml() {
+    return [0, 1, 2].map(function(i) {
+      var bid  = pending.showcaseBadges[i];
+      var disp = bid && PC_BADGE_DISPLAY[bid];
+      if (disp) {
+        return '<div class="pc-cust-badge-slot pc-cust-badge-filled" data-slot="' + i + '" ' +
+               'style="background:' + disp.bg + '" title="' + _escapeHtml(disp.name) + ' — click to remove">' +
+               '<span class="pc-badge-icon">' + disp.icon + '</span></div>';
+      }
+      return '<div class="pc-cust-badge-slot pc-badge-empty" data-slot="' + i + '" title="Empty — click a badge below to fill"></div>';
+    }).join('');
+  }
+
+  function makeBadgeGridHtml() {
+    var unlockedBadges = badges.filter(function(b) { return b.unlocked; });
+    var lockedBadges   = badges.filter(function(b) { return !b.unlocked; });
+    if (!unlockedBadges.length && !lockedBadges.length) {
+      return '<div class="pc-no-badges">No badges available yet.</div>';
+    }
+    var html = unlockedBadges.map(function(b) {
+      var disp = PC_BADGE_DISPLAY[b.id];
+      if (!disp) return '';
+      var isSelected = pending.showcaseBadges.includes(b.id);
+      return '<div class="pc-cust-badge-option' + (isSelected ? ' pc-selected' : '') + '" ' +
+             'data-badge-id="' + _escapeHtml(b.id) + '" ' +
+             'style="background:' + disp.bg + '" title="' + _escapeHtml(disp.name) + '">' +
+             '<span class="pc-badge-icon">' + disp.icon + '</span></div>';
+    }).join('');
+    if (lockedBadges.length) {
+      html += lockedBadges.map(function(b) {
+        var disp = PC_BADGE_DISPLAY[b.id];
+        if (!disp) return '';
+        return '<div class="pc-cust-badge-option pc-locked" title="' + _escapeHtml(b.unlock_condition) + '">' +
+               '<span class="pc-badge-icon" style="filter:grayscale(1);opacity:0.4">' + disp.icon + '</span>' +
+               '<span class="pc-badge-lock">🔒</span></div>';
+      }).join('');
+    }
+    return html || '<div class="pc-no-badges">No badges unlocked yet — keep playing!</div>';
+  }
+
   box.innerHTML =
     '<div class="pc-customizer-preview">' +
       '<h3>Preview</h3>' +
@@ -404,6 +473,13 @@ function _renderCustomizer(box, profileData, unlockables) {
       '<div class="pc-ctrl-section">' +
         '<div class="pc-ctrl-label">Title</div>' +
         '<div class="pc-selector-list" id="pcTitleList">' + makeTitleList('') + '</div>' +
+      '</div>' +
+
+      // Badges
+      '<div class="pc-ctrl-section">' +
+        '<div class="pc-ctrl-label">Badges <span style="font-size:10px;opacity:0.5">(pick up to 3)</span></div>' +
+        '<div class="pc-cust-badge-slots" id="pcBadgeSlots">' + makeBadgeSlotsHtml() + '</div>' +
+        '<div class="pc-cust-badge-grid" id="pcBadgeGrid">' + makeBadgeGridHtml() + '</div>' +
       '</div>' +
 
       // Accent color
@@ -525,6 +601,45 @@ function _renderCustomizer(box, profileData, unlockables) {
     });
   }
 
+  // Badge grid — toggle on/off
+  var badgeGrid = document.getElementById('pcBadgeGrid');
+  if (badgeGrid) {
+    badgeGrid.addEventListener('click', function(e) {
+      var item = e.target.closest('[data-badge-id]');
+      if (!item || item.classList.contains('pc-locked')) return;
+      var bid = item.dataset.badgeId;
+      var idx = pending.showcaseBadges.indexOf(bid);
+      if (idx !== -1) {
+        // Already selected — remove it
+        pending.showcaseBadges[idx] = null;
+      } else {
+        // Add to first empty slot; if all full, replace slot 0
+        var emptyIdx = pending.showcaseBadges.indexOf(null);
+        if (emptyIdx !== -1) {
+          pending.showcaseBadges[emptyIdx] = bid;
+        } else {
+          pending.showcaseBadges[0] = bid;
+        }
+      }
+      document.getElementById('pcBadgeSlots').innerHTML = makeBadgeSlotsHtml();
+      document.getElementById('pcBadgeGrid').innerHTML  = makeBadgeGridHtml();
+      rebuildPreview();
+    });
+  }
+
+  // Badge slots — click to clear
+  var badgeSlotsEl = document.getElementById('pcBadgeSlots');
+  if (badgeSlotsEl) {
+    badgeSlotsEl.addEventListener('click', function(e) {
+      var slot = e.target.closest('[data-slot]');
+      if (!slot || !slot.classList.contains('pc-cust-badge-filled')) return;
+      pending.showcaseBadges[Number(slot.dataset.slot)] = null;
+      document.getElementById('pcBadgeSlots').innerHTML = makeBadgeSlotsHtml();
+      document.getElementById('pcBadgeGrid').innerHTML  = makeBadgeGridHtml();
+      rebuildPreview();
+    });
+  }
+
   // Accent color
   var colorInput = document.getElementById('pcAccentColor');
   var colorHex   = document.getElementById('pcColorHex');
@@ -584,6 +699,7 @@ function _renderCustomizer(box, profileData, unlockables) {
         cardAccentColor: pending.cardAccentColor,
         cardTitle:       pending.cardTitle,
         showcaseSkin:    pending.showcaseSkin,
+        showcaseBadges:  pending.showcaseBadges,
         bio:             pending.bio,
         cardVisibility:  pending.cardVisibility,
       }).then(function(res) {

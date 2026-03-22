@@ -413,6 +413,23 @@ async function initSchema() {
         ('title_number_one',   'title', 'Him.',              'hold_number_one',      'text-shadow:0 0 8px #fff,0 0 16px rgba(255,255,255,0.5)'),
         ('title_custom',       'title', 'Custom',            'admin_granted',        '')
       ON CONFLICT (id) DO NOTHING;
+
+      -- Seed card_unlockables (badges)
+      INSERT INTO card_unlockables (id, type, name, unlock_condition, preview_css) VALUES
+        ('badge_rank_silver',    'badge', 'Silver Ranked',  'Reach Silver rank',                    'linear-gradient(135deg,#1a2030,#4a6080)'),
+        ('badge_rank_gold',      'badge', 'Gold Ranked',    'Reach Gold rank',                      'linear-gradient(135deg,#3a2000,#c09020)'),
+        ('badge_rank_platinum',  'badge', 'Platinum Ranked','Reach Platinum rank',                  'linear-gradient(135deg,#0d1f2d,#2a6080)'),
+        ('badge_rank_diamond',   'badge', 'Diamond Ranked', 'Reach Diamond rank',                   'linear-gradient(135deg,#050d1a,#1a6aaa)'),
+        ('badge_rank_apex',      'badge', 'Apex Ranked',    'Reach Apex rank',                      'linear-gradient(135deg,#1a0040,#6a20c0)'),
+        ('badge_wave_master',    'badge', 'Wave Master',    'Survive 30+ waves in a single game',   'linear-gradient(135deg,#0a2040,#1a5080)'),
+        ('badge_mythic_pull',    'badge', 'Mythic Pull',    'Roll a mythic rarity from any crate',  'linear-gradient(135deg,#200040,#8000cc)'),
+        ('badge_oblivion_club',  'badge', 'Oblivion Club',  'Own any Oblivion crate skin',          'linear-gradient(135deg,#050010,#1a0040)'),
+        ('badge_skin_collector', 'badge', 'Skin Collector', 'Own 25+ skins',                        'linear-gradient(135deg,#001a20,#005060)'),
+        ('badge_market_shark',   'badge', 'Market Shark',   'Complete 10+ trades',                  'linear-gradient(135deg,#001020,#003050)'),
+        ('badge_century',        'badge', 'Century',        'Play 100+ total games',                'linear-gradient(135deg,#101828,#204060)'),
+        ('badge_hot_streak',     'badge', 'Hot Streak',     'Win 5+ ranked games in a row',         'linear-gradient(135deg,#300000,#a03000)'),
+        ('badge_s1_champion',    'badge', 'S1 Champion',    'Reach Battle Pass Tier 50 (Season 1)', 'linear-gradient(135deg,#302000,#c07000)')
+      ON CONFLICT (id) DO NOTHING;
     `);
     console.log('[DB] Schema ready');
   } finally {

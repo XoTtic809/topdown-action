@@ -52,6 +52,22 @@ const UNLOCK_CONDITIONS = {
   'title_unbreakable':  (u,s,r) => (s.best_win_streak||0) >= 20,
   // title_number_one: reconcileNumberOneTitle() only
   // title_custom: admin-granted only
+
+  // Badges — ranked
+  'badge_rank_silver':    (u,s,r) => TIER_ORDER.indexOf(r.peak_tier||'bronze') >= TIER_ORDER.indexOf('silver'),
+  'badge_rank_gold':      (u,s,r) => TIER_ORDER.indexOf(r.peak_tier||'bronze') >= TIER_ORDER.indexOf('gold'),
+  'badge_rank_platinum':  (u,s,r) => TIER_ORDER.indexOf(r.peak_tier||'bronze') >= TIER_ORDER.indexOf('platinum'),
+  'badge_rank_diamond':   (u,s,r) => TIER_ORDER.indexOf(r.peak_tier||'bronze') >= TIER_ORDER.indexOf('diamond'),
+  'badge_rank_apex':      (u,s,r) => ['apex','sovereign'].includes(r.peak_tier),
+  // Badges — achievement
+  'badge_wave_master':    (u,s,r,ctx) => (ctx.wavesCleared||0) >= 30,
+  'badge_mythic_pull':    (u,s,r,ctx) => ctx.rolledRarity === 'mythic',
+  'badge_oblivion_club':  (u,s,r) => (u.owned_skins||[]).some(id => id.startsWith('ob_')),
+  'badge_skin_collector': (u,s,r) => (u.owned_skins||[]).length >= 25,
+  'badge_market_shark':   (u,s,r) => (s.total_trades_completed||0) >= 10,
+  'badge_century':        (u,s,r) => (s.total_games||0) >= 100,
+  'badge_hot_streak':     (u,s,r) => (s.best_win_streak||0) >= 5,
+  // badge_s1_champion: granted via battle pass claiming
 };
 
 /**
