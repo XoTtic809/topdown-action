@@ -197,7 +197,9 @@ function renderProfileCard(data, containerEl, opts) {
   // Apply skin preview after DOM insertion
   var skinEl = containerEl.querySelector('#' + skinId);
   if (skinEl && typeof applyRichSkinPreview === 'function') {
-    applyRichSkinPreview(skinEl, p.showcaseSkin || 'agent', null);
+    var _showcaseId = p.showcaseSkin || 'agent';
+    var _skinData   = typeof SKINS !== 'undefined' ? SKINS.find(function(s) { return s.id === _showcaseId; }) : null;
+    applyRichSkinPreview(skinEl, _showcaseId, _skinData ? _skinData.color : null);
   }
 }
 

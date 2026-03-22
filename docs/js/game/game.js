@@ -6526,6 +6526,8 @@ function _drawBaseballPreview(container) {
 // Used by the inventory, crate display, shop, and marketplace.
 function applyRichSkinPreview(el, skinId, fallbackColor) {
   const styles = {
+    // Default skin
+    agent:      ['radial-gradient(circle at 35% 35%,#d0f4ff 0%,#9be7ff 40%,#3ab0d8 75%,#0a4a6a 100%)', '0 0 18px rgba(155,231,255,0.6)', ''],
     // Shop specials
     rainbow:    ['conic-gradient(red,orange,yellow,green,cyan,blue,violet,red)',                                            '0 0 22px rgba(255,150,0,0.7)',                                       'quantumSpin 3s linear infinite'],
     galaxy:     ['linear-gradient(135deg,#667eea 0%,#764ba2 50%,#f093fb 100%)',                                            '0 0 25px #764ba2',                                                    'galaxyShimmer 2s ease-in-out infinite'],
