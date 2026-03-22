@@ -14,6 +14,7 @@ const {
   getListingsBySeller, createListing, deleteListing, getExpiredListings,
 } = require('../models/listing');
 const { logTrade, getRecentTrades, getEconomyStats } = require('../models/transaction');
+const { checkUnlocks } = require('../utils/unlock-checker');
 
 // ─────────────────────────────────────────────────────────────
 // CONSTANTS — kept in sync with your frontend marketplace.js
@@ -74,6 +75,10 @@ const CRATE_PRICING = {
   'legendary-crate': { floor: 3000, ceiling: 8000   },
   'icon-crate':      { floor: 500,  ceiling: 1200   },
   'oblivion-crate':  { floor: 8000, ceiling: 20000  },
+  'neon-crate':      { floor: 1500, ceiling: 4000   },
+  'frost-crate':     { floor: 2000, ceiling: 5000   },
+  'infernal-crate':  { floor: 2000, ceiling: 5000   },
+  'void-crate':      { floor: 5000, ceiling: 12000  },
 };
 
 // Crates that are no longer available to buy — their marketplace floor is raised 25%
@@ -90,6 +95,10 @@ const CRATE_DISPLAY_NAMES = {
   'legendary-crate': 'Legendary Crate',
   'icon-crate':      'Icon Crate',
   'oblivion-crate':  'Oblivion Crate',
+  'neon-crate':      'Neon Crate',
+  'frost-crate':     'Frost Crate',
+  'infernal-crate':  'Infernal Crate',
+  'void-crate':      'Void Crate',
 };
 
 // XP → level formula — matches the battle pass tier system in battlepass-system.js.
@@ -500,6 +509,21 @@ router.post('/buy', requireAuth, async (req, res) => {
         sellerReceived: sellerReceives,
       });
 
+      // Track stats for buyer and seller
+      await client.query(`
+        INSERT INTO player_stats (uid, total_trades_completed, total_coins_spent)
+        VALUES ($1, 1, $2)
+        ON CONFLICT (uid) DO UPDATE SET
+          total_trades_completed = player_stats.total_trades_completed + 1,
+          total_coins_spent      = player_stats.total_coins_spent + $2
+      `, [req.user.uid, price]);
+      await client.query(`
+        INSERT INTO player_stats (uid, total_trades_completed)
+        VALUES ($1, 1)
+        ON CONFLICT (uid) DO UPDATE SET
+          total_trades_completed = player_stats.total_trades_completed + 1
+      `, [listing.seller_id]);
+
       return {
         skinId:          listing.skin_id,
         skinName:        listing.skin_name,
@@ -507,8 +531,12 @@ router.post('/buy', requireAuth, async (req, res) => {
         tax,
         sellerReceives,
         newBuyerBalance: buyerAfter[0].total_coins, // fresh value from RETURNING
+        sellerId:        listing.seller_id,
       };
     });
+
+    checkUnlocks(req.user.uid, {}).catch(() => {});
+    checkUnlocks(receipt.sellerId, {}).catch(() => {});
 
     return res.json({ success: true, ...receipt });
   } catch (err) {

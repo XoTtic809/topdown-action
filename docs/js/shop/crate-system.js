@@ -69,9 +69,9 @@ const CRATES = [
     desc: 'Contains 1 random skin from the common pool',
     icon: '📦',
     rarityWeights: {
-      common: 0.70,    // 70% chance
+      common: 0.67,    // 67% chance
       uncommon: 0.25,  // 25% chance
-      rare: 0.05       // 5% chance
+      rare: 0.08       // 8% chance
     }
   },
   {
@@ -82,10 +82,10 @@ const CRATES = [
     desc: 'Better odds! Contains 1 skin with higher rarity chances',
     icon: '🎁',
     rarityWeights: {
-      common: 0.40,    // 40% chance
+      common: 0.37,    // 37% chance
       uncommon: 0.40,  // 40% chance
       rare: 0.15,      // 15% chance
-      epic: 0.05       // 5% chance
+      epic: 0.08       // 8% chance
     }
   },
   {
@@ -111,8 +111,8 @@ const CRATES = [
     icon: '⭐',
     rarityWeights: {
       rare: 0.20,      // 20% chance
-      epic: 0.50,      // 50% chance (was 40%)
-      legendary: 0.25, // 25% chance (was 35%)
+      epic: 0.55,      // 55% chance
+      legendary: 0.20, // 20% chance
       mythic: 0.05     // 5% chance
     }
   },
@@ -142,29 +142,115 @@ const CRATES = [
       ob_mythic: 0.15,    // 15% — Oblivion Mythics
       ob_ultra: 0.05      // 5%  — WORLDEATER / ETERNIUM
     }
+  },
+  {
+    id: 'neon-crate',
+    name: 'Neon Crate',
+    price: 2000,
+    color: '#00e5ff',
+    glowColor: '#00e5ff',
+    desc: 'Electric cyberpunk exclusives — always in rotation.',
+    icon: '⚡',
+    rarityWeights: {
+      uncommon: 0.30,
+      rare: 0.40,
+      epic: 0.25,
+      legendary: 0.05
+    }
+  },
+  {
+    id: 'frost-crate',
+    name: 'Frost Crate',
+    price: 2500,
+    color: '#a8d8ea',
+    glowColor: '#7fdbff',
+    desc: 'Ice & winter exclusives — seasonal rotation.',
+    icon: '❄️',
+    rarityWeights: {
+      uncommon: 0.30,
+      rare: 0.40,
+      epic: 0.25,
+      legendary: 0.05
+    }
+  },
+  {
+    id: 'infernal-crate',
+    name: 'Infernal Crate',
+    price: 2500,
+    color: '#ff4500',
+    glowColor: '#ff6600',
+    desc: 'Fire & heat exclusives — seasonal rotation.',
+    icon: '🔥',
+    rarityWeights: {
+      uncommon: 0.30,
+      rare: 0.40,
+      epic: 0.25,
+      legendary: 0.05
+    }
+  },
+  {
+    id: 'void-crate',
+    name: 'Void Crate',
+    price: 6000,
+    color: '#1a0040',
+    glowColor: '#6600cc',
+    desc: 'Premium dark/space exclusives — limited stock.',
+    icon: '🌀',
+    rarityWeights: {
+      rare: 0.25,
+      epic: 0.40,
+      legendary: 0.30,
+      mythic: 0.05
+    }
   }
 ];
 
 const SKIN_RARITIES = {
   // common/uncommon crate skins (map to 'common' marketplace tier)
-  common:    ['c_static', 'c_rust', 'c_slate', 'c_olive', 'c_maroon', 'inferno', 'venom', 'ice'],
-  uncommon:  ['c_cobalt', 'c_teal', 'c_coral', 'c_sand', 'c_chrome', 'shadow', 'amber', 'crimson', 'gold', 'ocean', 'toxic'],
+  common:    ['c_static', 'c_rust', 'c_slate', 'c_olive', 'c_maroon', 'inferno', 'venom', 'ice', 'c_moss', 'c_ash', 'c_dusk', 'c_clay'],
+  uncommon:  ['c_cobalt', 'c_teal', 'c_coral', 'c_sand', 'c_chrome', 'shadow', 'amber', 'crimson', 'gold', 'ocean', 'toxic', 'c_sapphire', 'c_mint', 'c_bronze_skin', 'c_storm_grey'],
   // rare crate skins (map to 'rare' marketplace tier)
-  rare:      ['c_prism', 'c_aurora', 'c_lava', 'c_storm', 'c_neon', 'magma', 'plasma', 'emerald', 'frost', 'midnight', 'sakura'],
+  rare:      ['c_prism', 'c_aurora', 'c_lava', 'c_storm', 'c_neon', 'magma', 'plasma', 'emerald', 'frost', 'midnight', 'sakura', 'c_bloodmoon', 'c_frostfire', 'c_vortex', 'c_toxic_waste'],
   // epic crate skins (map to 'epic' marketplace tier)
-  epic:      ['c_glitch', 'c_nebula', 'c_biohazard', 'c_arctic', 'c_wildfire', 'c_spectre', 'electric', 'ruby', 'lime', 'violet', 'rainbow', 'copper', 'cyber', 'sunset'],
+  epic:      ['c_glitch', 'c_nebula', 'c_biohazard', 'c_arctic', 'c_wildfire', 'c_spectre', 'electric', 'ruby', 'lime', 'violet', 'rainbow', 'copper', 'cyber', 'sunset', 'c_blackhole', 'c_dragonscale', 'c_hologram', 'c_thunderstrike'],
   // legendary crate skins (map to 'legendary' marketplace tier)
-  legendary: ['c_supernova', 'c_wraith', 'c_titan', 'c_astral', 'galaxy', 'phoenix', 'void', 'diamond'],
+  legendary: ['c_supernova', 'c_wraith', 'c_titan', 'c_astral', 'galaxy', 'phoenix', 'void', 'diamond', 'c_eclipse', 'c_abyssal_flame', 'c_zero_point'],
   // mythic crate skins (map to 'mythic' marketplace tier)
-  mythic:    ['c_omnichrome', 'c_singularity', 'c_ultraviolet', 'c_godmode', 'c_rift', 'quantum', 'celestial']
+  mythic:    ['c_omnichrome', 'c_singularity', 'c_ultraviolet', 'c_godmode', 'c_rift', 'quantum', 'celestial', 'c_entropy', 'c_dimension_rift', 'c_eternal']
 };
 
 // Oblivion Crate - Premium exclusive pools
 const OBLIVION_SKIN_RARITIES = {
-  ob_epic:      ['ob_duskblade', 'ob_voidborn', 'ob_ashwalker'],
-  ob_legendary: ['ob_soulreaper', 'ob_eclipsar', 'ob_phantomking'],
-  ob_mythic:    ['ob_abyssal', 'ob_eventide'],
-  ob_ultra:     ['ob_worldeater', 'ob_eternium']
+  ob_epic:      ['ob_duskblade', 'ob_voidborn', 'ob_ashwalker', 'ob_nightcrawler', 'ob_ironwraith'],
+  ob_legendary: ['ob_soulreaper', 'ob_eclipsar', 'ob_phantomking', 'ob_hellforge', 'ob_gravemind'],
+  ob_mythic:    ['ob_abyssal', 'ob_eventide', 'ob_voidwalker', 'ob_deathbloom'],
+  ob_ultra:     ['ob_worldeater', 'ob_eternium', 'ob_apocalypse']
+};
+
+// Themed Crate - Exclusive pools
+const NEON_SKIN_RARITIES = {
+  uncommon:  ['neon_pulse', 'neon_grid'],
+  rare:      ['neon_surge', 'neon_cipher'],
+  epic:      ['neon_overload'],
+  legendary: ['neon_synthwave']
+};
+const FROST_SKIN_RARITIES = {
+  uncommon:  ['frost_snowdrift', 'frost_icicle'],
+  rare:      ['frost_blizzard', 'frost_permafrost'],
+  epic:      ['frost_avalanche'],
+  legendary: ['frost_absolute_zero']
+};
+const INFERNAL_SKIN_RARITIES = {
+  uncommon:  ['infernal_ember', 'infernal_cinder'],
+  rare:      ['infernal_wildfire', 'infernal_eruption'],
+  epic:      ['infernal_hellstorm'],
+  legendary: ['infernal_solar_flare']
+};
+const VOID_SKIN_RARITIES = {
+  rare:      ['void_hollow'],
+  epic:      ['void_nebula_core', 'void_dark_matter'],
+  legendary: ['void_event_horizon'],
+  mythic:    ['void_big_bang']
 };
 
 // Icon Skins - Split into regular and ultra-rare creator
@@ -230,7 +316,11 @@ function getRandomSkinFromRarity(rarity, crateId) {
     pool = ICON_SKIN_RARITIES[rarity] || ICON_SKIN_RARITIES.icon;
   } else if (crateId === 'oblivion-crate') {
     pool = OBLIVION_SKIN_RARITIES[rarity] || OBLIVION_SKIN_RARITIES.ob_epic;
-  } else {
+  } else if (crateId === 'neon-crate')      { pool = NEON_SKIN_RARITIES[rarity]     || []; }
+  else if (crateId === 'frost-crate')       { pool = FROST_SKIN_RARITIES[rarity]    || []; }
+  else if (crateId === 'infernal-crate')    { pool = INFERNAL_SKIN_RARITIES[rarity] || []; }
+  else if (crateId === 'void-crate')        { pool = VOID_SKIN_RARITIES[rarity]     || []; }
+  else {
     pool = SKIN_RARITIES[rarity] || SKIN_RARITIES.common;
   }
   return pool[Math.floor(Math.random() * pool.length)];
@@ -573,6 +663,69 @@ async function showCrateOpeningAnimation(crateId) {
       ob_eventide:   { bg: 'conic-gradient(from 0deg, #1a0a2e, #2a1a4e, #3a2a6e, #2a1a4e, #1a0a2e)', shadow: '0 0 30px rgba(100, 60, 160, 0.4)', anim: 'quantumSpin 5s linear infinite' },
       ob_worldeater: { bg: 'radial-gradient(circle, #ff0000 0%, #660000 30%, #000 100%)', shadow: '0 0 35px rgba(255, 0, 0, 0.7), 0 0 60px rgba(255, 0, 0, 0.3)', anim: 'voidPulse 0.8s ease-in-out infinite', border: '2px solid rgba(255, 0, 0, 0.5)' },
       ob_eternium:   { bg: 'conic-gradient(from 0deg, #ff2060, #8a2be2, #00ccff, #39ff14, #ffd700, #ff2060)', shadow: '0 0 35px rgba(138, 43, 226, 0.6), 0 0 60px rgba(255, 255, 255, 0.3)', anim: 'quantumSpin 1.2s linear infinite', border: '2px solid rgba(255, 255, 255, 0.5)' },
+      // New Oblivion skins
+      ob_nightcrawler: { bg: 'radial-gradient(circle,#1a2060 0%,#050520 55%,#000000 100%)', shadow: '0 0 20px rgba(30,30,120,0.8)', anim: 'voidPulse 2.5s ease-in-out infinite' },
+      ob_ironwraith:   { bg: 'radial-gradient(circle,#7090b0 0%,#3d2820 50%,#0a0806 100%)', shadow: '0 0 18px rgba(80,120,180,0.7)', anim: 'voidPulse 2s ease-in-out infinite' },
+      ob_hellforge:    { bg: 'conic-gradient(from 0deg,#550000,#cc3300,#ff6600,#cc3300,#550000)', shadow: '0 0 25px rgba(220,80,0,0.8)', anim: 'quantumSpin 2s linear infinite' },
+      ob_gravemind:    { bg: 'radial-gradient(circle,#f5f0e0 0%,#c8b090 40%,#301808 100%)', shadow: '0 0 20px rgba(80,40,20,0.8)', anim: 'voidPulse 3s ease-in-out infinite' },
+      ob_voidwalker:   { bg: 'radial-gradient(circle,rgba(80,0,160,0.4) 0%,rgba(20,0,60,0.7) 60%,rgba(0,0,0,0.9) 100%)', shadow: '0 0 30px rgba(100,0,200,0.9)', anim: 'quantumSpin 1.8s linear infinite' },
+      ob_deathbloom:   { bg: 'conic-gradient(from 0deg,#0a0000,#1a0000,#cc0000,#1a0000,#0a0000)', shadow: '0 0 28px rgba(200,0,0,0.9)', anim: 'quantumSpin 1.4s linear infinite' },
+      ob_apocalypse:   { bg: 'conic-gradient(from 0deg,#cc0000,#ff4400,#ffaa00,#440000,#cc0000)', shadow: '0 0 40px rgba(255,100,0,0.9), 0 0 60px rgba(200,0,0,0.5)', anim: 'quantumSpin 0.8s linear infinite', border: '2px solid rgba(255,100,0,0.6)' },
+      // Standard crate skins — Common
+      c_moss:          { bg: 'radial-gradient(circle,#6aaa50 0%,#3d6e3d 55%,#1a3318 100%)', shadow: '#3d6e3d' },
+      c_ash:           { bg: 'radial-gradient(circle,#e8e0d8 0%,#b0a898 55%,#585048 100%)', shadow: '#b0a898' },
+      c_dusk:          { bg: 'radial-gradient(circle,#5050a0 0%,#2d2050 55%,#10081e 100%)', shadow: '#403080' },
+      c_clay:          { bg: 'radial-gradient(circle,#d4854a 0%,#b5651d 55%,#5a2c08 100%)', shadow: '#b5651d' },
+      // Standard crate skins — Uncommon
+      c_sapphire:      { bg: 'linear-gradient(135deg,#4080ff 0%,#1560bd 50%,#072f6e 100%)', shadow: '#1560bd', anim: 'galaxyShimmer 3s ease-in-out infinite' },
+      c_mint:          { bg: 'linear-gradient(135deg,#a0ffe0 0%,#4dffc3 50%,#00cc88 100%)', shadow: '#4dffc3', anim: 'galaxyShimmer 3.5s ease-in-out infinite' },
+      c_bronze_skin:   { bg: 'linear-gradient(135deg,#e8a840 0%,#c07830 50%,#7a4810 100%)', shadow: '#c07830', anim: 'galaxyShimmer 3s ease-in-out infinite' },
+      c_storm_grey:    { bg: 'linear-gradient(135deg,#8090b0 0%,#4a5568 50%,#1a2030 100%)', shadow: '#6090d0', anim: 'voidPulse 2.5s ease-in-out infinite' },
+      // Standard crate skins — Rare
+      c_bloodmoon:     { bg: 'radial-gradient(circle,#ff2020 0%,#8b0000 45%,#200000 100%)', shadow: '#cc0000', anim: 'voidPulse 1.8s ease-in-out infinite' },
+      c_frostfire:     { bg: 'linear-gradient(90deg,#00aaff 0%,#0055ff 45%,#ff4400 55%,#ff8800 100%)', shadow: '#8844ff', anim: 'galaxyShimmer 2s ease-in-out infinite' },
+      c_vortex:        { bg: 'conic-gradient(from 0deg,#6600ff,#4400aa,#0044ff,#6600ff)', shadow: '#5500ee', anim: 'quantumSpin 3s linear infinite' },
+      c_toxic_waste:   { bg: 'radial-gradient(circle,#aaff00 0%,#39ff14 40%,#003300 100%)', shadow: '#39ff14', anim: 'voidPulse 1.5s ease-in-out infinite' },
+      // Standard crate skins — Epic
+      c_blackhole:     { bg: 'conic-gradient(from 0deg,#000000,#110011,#330033,#000000)', shadow: '#440044', anim: 'quantumSpin 1.2s linear infinite' },
+      c_dragonscale:   { bg: 'conic-gradient(from 0deg,#ff2200,#cc4400,#ffaa00,#cc4400,#ff2200)', shadow: '#ff6600', anim: 'quantumSpin 1.5s linear infinite' },
+      c_hologram:      { bg: 'conic-gradient(from 0deg,rgba(0,255,255,0.8),rgba(255,0,255,0.8),rgba(255,255,0,0.8),rgba(0,255,255,0.8))', shadow: 'white', anim: 'quantumSpin 0.8s linear infinite' },
+      c_thunderstrike: { bg: 'radial-gradient(circle,#ffff00 0%,#f5d800 30%,#ff8800 70%,#220000 100%)', shadow: '#f5d800', anim: 'quantumSpin 1.0s linear infinite' },
+      // Standard crate skins — Legendary
+      c_eclipse:       { bg: 'radial-gradient(circle,#ffd700 0%,#c07000 15%,#050505 40%,#ffd700 80%,#050505 100%)', shadow: '#ffd700', anim: 'quantumSpin 2s linear infinite' },
+      c_abyssal_flame: { bg: 'conic-gradient(from 0deg,#000820,#001860,#0044aa,#0088ff,#001860,#000820)', shadow: '#0066ff', anim: 'quantumSpin 1.8s linear infinite' },
+      c_zero_point:    { bg: 'radial-gradient(circle,white 0%,#ccddff 20%,#2200aa 60%,#000000 100%)', shadow: 'white', anim: 'quantumSpin 1.5s linear infinite' },
+      // Standard crate skins — Mythic
+      c_entropy:         { bg: 'conic-gradient(red,orange,yellow,lime,cyan,blue,violet,red)', shadow: 'white', anim: 'quantumSpin 0.5s linear infinite' },
+      c_dimension_rift:  { bg: 'conic-gradient(from 0deg,#0000ff,#ff00ff,#00ffff,#ffffff,#ff00ff,#0000ff)', shadow: '#aa00ff', anim: 'quantumSpin 0.6s linear infinite' },
+      c_eternal:         { bg: 'radial-gradient(circle,#fffacc 0%,#ffd700 40%,#c09000 70%,#402000 100%)', shadow: '#ffd700', anim: 'voidPulse 2s ease-in-out infinite' },
+      // Neon Crate exclusives
+      neon_pulse:      { bg: 'linear-gradient(135deg,#80e8ff 0%,#00b4ff 50%,#0055aa 100%)', shadow: '#00b4ff', anim: 'voidPulse 1.8s ease-in-out infinite' },
+      neon_grid:       { bg: 'linear-gradient(135deg,#80fff0 0%,#00ffcc 50%,#00aa88 100%)', shadow: '#00ffcc', anim: 'galaxyShimmer 2.5s ease-in-out infinite' },
+      neon_surge:      { bg: 'conic-gradient(from 0deg,#0088ff,#00ffff,#00ff88,#0088ff)', shadow: '#00ffcc', anim: 'quantumSpin 2.5s linear infinite' },
+      neon_cipher:     { bg: 'radial-gradient(circle,#00ff88 0%,#00aa44 40%,#002200 100%)', shadow: '#00ff88', anim: 'voidPulse 1.5s ease-in-out infinite' },
+      neon_overload:   { bg: 'conic-gradient(from 0deg,#ff00ff,#00ffff,#ffff00,#ff0088,#ff00ff)', shadow: '#ff00ff', anim: 'quantumSpin 0.9s linear infinite' },
+      neon_synthwave:  { bg: 'linear-gradient(180deg,#ff6ec7 0%,#ff4488 30%,#aa00ff 60%,#0033ff 100%)', shadow: '#ff4488', anim: 'quantumSpin 2s linear infinite' },
+      // Frost Crate exclusives
+      frost_snowdrift:     { bg: 'radial-gradient(circle,#ffffff 0%,#cce8ff 55%,#6699cc 100%)', shadow: '#a0d0ff' },
+      frost_icicle:        { bg: 'linear-gradient(135deg,#d0eeff 0%,#a8d8ea 50%,#5090b0 100%)', shadow: '#a8d8ea', anim: 'galaxyShimmer 3s ease-in-out infinite' },
+      frost_blizzard:      { bg: 'conic-gradient(from 0deg,white,#aaddff,#6699cc,white)', shadow: '#aaddff', anim: 'quantumSpin 3s linear infinite' },
+      frost_permafrost:    { bg: 'radial-gradient(circle,#80bbdd 0%,#2266aa 40%,#001133 100%)', shadow: '#4499cc', anim: 'voidPulse 2s ease-in-out infinite' },
+      frost_avalanche:     { bg: 'conic-gradient(from 0deg,#ffffff,#88ccff,#0044aa,#88ccff,#ffffff)', shadow: '#88ccff', anim: 'quantumSpin 1.5s linear infinite' },
+      frost_absolute_zero: { bg: 'radial-gradient(circle,rgba(255,255,255,0.9) 0%,rgba(180,220,255,0.7) 40%,rgba(0,80,160,0.5) 100%)', shadow: 'white', anim: 'quantumSpin 2s linear infinite' },
+      // Infernal Crate exclusives
+      infernal_ember:       { bg: 'radial-gradient(circle,#ffaa44 0%,#ff6600 55%,#551100 100%)', shadow: '#ff6600' },
+      infernal_cinder:      { bg: 'radial-gradient(circle,#88807a 0%,#555244 55%,#1a1510 100%)', shadow: '#887860', anim: 'voidPulse 2.5s ease-in-out infinite' },
+      infernal_wildfire:    { bg: 'conic-gradient(from 0deg,#ff4400,#ff8800,#ffcc00,#ff4400)', shadow: '#ff6600', anim: 'quantumSpin 2s linear infinite' },
+      infernal_eruption:    { bg: 'radial-gradient(circle,#ffcc00 0%,#ff4400 40%,#880000 75%,#1a0000 100%)', shadow: '#ff6600', anim: 'voidPulse 1.5s ease-in-out infinite' },
+      infernal_hellstorm:   { bg: 'conic-gradient(from 0deg,#ff0000,#aa0000,#ff4400,#ffaa00,#aa0000,#ff0000)', shadow: '#ff2200', anim: 'quantumSpin 1.0s linear infinite' },
+      infernal_solar_flare: { bg: 'radial-gradient(circle,white 0%,#ffff88 20%,#ffcc00 50%,#ff4400 80%)', shadow: 'white', anim: 'quantumSpin 1.5s linear infinite' },
+      // Void Crate exclusives
+      void_hollow:        { bg: 'radial-gradient(circle,#111111 0%,#050505 60%,#000000 100%)', shadow: '0 0 15px rgba(80,0,160,0.5)' },
+      void_nebula_core:   { bg: 'conic-gradient(from 0deg,#0a002a,#220066,#440088,#220066,#0a002a)', shadow: '#440088', anim: 'quantumSpin 2s linear infinite' },
+      void_dark_matter:   { bg: 'radial-gradient(circle,rgba(40,0,80,0.6) 0%,rgba(10,0,20,0.9) 100%)', shadow: '0 0 25px rgba(100,0,200,0.7)', anim: 'voidPulse 3s ease-in-out infinite' },
+      void_event_horizon: { bg: 'radial-gradient(circle,#000000 0%,#000000 30%,#6600cc 40%,#aa44ff 50%,#000000 60%)', shadow: '#8800ff', anim: 'quantumSpin 1.5s linear infinite' },
+      void_big_bang:      { bg: 'conic-gradient(from 0deg,white,#ffff00,#ff4400,#aa00ff,#0044ff,#00ffff,white)', shadow: 'white', anim: 'quantumSpin 0.6s linear infinite' },
     };
     const ps = reelPreviewStyles[item.skin.id];
     if (ps) {
@@ -942,7 +1095,13 @@ function showCrateIndex(crateId) {
   // Determine which pool to use
   const isIcon = crateId === 'icon-crate';
   const isOblivion = crateId === 'oblivion-crate';
-  const pool = isOblivion ? OBLIVION_SKIN_RARITIES : isIcon ? ICON_SKIN_RARITIES : SKIN_RARITIES;
+  const pool = crateId === 'oblivion-crate'  ? OBLIVION_SKIN_RARITIES
+    : crateId === 'icon-crate'               ? ICON_SKIN_RARITIES
+    : crateId === 'neon-crate'               ? NEON_SKIN_RARITIES
+    : crateId === 'frost-crate'              ? FROST_SKIN_RARITIES
+    : crateId === 'infernal-crate'           ? INFERNAL_SKIN_RARITIES
+    : crateId === 'void-crate'               ? VOID_SKIN_RARITIES
+    : SKIN_RARITIES;
 
   // Build a section for each rarity this crate can drop
   Object.entries(crate.rarityWeights).forEach(([rarity, weight]) => {

@@ -322,10 +322,13 @@ async function executeSave() {
     }
 
     const result = await apiPost('/auth/progress', {
-      highScore:  high,
-      totalCoins: playerCoins,
+      highScore:   high,
+      totalCoins:  playerCoins,
       currentXp,
-      ownedSkins: typeof ownedSkins !== 'undefined' ? ownedSkins : [],
+      ownedSkins:  typeof ownedSkins  !== 'undefined' ? ownedSkins  : [],
+      kills:       typeof totalKills  !== 'undefined' ? totalKills  : 0,
+      wavesCleared:typeof wave        !== 'undefined' ? (wave - 1)  : 0,
+      activeSkin:  typeof activeSkin  !== 'undefined' ? activeSkin  : null,
     });
 
     if (!result.error) {
@@ -334,6 +337,9 @@ async function executeSave() {
       lastSubmittedData.xp        = currentXp;
       if (typeof calculateTrueLevel === 'function') {
         lastSubmittedData.level = calculateTrueLevel(currentXp);
+      }
+      if (result.newUnlocks?.length && typeof handleNewUnlocks === 'function') {
+        handleNewUnlocks(result.newUnlocks);
       }
     }
 
@@ -453,6 +459,10 @@ async function displayLeaderboard(filter = 'allTime') {
         <div class="leaderboard-score">${value}</div>
       `;
     }
+    el.style.cursor = 'pointer';
+    el.addEventListener('click', () => {
+      if (typeof openProfilePopup === 'function') openProfilePopup(entry.userId);
+    });
     listEl.appendChild(el);
   });
 }

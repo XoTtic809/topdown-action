@@ -537,6 +537,9 @@ async function endRankedRun(won) {
   // Use server-calculated rpDelta if available, otherwise fall back to client estimate
   const serverRpDelta = result ? result.rp_delta : rpDelta;
 
+  if (result?.newUnlocks?.length && typeof handleNewUnlocks === 'function') {
+    handleNewUnlocks(result.newUnlocks);
+  }
   updateRankedBadge();
   showRankedEndOverlay({ rpDelta: serverRpDelta, won, result, wavesCleared: _rankedWavesCleared, targetWaves });
   // Post-game crate drop (fire-and-forget)

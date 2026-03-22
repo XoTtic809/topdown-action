@@ -437,6 +437,64 @@ const SKINS = [
  // oblivion-exclusive ultra rares
   { id: 'ob_worldeater', name: 'WORLDEATER',    color: null, price: -2, crateOnly: true, desc: '🌑 Oblivion Exclusive · Ultra Rare' },
   { id: 'ob_eternium',   name: 'ETERNIUM',      color: null, price: -2, crateOnly: true, desc: '🌑 Oblivion Exclusive · Ultra Rare' },
+ // new oblivion skins
+  { id: 'ob_nightcrawler', name: 'Nightcrawler',  color: '#0a1030', price: -2, crateOnly: true, desc: '🌑 Oblivion Crate · Epic' },
+  { id: 'ob_ironwraith',   name: 'Iron Wraith',   color: '#3d2820', price: -2, crateOnly: true, desc: '🌑 Oblivion Crate · Epic' },
+  { id: 'ob_hellforge',    name: 'Hellforge',     color: null,      price: -2, crateOnly: true, desc: '🌑 Oblivion Crate · Legendary' },
+  { id: 'ob_gravemind',    name: 'Gravemind',     color: '#e8e0d0', price: -2, crateOnly: true, desc: '🌑 Oblivion Crate · Legendary' },
+  { id: 'ob_voidwalker',   name: 'Voidwalker',    color: null,      price: -2, crateOnly: true, desc: '🌑 Oblivion Crate · Mythic' },
+  { id: 'ob_deathbloom',   name: 'Deathbloom',    color: null,      price: -2, crateOnly: true, desc: '🌑 Oblivion Crate · Mythic' },
+  { id: 'ob_apocalypse',   name: 'Apocalypse',    color: null,      price: -2, crateOnly: true, desc: '🌑 Oblivion Crate · Ultra' },
+ // new standard crate skins
+  { id: 'c_moss',          name: 'Moss',          color: '#3d6e3d', price: -2, crateOnly: true, desc: '📦 Crate Exclusive · Common' },
+  { id: 'c_ash',           name: 'Ash',           color: '#c8c0b8', price: -2, crateOnly: true, desc: '📦 Crate Exclusive · Common' },
+  { id: 'c_dusk',          name: 'Dusk',          color: '#2d2050', price: -2, crateOnly: true, desc: '📦 Crate Exclusive · Common' },
+  { id: 'c_clay',          name: 'Clay',          color: '#b5651d', price: -2, crateOnly: true, desc: '📦 Crate Exclusive · Common' },
+  { id: 'c_sapphire',      name: 'Sapphire',      color: '#1560bd', price: -2, crateOnly: true, desc: '📦 Crate Exclusive · Uncommon' },
+  { id: 'c_mint',          name: 'Mint',          color: '#4dffc3', price: -2, crateOnly: true, desc: '📦 Crate Exclusive · Uncommon' },
+  { id: 'c_bronze_skin',   name: 'Bronze',        color: '#c07830', price: -2, crateOnly: true, desc: '📦 Crate Exclusive · Uncommon' },
+  { id: 'c_storm_grey',    name: 'Storm Grey',    color: '#4a5568', price: -2, crateOnly: true, desc: '📦 Crate Exclusive · Uncommon' },
+  { id: 'c_bloodmoon',     name: 'Blood Moon',    color: null,      price: -2, crateOnly: true, desc: '📦 Crate Exclusive · Rare' },
+  { id: 'c_frostfire',     name: 'Frost Fire',    color: null,      price: -2, crateOnly: true, desc: '📦 Crate Exclusive · Rare' },
+  { id: 'c_vortex',        name: 'Vortex',        color: null,      price: -2, crateOnly: true, desc: '📦 Crate Exclusive · Rare' },
+  { id: 'c_toxic_waste',   name: 'Toxic Waste',   color: '#39ff14', price: -2, crateOnly: true, desc: '📦 Crate Exclusive · Rare' },
+  { id: 'c_blackhole',     name: 'Black Hole',    color: null,      price: -2, crateOnly: true, desc: '📦 Crate Exclusive · Epic' },
+  { id: 'c_dragonscale',   name: 'Dragon Scale',  color: null,      price: -2, crateOnly: true, desc: '📦 Crate Exclusive · Epic' },
+  { id: 'c_hologram',      name: 'Hologram',      color: null,      price: -2, crateOnly: true, desc: '📦 Crate Exclusive · Epic' },
+  { id: 'c_thunderstrike', name: 'Thunderstrike', color: null,      price: -2, crateOnly: true, desc: '📦 Crate Exclusive · Epic' },
+  { id: 'c_eclipse',       name: 'Eclipse',       color: null,      price: -2, crateOnly: true, desc: '📦 Crate Exclusive · Legendary' },
+  { id: 'c_abyssal_flame', name: 'Abyssal Flame', color: null,      price: -2, crateOnly: true, desc: '📦 Crate Exclusive · Legendary' },
+  { id: 'c_zero_point',    name: 'Zero Point',    color: null,      price: -2, crateOnly: true, desc: '📦 Crate Exclusive · Legendary' },
+  { id: 'c_entropy',       name: 'Entropy',       color: null,      price: -2, crateOnly: true, desc: '📦 Crate Exclusive · Mythic' },
+  { id: 'c_dimension_rift',name: 'Dimension Rift',color: null,      price: -2, crateOnly: true, desc: '📦 Crate Exclusive · Mythic' },
+  { id: 'c_eternal',       name: 'Eternal',       color: null,      price: -2, crateOnly: true, desc: '📦 Crate Exclusive · Mythic' },
+ // neon crate exclusives
+  { id: 'neon_pulse',    name: 'Neon Pulse',    color: '#00b4ff', price: -2, crateOnly: true, desc: '⚡ Neon Crate · Uncommon' },
+  { id: 'neon_grid',     name: 'Neon Grid',     color: '#00ffcc', price: -2, crateOnly: true, desc: '⚡ Neon Crate · Uncommon' },
+  { id: 'neon_surge',    name: 'Neon Surge',    color: null,      price: -2, crateOnly: true, desc: '⚡ Neon Crate · Rare' },
+  { id: 'neon_cipher',   name: 'Neon Cipher',   color: null,      price: -2, crateOnly: true, desc: '⚡ Neon Crate · Rare' },
+  { id: 'neon_overload', name: 'Neon Overload', color: null,      price: -2, crateOnly: true, desc: '⚡ Neon Crate · Epic' },
+  { id: 'neon_synthwave',name: 'Synthwave',     color: null,      price: -2, crateOnly: true, desc: '⚡ Neon Crate · Legendary' },
+ // frost crate exclusives
+  { id: 'frost_snowdrift',    name: 'Snowdrift',     color: '#e8f4fd', price: -2, crateOnly: true, desc: '❄️ Frost Crate · Uncommon' },
+  { id: 'frost_icicle',       name: 'Icicle',        color: '#a8d8ea', price: -2, crateOnly: true, desc: '❄️ Frost Crate · Uncommon' },
+  { id: 'frost_blizzard',     name: 'Blizzard',      color: null,      price: -2, crateOnly: true, desc: '❄️ Frost Crate · Rare' },
+  { id: 'frost_permafrost',   name: 'Permafrost',    color: null,      price: -2, crateOnly: true, desc: '❄️ Frost Crate · Rare' },
+  { id: 'frost_avalanche',    name: 'Avalanche',     color: null,      price: -2, crateOnly: true, desc: '❄️ Frost Crate · Epic' },
+  { id: 'frost_absolute_zero',name: 'Absolute Zero', color: null,      price: -2, crateOnly: true, desc: '❄️ Frost Crate · Legendary' },
+ // infernal crate exclusives
+  { id: 'infernal_ember',       name: 'Ember',       color: '#ff6600', price: -2, crateOnly: true, desc: '🔥 Infernal Crate · Uncommon' },
+  { id: 'infernal_cinder',      name: 'Cinder',      color: '#555244', price: -2, crateOnly: true, desc: '🔥 Infernal Crate · Uncommon' },
+  { id: 'infernal_wildfire',    name: 'Wildfire',    color: null,      price: -2, crateOnly: true, desc: '🔥 Infernal Crate · Rare' },
+  { id: 'infernal_eruption',    name: 'Eruption',    color: null,      price: -2, crateOnly: true, desc: '🔥 Infernal Crate · Rare' },
+  { id: 'infernal_hellstorm',   name: 'Hellstorm',   color: null,      price: -2, crateOnly: true, desc: '🔥 Infernal Crate · Epic' },
+  { id: 'infernal_solar_flare', name: 'Solar Flare', color: null,      price: -2, crateOnly: true, desc: '🔥 Infernal Crate · Legendary' },
+ // void crate exclusives
+  { id: 'void_hollow',        name: 'Hollow',        color: '#050505', price: -2, crateOnly: true, desc: '🌀 Void Crate · Rare' },
+  { id: 'void_nebula_core',   name: 'Nebula Core',   color: null,      price: -2, crateOnly: true, desc: '🌀 Void Crate · Epic' },
+  { id: 'void_dark_matter',   name: 'Dark Matter',   color: null,      price: -2, crateOnly: true, desc: '🌀 Void Crate · Epic' },
+  { id: 'void_event_horizon', name: 'Event Horizon', color: null,      price: -2, crateOnly: true, desc: '🌀 Void Crate · Legendary' },
+  { id: 'void_big_bang',      name: 'Big Bang',      color: null,      price: -2, crateOnly: true, desc: '🌀 Void Crate · Mythic' },
 
  // icon skins (friend collection, crate only)
   { id: 'icon_noah_brown',      name: 'Noah - IYKYK',           color: '#6b4423', price: -2, crateOnly: true, iconSkin: true, desc: '🎯 Icon Skins Exclusive' },
@@ -912,6 +970,7 @@ let paused = false;
 let lastTime = 0;
 let skipNextFrame = false;
 let score = 0;
+let _sessionStartCoins = 0;
 let wave = 1;
 let enemiesThisWave = 0;
 let enemiesKilledThisWave = 0;
@@ -2586,12 +2645,12 @@ class Player {
 
  // Determine tier from skin id for effect intensity
       const crateTiers = {
-        common:    ['c_static','c_rust','c_slate','c_olive','c_maroon'],
-        uncommon:  ['c_cobalt','c_teal','c_coral','c_sand','c_chrome'],
-        rare:      ['c_prism','c_aurora','c_lava','c_storm','c_neon'],
-        epic:      ['c_glitch','c_nebula','c_biohazard','c_arctic','c_wildfire','c_spectre'],
-        legendary: ['c_supernova','c_wraith','c_titan','c_astral'],
-        mythic:    ['c_omnichrome','c_singularity','c_ultraviolet','c_godmode','c_rift'],
+        common:    ['c_static','c_rust','c_slate','c_olive','c_maroon','c_moss','c_ash','c_dusk','c_clay'],
+        uncommon:  ['c_cobalt','c_teal','c_coral','c_sand','c_chrome','c_sapphire','c_mint','c_bronze_skin','c_storm_grey','neon_pulse','neon_grid','frost_snowdrift','frost_icicle','infernal_ember','infernal_cinder'],
+        rare:      ['c_prism','c_aurora','c_lava','c_storm','c_neon','c_bloodmoon','c_frostfire','c_vortex','c_toxic_waste','neon_surge','neon_cipher','frost_blizzard','frost_permafrost','infernal_wildfire','infernal_eruption','void_hollow'],
+        epic:      ['c_glitch','c_nebula','c_biohazard','c_arctic','c_wildfire','c_spectre','c_blackhole','c_dragonscale','c_hologram','c_thunderstrike','neon_overload','frost_avalanche','infernal_hellstorm','void_nebula_core','void_dark_matter'],
+        legendary: ['c_supernova','c_wraith','c_titan','c_astral','c_eclipse','c_abyssal_flame','c_zero_point','neon_synthwave','frost_absolute_zero','infernal_solar_flare','void_event_horizon'],
+        mythic:    ['c_omnichrome','c_singularity','c_ultraviolet','c_godmode','c_rift','c_entropy','c_dimension_rift','c_eternal','void_big_bang'],
       };
       const tier = Object.entries(crateTiers).find(([,ids]) => ids.includes(activeSkin))?.[0] || 'common';
 
@@ -6545,6 +6604,69 @@ function applyRichSkinPreview(el, skinId, fallbackColor) {
     ob_eventide:    ['conic-gradient(from 0deg,#1a0a2e,#2a1a4e,#3a2a6e,#2a1a4e,#1a0a2e)',                                   '0 0 30px rgba(100,60,160,0.4)', 'quantumSpin 5s linear infinite'],
     ob_worldeater:  ['radial-gradient(circle,#ff0000 0%,#660000 30%,#1a0000 60%,#000 100%)',                                 '0 0 35px rgba(255,0,0,0.7)', 'voidPulse 0.8s ease-in-out infinite'],
     ob_eternium:    ['conic-gradient(from 0deg,#ff2060,#8a2be2,#00ccff,#39ff14,#ffd700,#ff2060)',                            '0 0 35px rgba(138,43,226,0.6)', 'quantumSpin 1.2s linear infinite'],
+    // new oblivion
+    ob_nightcrawler:['radial-gradient(circle,#1a2060 0%,#050520 55%,#000000 100%)',                                         '0 0 20px rgba(30,30,120,0.8)',  'voidPulse 2.5s ease-in-out infinite'],
+    ob_ironwraith:  ['radial-gradient(circle,#7090b0 0%,#3d2820 50%,#0a0806 100%)',                                         '0 0 18px rgba(80,120,180,0.7)', 'voidPulse 2s ease-in-out infinite'],
+    ob_hellforge:   ['conic-gradient(from 0deg,#550000,#cc3300,#ff6600,#cc3300,#550000)',                                   '0 0 25px rgba(220,80,0,0.8)',   'quantumSpin 2s linear infinite'],
+    ob_gravemind:   ['radial-gradient(circle,#f5f0e0 0%,#c8b090 40%,#301808 100%)',                                         '0 0 20px rgba(80,40,20,0.8)',   'voidPulse 3s ease-in-out infinite'],
+    ob_voidwalker:  ['radial-gradient(circle,rgba(80,0,160,0.4) 0%,rgba(20,0,60,0.7) 60%,rgba(0,0,0,0.9) 100%)',           '0 0 30px rgba(100,0,200,0.9)', 'quantumSpin 1.8s linear infinite'],
+    ob_deathbloom:  ['conic-gradient(from 0deg,#0a0000,#1a0000,#cc0000,#1a0000,#0a0000)',                                   '0 0 28px rgba(200,0,0,0.9)',    'quantumSpin 1.4s linear infinite'],
+    ob_apocalypse:  ['conic-gradient(from 0deg,#cc0000,#ff4400,#ffaa00,#440000,#cc0000)',                                   '0 0 40px rgba(255,100,0,0.9)',  'quantumSpin 0.8s linear infinite'],
+    // new standard common
+    c_moss:         ['radial-gradient(circle,#6aaa50 0%,#3d6e3d 55%,#1a3318 100%)',                                         '0 0 12px #3d6e3d',  ''],
+    c_ash:          ['radial-gradient(circle,#e8e0d8 0%,#b0a898 55%,#585048 100%)',                                         '0 0 10px #b0a898',  ''],
+    c_dusk:         ['radial-gradient(circle,#5050a0 0%,#2d2050 55%,#10081e 100%)',                                         '0 0 12px #403080',  ''],
+    c_clay:         ['radial-gradient(circle,#d4854a 0%,#b5651d 55%,#5a2c08 100%)',                                         '0 0 12px #b5651d',  ''],
+    // new standard uncommon
+    c_sapphire:     ['linear-gradient(135deg,#4080ff 0%,#1560bd 50%,#072f6e 100%)',                                         '0 0 18px #1560bd',  'galaxyShimmer 3s ease-in-out infinite'],
+    c_mint:         ['linear-gradient(135deg,#a0ffe0 0%,#4dffc3 50%,#00cc88 100%)',                                         '0 0 18px #4dffc3',  'galaxyShimmer 3.5s ease-in-out infinite'],
+    c_bronze_skin:  ['linear-gradient(135deg,#e8a840 0%,#c07830 50%,#7a4810 100%)',                                         '0 0 18px #c07830',  'galaxyShimmer 3s ease-in-out infinite'],
+    c_storm_grey:   ['linear-gradient(135deg,#8090b0 0%,#4a5568 50%,#1a2030 100%)',                                         '0 0 18px #6090d0',  'voidPulse 2.5s ease-in-out infinite'],
+    // new standard rare
+    c_bloodmoon:    ['radial-gradient(circle,#ff2020 0%,#8b0000 45%,#200000 100%)',                                         '0 0 28px #cc0000',  'voidPulse 1.8s ease-in-out infinite'],
+    c_frostfire:    ['linear-gradient(90deg,#00aaff 0%,#0055ff 45%,#ff4400 55%,#ff8800 100%)',                              '0 0 28px #8844ff',  'galaxyShimmer 2s ease-in-out infinite'],
+    c_vortex:       ['conic-gradient(from 0deg,#6600ff,#4400aa,#0044ff,#6600ff)',                                           '0 0 28px #5500ee',  'quantumSpin 3s linear infinite'],
+    c_toxic_waste:  ['radial-gradient(circle,#aaff00 0%,#39ff14 40%,#003300 100%)',                                         '0 0 28px #39ff14',  'voidPulse 1.5s ease-in-out infinite'],
+    // new standard epic
+    c_blackhole:    ['conic-gradient(from 0deg,#000000,#110011,#330033,#000000)',                                           '0 0 35px #440044',  'quantumSpin 1.2s linear infinite'],
+    c_dragonscale:  ['conic-gradient(from 0deg,#ff2200,#cc4400,#ffaa00,#cc4400,#ff2200)',                                   '0 0 35px #ff6600',  'quantumSpin 1.5s linear infinite'],
+    c_hologram:     ['conic-gradient(from 0deg,rgba(0,255,255,0.8),rgba(255,0,255,0.8),rgba(255,255,0,0.8),rgba(0,255,255,0.8))','0 0 35px white','quantumSpin 0.8s linear infinite'],
+    c_thunderstrike:['radial-gradient(circle,#ffff00 0%,#f5d800 30%,#ff8800 70%,#220000 100%)',                             '0 0 35px #f5d800',  'quantumSpin 1.0s linear infinite'],
+    // new standard legendary
+    c_eclipse:      ['radial-gradient(circle,#ffd700 0%,#c07000 15%,#050505 40%,#ffd700 80%,#050505 100%)',                 '0 0 45px #ffd700',  'quantumSpin 2s linear infinite'],
+    c_abyssal_flame:['conic-gradient(from 0deg,#000820,#001860,#0044aa,#0088ff,#001860,#000820)',                           '0 0 45px #0066ff',  'quantumSpin 1.8s linear infinite'],
+    c_zero_point:   ['radial-gradient(circle,white 0%,#ccddff 20%,#2200aa 60%,#000000 100%)',                               '0 0 45px white',    'quantumSpin 1.5s linear infinite'],
+    // new standard mythic
+    c_entropy:      ['conic-gradient(red,orange,yellow,lime,cyan,blue,violet,red)',                                         '0 0 55px white',    'quantumSpin 0.5s linear infinite'],
+    c_dimension_rift:['conic-gradient(from 0deg,#0000ff,#ff00ff,#00ffff,#ffffff,#ff00ff,#0000ff)',                          '0 0 55px #aa00ff',  'quantumSpin 0.6s linear infinite'],
+    c_eternal:      ['radial-gradient(circle,#fffacc 0%,#ffd700 40%,#c09000 70%,#402000 100%)',                             '0 0 55px #ffd700',  'voidPulse 2s ease-in-out infinite'],
+    // neon crate
+    neon_pulse:     ['linear-gradient(135deg,#80e8ff 0%,#00b4ff 50%,#0055aa 100%)',                                         '0 0 22px #00b4ff',  'voidPulse 1.8s ease-in-out infinite'],
+    neon_grid:      ['linear-gradient(135deg,#80fff0 0%,#00ffcc 50%,#00aa88 100%)',                                         '0 0 22px #00ffcc',  'galaxyShimmer 2.5s ease-in-out infinite'],
+    neon_surge:     ['conic-gradient(from 0deg,#0088ff,#00ffff,#00ff88,#0088ff)',                                           '0 0 28px #00ffcc',  'quantumSpin 2.5s linear infinite'],
+    neon_cipher:    ['radial-gradient(circle,#00ff88 0%,#00aa44 40%,#002200 100%)',                                         '0 0 28px #00ff88',  'voidPulse 1.5s ease-in-out infinite'],
+    neon_overload:  ['conic-gradient(from 0deg,#ff00ff,#00ffff,#ffff00,#ff0088,#ff00ff)',                                   '0 0 35px #ff00ff',  'quantumSpin 0.9s linear infinite'],
+    neon_synthwave: ['linear-gradient(180deg,#ff6ec7 0%,#ff4488 30%,#aa00ff 60%,#0033ff 100%)',                             '0 0 45px #ff4488',  'quantumSpin 2s linear infinite'],
+    // frost crate
+    frost_snowdrift:   ['radial-gradient(circle,#ffffff 0%,#cce8ff 55%,#6699cc 100%)',                                      '0 0 14px #a0d0ff',  ''],
+    frost_icicle:      ['linear-gradient(135deg,#d0eeff 0%,#a8d8ea 50%,#5090b0 100%)',                                      '0 0 18px #a8d8ea',  'galaxyShimmer 3s ease-in-out infinite'],
+    frost_blizzard:    ['conic-gradient(from 0deg,white,#aaddff,#6699cc,white)',                                            '0 0 28px #aaddff',  'quantumSpin 3s linear infinite'],
+    frost_permafrost:  ['radial-gradient(circle,#80bbdd 0%,#2266aa 40%,#001133 100%)',                                      '0 0 28px #4499cc',  'voidPulse 2s ease-in-out infinite'],
+    frost_avalanche:   ['conic-gradient(from 0deg,#ffffff,#88ccff,#0044aa,#88ccff,#ffffff)',                                '0 0 35px #88ccff',  'quantumSpin 1.5s linear infinite'],
+    frost_absolute_zero:['radial-gradient(circle,rgba(255,255,255,0.9) 0%,rgba(180,220,255,0.7) 40%,rgba(0,80,160,0.5) 100%)','0 0 45px white', 'quantumSpin 2s linear infinite'],
+    // infernal crate
+    infernal_ember:      ['radial-gradient(circle,#ffaa44 0%,#ff6600 55%,#551100 100%)',                                    '0 0 18px #ff6600',  ''],
+    infernal_cinder:     ['radial-gradient(circle,#88807a 0%,#555244 55%,#1a1510 100%)',                                    '0 0 16px #887860',  'voidPulse 2.5s ease-in-out infinite'],
+    infernal_wildfire:   ['conic-gradient(from 0deg,#ff4400,#ff8800,#ffcc00,#ff4400)',                                      '0 0 28px #ff6600',  'quantumSpin 2s linear infinite'],
+    infernal_eruption:   ['radial-gradient(circle,#ffcc00 0%,#ff4400 40%,#880000 75%,#1a0000 100%)',                        '0 0 28px #ff6600',  'voidPulse 1.5s ease-in-out infinite'],
+    infernal_hellstorm:  ['conic-gradient(from 0deg,#ff0000,#aa0000,#ff4400,#ffaa00,#aa0000,#ff0000)',                      '0 0 35px #ff2200',  'quantumSpin 1.0s linear infinite'],
+    infernal_solar_flare:['radial-gradient(circle,white 0%,#ffff88 20%,#ffcc00 50%,#ff4400 80%)',                           '0 0 45px white',    'quantumSpin 1.5s linear infinite'],
+    // void crate
+    void_hollow:        ['radial-gradient(circle,#111111 0%,#050505 60%,#000000 100%)',                                     '0 0 15px rgba(80,0,160,0.5)', ''],
+    void_nebula_core:   ['conic-gradient(from 0deg,#0a002a,#220066,#440088,#220066,#0a002a)',                               '0 0 35px #440088',  'quantumSpin 2s linear infinite'],
+    void_dark_matter:   ['radial-gradient(circle,rgba(40,0,80,0.6) 0%,rgba(10,0,20,0.9) 100%)',                             '0 0 25px rgba(100,0,200,0.7)', 'voidPulse 3s ease-in-out infinite'],
+    void_event_horizon: ['radial-gradient(circle,#000000 0%,#000000 30%,#6600cc 40%,#aa44ff 50%,#000000 60%)',              '0 0 45px #8800ff',  'quantumSpin 1.5s linear infinite'],
+    void_big_bang:      ['conic-gradient(from 0deg,white,#ffff00,#ff4400,#aa00ff,#0044ff,#00ffff,white)',                   '0 0 55px white',    'quantumSpin 0.6s linear infinite'],
   };
 
   const s = styles[skinId];
@@ -6875,6 +6997,69 @@ function initShopUI() {
       ob_eventide:    ()=> { preview.style.background = 'conic-gradient(from 0deg, #1a0a2e, #2a1a4e, #3a2a6e, #2a1a4e, #1a0a2e)'; preview.style.boxShadow = '0 0 30px rgba(100,60,160,0.4)'; preview.style.animation = 'quantumSpin 5s linear infinite'; preview.style.border = '2px solid rgba(100,60,160,0.3)'; },
       ob_worldeater:  ()=> { preview.style.background = 'radial-gradient(circle, #ff0000 0%, #660000 30%, #1a0000 60%, #000 100%)'; preview.style.boxShadow = '0 0 35px rgba(255,0,0,0.7), 0 0 60px rgba(255,0,0,0.3)'; preview.style.animation = 'voidPulse 0.8s ease-in-out infinite'; preview.style.border = '2px solid rgba(255,0,0,0.5)'; },
       ob_eternium:    ()=> { preview.style.background = 'conic-gradient(from 0deg, #ff2060, #8a2be2, #00ccff, #39ff14, #ffd700, #ff2060)'; preview.style.boxShadow = '0 0 35px rgba(138,43,226,0.6), 0 0 60px rgba(255,255,255,0.3)'; preview.style.animation = 'quantumSpin 1.2s linear infinite'; preview.style.border = '2px solid rgba(255,255,255,0.5)'; },
+      // New Oblivion skins
+      ob_nightcrawler: ()=> { preview.style.background = 'radial-gradient(circle,#1a2060 0%,#050520 55%,#000000 100%)'; preview.style.boxShadow = '0 0 20px rgba(30,30,120,0.8)'; preview.style.animation = 'voidPulse 2.5s ease-in-out infinite'; preview.style.border = '2px solid rgba(30,30,120,0.5)'; },
+      ob_ironwraith:   ()=> { preview.style.background = 'radial-gradient(circle,#7090b0 0%,#3d2820 50%,#0a0806 100%)'; preview.style.boxShadow = '0 0 18px rgba(80,120,180,0.7)'; preview.style.animation = 'voidPulse 2s ease-in-out infinite'; preview.style.border = '2px solid rgba(80,120,180,0.4)'; },
+      ob_hellforge:    ()=> { preview.style.background = 'conic-gradient(from 0deg,#550000,#cc3300,#ff6600,#cc3300,#550000)'; preview.style.boxShadow = '0 0 25px rgba(220,80,0,0.8)'; preview.style.animation = 'quantumSpin 2s linear infinite'; preview.style.border = '2px solid rgba(220,80,0,0.5)'; },
+      ob_gravemind:    ()=> { preview.style.background = 'radial-gradient(circle,#f5f0e0 0%,#c8b090 40%,#301808 100%)'; preview.style.boxShadow = '0 0 20px rgba(80,40,20,0.8)'; preview.style.animation = 'voidPulse 3s ease-in-out infinite'; preview.style.border = '2px solid rgba(80,40,20,0.5)'; },
+      ob_voidwalker:   ()=> { preview.style.background = 'radial-gradient(circle,rgba(80,0,160,0.4) 0%,rgba(20,0,60,0.7) 60%,rgba(0,0,0,0.9) 100%)'; preview.style.boxShadow = '0 0 30px rgba(100,0,200,0.9)'; preview.style.animation = 'quantumSpin 1.8s linear infinite'; preview.style.border = '2px solid rgba(100,0,200,0.6)'; },
+      ob_deathbloom:   ()=> { preview.style.background = 'conic-gradient(from 0deg,#0a0000,#1a0000,#cc0000,#1a0000,#0a0000)'; preview.style.boxShadow = '0 0 28px rgba(200,0,0,0.9)'; preview.style.animation = 'quantumSpin 1.4s linear infinite'; preview.style.border = '2px solid rgba(200,0,0,0.6)'; },
+      ob_apocalypse:   ()=> { preview.style.background = 'conic-gradient(from 0deg,#cc0000,#ff4400,#ffaa00,#440000,#cc0000)'; preview.style.boxShadow = '0 0 40px rgba(255,100,0,0.9), 0 0 60px rgba(200,0,0,0.5)'; preview.style.animation = 'quantumSpin 0.8s linear infinite'; preview.style.border = '2px solid rgba(255,100,0,0.6)'; },
+      // Standard crate skins — Common
+      c_moss:          ()=> { preview.style.background = 'radial-gradient(circle,#6aaa50 0%,#3d6e3d 55%,#1a3318 100%)'; preview.style.boxShadow = '0 0 10px #3d6e3d'; },
+      c_ash:           ()=> { preview.style.background = 'radial-gradient(circle,#e8e0d8 0%,#b0a898 55%,#585048 100%)'; preview.style.boxShadow = '0 0 10px #b0a898'; },
+      c_dusk:          ()=> { preview.style.background = 'radial-gradient(circle,#5050a0 0%,#2d2050 55%,#10081e 100%)'; preview.style.boxShadow = '0 0 10px #403080'; },
+      c_clay:          ()=> { preview.style.background = 'radial-gradient(circle,#d4854a 0%,#b5651d 55%,#5a2c08 100%)'; preview.style.boxShadow = '0 0 10px #b5651d'; },
+      // Standard crate skins — Uncommon
+      c_sapphire:      ()=> { preview.style.background = 'linear-gradient(135deg,#4080ff 0%,#1560bd 50%,#072f6e 100%)'; preview.style.boxShadow = '0 0 15px #1560bd'; preview.style.animation = 'galaxyShimmer 3s ease-in-out infinite'; },
+      c_mint:          ()=> { preview.style.background = 'linear-gradient(135deg,#a0ffe0 0%,#4dffc3 50%,#00cc88 100%)'; preview.style.boxShadow = '0 0 15px #4dffc3'; preview.style.animation = 'galaxyShimmer 3.5s ease-in-out infinite'; },
+      c_bronze_skin:   ()=> { preview.style.background = 'linear-gradient(135deg,#e8a840 0%,#c07830 50%,#7a4810 100%)'; preview.style.boxShadow = '0 0 15px #c07830'; preview.style.animation = 'galaxyShimmer 3s ease-in-out infinite'; },
+      c_storm_grey:    ()=> { preview.style.background = 'linear-gradient(135deg,#8090b0 0%,#4a5568 50%,#1a2030 100%)'; preview.style.boxShadow = '0 0 15px #6090d0'; preview.style.animation = 'voidPulse 2.5s ease-in-out infinite'; },
+      // Standard crate skins — Rare
+      c_bloodmoon:     ()=> { preview.style.background = 'radial-gradient(circle,#ff2020 0%,#8b0000 45%,#200000 100%)'; preview.style.boxShadow = '0 0 20px #cc0000'; preview.style.animation = 'voidPulse 1.8s ease-in-out infinite'; },
+      c_frostfire:     ()=> { preview.style.background = 'linear-gradient(90deg,#00aaff 0%,#0055ff 45%,#ff4400 55%,#ff8800 100%)'; preview.style.boxShadow = '0 0 20px #8844ff'; preview.style.animation = 'galaxyShimmer 2s ease-in-out infinite'; },
+      c_vortex:        ()=> { preview.style.background = 'conic-gradient(from 0deg,#6600ff,#4400aa,#0044ff,#6600ff)'; preview.style.boxShadow = '0 0 20px #5500ee'; preview.style.animation = 'quantumSpin 3s linear infinite'; },
+      c_toxic_waste:   ()=> { preview.style.background = 'radial-gradient(circle,#aaff00 0%,#39ff14 40%,#003300 100%)'; preview.style.boxShadow = '0 0 20px #39ff14'; preview.style.animation = 'voidPulse 1.5s ease-in-out infinite'; },
+      // Standard crate skins — Epic
+      c_blackhole:     ()=> { preview.style.background = 'conic-gradient(from 0deg,#000000,#110011,#330033,#000000)'; preview.style.boxShadow = '0 0 25px #440044'; preview.style.animation = 'quantumSpin 1.2s linear infinite'; },
+      c_dragonscale:   ()=> { preview.style.background = 'conic-gradient(from 0deg,#ff2200,#cc4400,#ffaa00,#cc4400,#ff2200)'; preview.style.boxShadow = '0 0 25px #ff6600'; preview.style.animation = 'quantumSpin 1.5s linear infinite'; },
+      c_hologram:      ()=> { preview.style.background = 'conic-gradient(from 0deg,rgba(0,255,255,0.8),rgba(255,0,255,0.8),rgba(255,255,0,0.8),rgba(0,255,255,0.8))'; preview.style.boxShadow = '0 0 25px white'; preview.style.animation = 'quantumSpin 0.8s linear infinite'; },
+      c_thunderstrike: ()=> { preview.style.background = 'radial-gradient(circle,#ffff00 0%,#f5d800 30%,#ff8800 70%,#220000 100%)'; preview.style.boxShadow = '0 0 25px #f5d800'; preview.style.animation = 'quantumSpin 1.0s linear infinite'; },
+      // Standard crate skins — Legendary
+      c_eclipse:       ()=> { preview.style.background = 'radial-gradient(circle,#ffd700 0%,#c07000 15%,#050505 40%,#ffd700 80%,#050505 100%)'; preview.style.boxShadow = '0 0 30px #ffd700'; preview.style.animation = 'quantumSpin 2s linear infinite'; },
+      c_abyssal_flame: ()=> { preview.style.background = 'conic-gradient(from 0deg,#000820,#001860,#0044aa,#0088ff,#001860,#000820)'; preview.style.boxShadow = '0 0 30px #0066ff'; preview.style.animation = 'quantumSpin 1.8s linear infinite'; },
+      c_zero_point:    ()=> { preview.style.background = 'radial-gradient(circle,white 0%,#ccddff 20%,#2200aa 60%,#000000 100%)'; preview.style.boxShadow = '0 0 30px white'; preview.style.animation = 'quantumSpin 1.5s linear infinite'; },
+      // Standard crate skins — Mythic
+      c_entropy:         ()=> { preview.style.background = 'conic-gradient(red,orange,yellow,lime,cyan,blue,violet,red)'; preview.style.boxShadow = '0 0 35px white'; preview.style.animation = 'quantumSpin 0.5s linear infinite'; },
+      c_dimension_rift:  ()=> { preview.style.background = 'conic-gradient(from 0deg,#0000ff,#ff00ff,#00ffff,#ffffff,#ff00ff,#0000ff)'; preview.style.boxShadow = '0 0 35px #aa00ff'; preview.style.animation = 'quantumSpin 0.6s linear infinite'; },
+      c_eternal:         ()=> { preview.style.background = 'radial-gradient(circle,#fffacc 0%,#ffd700 40%,#c09000 70%,#402000 100%)'; preview.style.boxShadow = '0 0 35px #ffd700'; preview.style.animation = 'voidPulse 2s ease-in-out infinite'; },
+      // Neon Crate exclusives
+      neon_pulse:      ()=> { preview.style.background = 'linear-gradient(135deg,#80e8ff 0%,#00b4ff 50%,#0055aa 100%)'; preview.style.boxShadow = '0 0 20px #00b4ff'; preview.style.animation = 'voidPulse 1.8s ease-in-out infinite'; },
+      neon_grid:       ()=> { preview.style.background = 'linear-gradient(135deg,#80fff0 0%,#00ffcc 50%,#00aa88 100%)'; preview.style.boxShadow = '0 0 20px #00ffcc'; preview.style.animation = 'galaxyShimmer 2.5s ease-in-out infinite'; },
+      neon_surge:      ()=> { preview.style.background = 'conic-gradient(from 0deg,#0088ff,#00ffff,#00ff88,#0088ff)'; preview.style.boxShadow = '0 0 25px #00ffcc'; preview.style.animation = 'quantumSpin 2.5s linear infinite'; },
+      neon_cipher:     ()=> { preview.style.background = 'radial-gradient(circle,#00ff88 0%,#00aa44 40%,#002200 100%)'; preview.style.boxShadow = '0 0 25px #00ff88'; preview.style.animation = 'voidPulse 1.5s ease-in-out infinite'; },
+      neon_overload:   ()=> { preview.style.background = 'conic-gradient(from 0deg,#ff00ff,#00ffff,#ffff00,#ff0088,#ff00ff)'; preview.style.boxShadow = '0 0 30px #ff00ff'; preview.style.animation = 'quantumSpin 0.9s linear infinite'; },
+      neon_synthwave:  ()=> { preview.style.background = 'linear-gradient(180deg,#ff6ec7 0%,#ff4488 30%,#aa00ff 60%,#0033ff 100%)'; preview.style.boxShadow = '0 0 30px #ff4488'; preview.style.animation = 'quantumSpin 2s linear infinite'; },
+      // Frost Crate exclusives
+      frost_snowdrift:     ()=> { preview.style.background = 'radial-gradient(circle,#ffffff 0%,#cce8ff 55%,#6699cc 100%)'; preview.style.boxShadow = '0 0 15px #a0d0ff'; },
+      frost_icicle:        ()=> { preview.style.background = 'linear-gradient(135deg,#d0eeff 0%,#a8d8ea 50%,#5090b0 100%)'; preview.style.boxShadow = '0 0 15px #a8d8ea'; preview.style.animation = 'galaxyShimmer 3s ease-in-out infinite'; },
+      frost_blizzard:      ()=> { preview.style.background = 'conic-gradient(from 0deg,white,#aaddff,#6699cc,white)'; preview.style.boxShadow = '0 0 20px #aaddff'; preview.style.animation = 'quantumSpin 3s linear infinite'; },
+      frost_permafrost:    ()=> { preview.style.background = 'radial-gradient(circle,#80bbdd 0%,#2266aa 40%,#001133 100%)'; preview.style.boxShadow = '0 0 20px #4499cc'; preview.style.animation = 'voidPulse 2s ease-in-out infinite'; },
+      frost_avalanche:     ()=> { preview.style.background = 'conic-gradient(from 0deg,#ffffff,#88ccff,#0044aa,#88ccff,#ffffff)'; preview.style.boxShadow = '0 0 25px #88ccff'; preview.style.animation = 'quantumSpin 1.5s linear infinite'; },
+      frost_absolute_zero: ()=> { preview.style.background = 'radial-gradient(circle,rgba(255,255,255,0.9) 0%,rgba(180,220,255,0.7) 40%,rgba(0,80,160,0.5) 100%)'; preview.style.boxShadow = '0 0 30px white'; preview.style.animation = 'quantumSpin 2s linear infinite'; },
+      // Infernal Crate exclusives
+      infernal_ember:       ()=> { preview.style.background = 'radial-gradient(circle,#ffaa44 0%,#ff6600 55%,#551100 100%)'; preview.style.boxShadow = '0 0 15px #ff6600'; },
+      infernal_cinder:      ()=> { preview.style.background = 'radial-gradient(circle,#88807a 0%,#555244 55%,#1a1510 100%)'; preview.style.boxShadow = '0 0 15px #887860'; preview.style.animation = 'voidPulse 2.5s ease-in-out infinite'; },
+      infernal_wildfire:    ()=> { preview.style.background = 'conic-gradient(from 0deg,#ff4400,#ff8800,#ffcc00,#ff4400)'; preview.style.boxShadow = '0 0 20px #ff6600'; preview.style.animation = 'quantumSpin 2s linear infinite'; },
+      infernal_eruption:    ()=> { preview.style.background = 'radial-gradient(circle,#ffcc00 0%,#ff4400 40%,#880000 75%,#1a0000 100%)'; preview.style.boxShadow = '0 0 20px #ff6600'; preview.style.animation = 'voidPulse 1.5s ease-in-out infinite'; },
+      infernal_hellstorm:   ()=> { preview.style.background = 'conic-gradient(from 0deg,#ff0000,#aa0000,#ff4400,#ffaa00,#aa0000,#ff0000)'; preview.style.boxShadow = '0 0 25px #ff2200'; preview.style.animation = 'quantumSpin 1.0s linear infinite'; },
+      infernal_solar_flare: ()=> { preview.style.background = 'radial-gradient(circle,white 0%,#ffff88 20%,#ffcc00 50%,#ff4400 80%)'; preview.style.boxShadow = '0 0 30px white'; preview.style.animation = 'quantumSpin 1.5s linear infinite'; },
+      // Void Crate exclusives
+      void_hollow:        ()=> { preview.style.background = 'radial-gradient(circle,#111111 0%,#050505 60%,#000000 100%)'; preview.style.boxShadow = '0 0 15px rgba(80,0,160,0.5)'; },
+      void_nebula_core:   ()=> { preview.style.background = 'conic-gradient(from 0deg,#0a002a,#220066,#440088,#220066,#0a002a)'; preview.style.boxShadow = '0 0 25px #440088'; preview.style.animation = 'quantumSpin 2s linear infinite'; },
+      void_dark_matter:   ()=> { preview.style.background = 'radial-gradient(circle,rgba(40,0,80,0.6) 0%,rgba(10,0,20,0.9) 100%)'; preview.style.boxShadow = '0 0 25px rgba(100,0,200,0.7)'; preview.style.animation = 'voidPulse 3s ease-in-out infinite'; },
+      void_event_horizon: ()=> { preview.style.background = 'radial-gradient(circle,#000000 0%,#000000 30%,#6600cc 40%,#aa44ff 50%,#000000 60%)'; preview.style.boxShadow = '0 0 30px #8800ff'; preview.style.animation = 'quantumSpin 1.5s linear infinite'; },
+      void_big_bang:      ()=> { preview.style.background = 'conic-gradient(from 0deg,white,#ffff00,#ff4400,#aa00ff,#0044ff,#00ffff,white)'; preview.style.boxShadow = '0 0 35px white'; preview.style.animation = 'quantumSpin 0.6s linear infinite'; },
     };
     if (animated[skinId]) {
       animated[skinId]();
@@ -7855,7 +8040,11 @@ if (gameSettings.screenShake) screenShakeAmt = 1;
       if (currentUser && !isGuest) {
         if (typeof acSessionEnd === 'function') acSessionEnd(wave, totalKills);
         if (typeof acSubmitScore === 'function') acSubmitScore(score);
+        const SESSION_COIN_CAP = 5000;
+        const sessionEarned = playerCoins - _sessionStartCoins;
+        if (sessionEarned > SESSION_COIN_CAP) playerCoins = _sessionStartCoins + SESSION_COIN_CAP;
         saveUserDataToFirebase('critical');
+        _sessionStartCoins = playerCoins;
       }
 
  // Pause game logic (enemies/bullets stop moving) but keep loop alive for particles
@@ -8403,6 +8592,7 @@ function startGame() {
   powerups = [];
   boss = null;
   score = 0;
+  _sessionStartCoins = playerCoins;
   wave = 1;
   enemiesThisWave = 0;
   enemiesKilledThisWave = 0;

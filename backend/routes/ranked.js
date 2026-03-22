@@ -3,6 +3,7 @@ const express = require('express');
 const router  = express.Router();
 const { query, withTransaction } = require('../config/db');
 const { requireAuth } = require('../middleware/auth');
+const { checkUnlocks } = require('../utils/unlock-checker');
 
 const TIER_ORDER = ['bronze','silver','gold','platinum','diamond','master','grandmaster','apex','sovereign'];
 const TIER_CONFIG = {
@@ -206,7 +207,21 @@ router.post('/submit', requireAuth, async (req, res) => {
       };
     });
 
-    return res.json(result);
+    // ── Stats tracking (non-blocking) ────────────────────────────
+    query(`
+      INSERT INTO player_stats (uid, total_games, total_waves_cleared, best_win_streak)
+      VALUES ($1, 1, $2, $3)
+      ON CONFLICT (uid) DO UPDATE SET
+        total_games         = player_stats.total_games + 1,
+        total_waves_cleared = player_stats.total_waves_cleared + $2,
+        best_win_streak     = GREATEST(player_stats.best_win_streak, $3)
+    `, [uid, wavesCleared, result.streak]).catch(err =>
+      console.error('[Stats] ranked upsert error:', err.message)
+    );
+
+    const newUnlocks = await checkUnlocks(uid, {}).catch(() => []);
+
+    return res.json({ ...result, newUnlocks });
   } catch (err) {
     console.error('[Ranked] submit error:', err.message);
     return res.status(500).json({ error: 'Failed to submit ranked result' });

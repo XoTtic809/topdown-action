@@ -113,6 +113,24 @@ function initMarketplaceUI() {
     });
   }
 
+  // Seller mini-card hover
+  let _miniCardTimer = null;
+  document.addEventListener('mouseover', e => {
+    const el = e.target.closest('.mp-seller-hover');
+    if (!el || !el.dataset.uid) return;
+    clearTimeout(_miniCardTimer);
+    _miniCardTimer = setTimeout(() => {
+      if (typeof showMiniProfileCard === 'function') showMiniProfileCard(el.dataset.uid, el);
+    }, 200);
+  });
+  document.addEventListener('mouseleave', e => {
+    if (!e.target.closest?.('.mp-seller-hover') && !e.target.closest?.('.pc-mini-card')) return;
+    clearTimeout(_miniCardTimer);
+    _miniCardTimer = setTimeout(() => {
+      if (typeof hideMiniProfileCard === 'function') hideMiniProfileCard();
+    }, 200);
+  }, true);
+
   console.log('🏪 Marketplace UI initialized');
 }
 
@@ -326,7 +344,7 @@ function createListingCard(listing) {
     <div class="mp-listing-info">
       <div class="mp-listing-name">${_esc(listing.skinName || listing.skinId)}${mutTag}</div>
       <div class="mp-listing-rarity" style="color:${mc ? mc.color : rarity.color}">${rarityLabel}</div>
-      <div class="mp-listing-seller">by ${_esc(listing.sellerName || 'Unknown')}</div>
+      <div class="mp-listing-seller">by <span class="mp-seller-hover" data-uid="${_esc(listing.sellerId || '')}" data-username="${_esc(listing.sellerName || 'Unknown')}">${_esc(listing.sellerName || 'Unknown')}</span></div>
       <div class="mp-listing-time">${timeText}</div>
       <div class="mp-stats-badges" style="margin-top:4px;display:flex;gap:4px;flex-wrap:wrap;"></div>
       <div class="mp-supply-row" style="font-size:11px;color:#888;margin-top:3px;"></div>
@@ -393,7 +411,7 @@ function _createCrateListingCard(listing) {
     <div class="mp-listing-info">
       <div class="mp-listing-name">${_esc(listing.skinName || listing.crateId)}</div>
       <div class="mp-listing-rarity" style="color:${crateColor}">Crate</div>
-      <div class="mp-listing-seller">by ${_esc(listing.sellerName || 'Unknown')}</div>
+      <div class="mp-listing-seller">by <span class="mp-seller-hover" data-uid="${_esc(listing.sellerId || '')}" data-username="${_esc(listing.sellerName || 'Unknown')}">${_esc(listing.sellerName || 'Unknown')}</span></div>
       <div class="mp-listing-time">${timeText}</div>
       <div class="mp-stats-badges" style="margin-top:4px;display:flex;gap:4px;flex-wrap:wrap;"></div>
       <div class="mp-supply-row" style="font-size:11px;color:#888;margin-top:3px;"></div>

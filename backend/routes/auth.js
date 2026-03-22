@@ -12,6 +12,7 @@ const { validateUsername } = require('../middleware/validation');
 const { updateProgress, isWhitelisted } = require('../models/user');
 const { syncSkins } = require('../models/inventory');
 const { isValidSkinId } = require('./crates');
+const { checkUnlocks, reconcileNumberOneTitle } = require('../utils/unlock-checker');
 
 const SALT_ROUNDS = 12;
 const MAX_COIN_DELTA_PER_SAVE  = 6000;   // flag if delta > this (~max from a long wave session)
@@ -183,10 +184,11 @@ router.get('/me', requireAuth, async (req, res) => {
 
 // ─── POST /api/auth/progress ──────────────────────────────────
 // Saves score/coins/XP after each game round.
-// Body: { highScore, totalCoins, currentXp }
+// Body: { highScore, totalCoins, currentXp, kills?, wavesCleared?, activeSkin? }
 router.post('/progress', requireAuth, async (req, res) => {
   try {
-    const { highScore = 0, totalCoins = 0, currentXp = 0, ownedSkins } = req.body;
+    const { highScore = 0, totalCoins = 0, currentXp = 0, ownedSkins,
+            kills = 0, wavesCleared = 0, activeSkin } = req.body;
 
     if (highScore < 0 || highScore > 9_999_999)     return res.status(400).json({ error: 'Invalid score' });
     if (totalCoins < 0 || totalCoins > 10_000_000)  return res.status(400).json({ error: 'Invalid coins' });
@@ -236,7 +238,48 @@ router.post('/progress', requireAuth, async (req, res) => {
       if (valid.length > 0) await syncSkins(req.user.uid, valid);
     }
 
-    return res.json(updated);
+    // ── Stats tracking ────────────────────────────────────────────
+    const uid      = req.user.uid;
+    const coinDelta = Math.max(0, Math.floor(totalCoins) - (currentRows[0]?.total_coins || 0));
+    const safeKills = Math.max(0, Math.floor(kills) || 0);
+    const safeWaves = Math.max(0, Math.floor(wavesCleared) || 0);
+
+    // Upsert player_stats row (fire and forget — don't block response)
+    query(`
+      INSERT INTO player_stats (uid, total_games, total_kills, total_waves_cleared, total_coins_earned)
+      VALUES ($1, 1, $2, $3, $4)
+      ON CONFLICT (uid) DO UPDATE SET
+        total_games         = player_stats.total_games + 1,
+        total_kills         = player_stats.total_kills + $2,
+        total_waves_cleared = player_stats.total_waves_cleared + $3,
+        total_coins_earned  = player_stats.total_coins_earned + $4
+    `, [uid, safeKills, safeWaves, coinDelta]).catch(err =>
+      console.error('[Stats] progress upsert error:', err.message)
+    );
+
+    // Track skin play count for favorite skin
+    const skinToTrack = activeSkin || (currentRows[0]?.active_skin) || null;
+    if (skinToTrack && typeof skinToTrack === 'string' && skinToTrack.length <= 120) {
+      query(`
+        INSERT INTO player_stats (uid, skin_play_counts) VALUES ($1, jsonb_build_object($2, 1))
+        ON CONFLICT (uid) DO UPDATE SET
+          skin_play_counts = jsonb_set(
+            player_stats.skin_play_counts,
+            ARRAY[$2::text],
+            (COALESCE((player_stats.skin_play_counts->>$2)::int, 0) + 1)::text::jsonb
+          )
+      `, [uid, skinToTrack]).catch(err =>
+        console.error('[Stats] skin_play_counts error:', err.message)
+      );
+    }
+
+    // Check for new unlocks + reconcile #1 title (both async, non-blocking)
+    const newUnlocksPromise = checkUnlocks(uid, { wavesCleared: safeWaves });
+    reconcileNumberOneTitle().catch(err => console.error('[Unlocks] reconcile error:', err.message));
+
+    const newUnlocks = await newUnlocksPromise;
+
+    return res.json({ ...updated, newUnlocks });
   } catch (err) {
     console.error('[Auth] /progress error:', err.message);
     return res.status(500).json({ error: 'Failed to save progress' });

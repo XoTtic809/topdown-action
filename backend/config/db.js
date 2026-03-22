@@ -319,6 +319,100 @@ async function initSchema() {
         ('icon-crate',      true,  false),
         ('oblivion-crate',  false, true )
       ON CONFLICT (crate_id) DO NOTHING;
+
+      -- ── Player Profile Cards ───────────────────────────────────────────────
+
+      CREATE TABLE IF NOT EXISTS player_profiles (
+        uid               TEXT PRIMARY KEY REFERENCES users(uid) ON DELETE CASCADE,
+        card_background   TEXT NOT NULL DEFAULT 'bg_default',
+        card_border       TEXT NOT NULL DEFAULT 'border_default',
+        card_accent_color TEXT NOT NULL DEFAULT '#4a9eff',
+        card_title        TEXT,
+        title_override    TEXT,
+        showcase_skin     TEXT,
+        showcase_badge_1  TEXT,
+        showcase_badge_2  TEXT,
+        showcase_badge_3  TEXT,
+        bio               TEXT,
+        custom_title_text TEXT,
+        card_visibility   TEXT NOT NULL DEFAULT 'public',
+        updated_at        TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+
+      CREATE TABLE IF NOT EXISTS player_stats (
+        uid                    TEXT PRIMARY KEY REFERENCES users(uid) ON DELETE CASCADE,
+        total_games            INTEGER NOT NULL DEFAULT 0,
+        total_waves_cleared    INTEGER NOT NULL DEFAULT 0,
+        total_kills            INTEGER NOT NULL DEFAULT 0,
+        total_coins_earned     INTEGER NOT NULL DEFAULT 0,
+        total_coins_spent      INTEGER NOT NULL DEFAULT 0,
+        total_crates_opened    INTEGER NOT NULL DEFAULT 0,
+        total_trades_completed INTEGER NOT NULL DEFAULT 0,
+        best_win_streak        INTEGER NOT NULL DEFAULT 0,
+        skin_play_counts       JSONB   NOT NULL DEFAULT '{}'
+      );
+
+      CREATE TABLE IF NOT EXISTS card_unlockables (
+        id               TEXT PRIMARY KEY,
+        type             TEXT NOT NULL,
+        name             TEXT NOT NULL,
+        unlock_condition TEXT NOT NULL,
+        preview_css      TEXT NOT NULL DEFAULT ''
+      );
+
+      CREATE TABLE IF NOT EXISTS player_unlocks (
+        uid           TEXT NOT NULL REFERENCES users(uid) ON DELETE CASCADE,
+        unlockable_id TEXT NOT NULL REFERENCES card_unlockables(id) ON DELETE CASCADE,
+        unlocked_at   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        PRIMARY KEY (uid, unlockable_id)
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_player_unlocks_uid ON player_unlocks (uid);
+
+      -- Seed card_unlockables (backgrounds)
+      INSERT INTO card_unlockables (id, type, name, unlock_condition, preview_css) VALUES
+        ('bg_default',    'background', 'Dark Grid',      'default',          'linear-gradient(135deg,#0a1628,#1a2a44)'),
+        ('bg_bronze',     'background', 'Bronze',         'reach_bronze',     'linear-gradient(135deg,#3d2011,#7a4a22,#3d2011)'),
+        ('bg_silver',     'background', 'Silver',         'reach_silver',     'linear-gradient(135deg,#1a2030,#4a6080,#1a2030)'),
+        ('bg_gold',       'background', 'Gold',           'reach_gold',       'linear-gradient(135deg,#2a1a00,#c0900a,#2a1a00)'),
+        ('bg_platinum',   'background', 'Platinum',       'reach_platinum',   'linear-gradient(135deg,#0d1f2d,#2a6080,#0d1f2d)'),
+        ('bg_diamond',    'background', 'Diamond',        'reach_diamond',    'linear-gradient(135deg,#050d1a,#0a3a6a,#1a6aaa,#0a3a6a,#050d1a)'),
+        ('bg_galaxy',     'background', 'Galaxy',         'reach_apex',       'radial-gradient(ellipse at top,#1a0a3a,#050a1a)'),
+        ('bg_sovereign',  'background', 'Sovereign Aura', 'reach_sovereign',  'conic-gradient(from 0deg,#0a0a20,#1a1050,#3a2080,#1a1050,#0a0a20)'),
+        ('bg_inferno',    'background', 'Inferno',        'survive_30_waves', 'linear-gradient(135deg,#1a0500,#5a1500,#1a0500)'),
+        ('bg_collector',  'background', 'Collector',      'own_50_skins',     'linear-gradient(135deg,#0a1a0a,#1a3a1a,#0a4a0a)'),
+        ('bg_whale',      'background', 'Big Spender',    'spend_100k_coins', 'linear-gradient(135deg,#0a1528,#1a3558,#0a1528)'),
+        ('bg_veteran',    'background', 'Veteran',        'play_500_games',   'linear-gradient(135deg,#1a1a1a,#2a2a2a,#3a3a3a,#2a2a2a)'),
+        ('bg_seasonal_s1','background', 'Season 1',       'seasonal_s1',      'linear-gradient(135deg,#1a0a28,#3a1a48,#1a0a28)')
+      ON CONFLICT (id) DO NOTHING;
+
+      -- Seed card_unlockables (borders)
+      INSERT INTO card_unlockables (id, type, name, unlock_condition, preview_css) VALUES
+        ('border_default',         'border', 'Default',   'default',               '1px solid rgba(88,166,255,0.2)'),
+        ('border_silver',          'border', 'Silver',    'reach_silver',          '2px solid #8090b0'),
+        ('border_gold',            'border', 'Gold',      'reach_gold',            '2px solid #c0900a'),
+        ('border_diamond',         'border', 'Diamond',   'reach_diamond',         '2px solid #40aaff'),
+        ('border_animated_pulse',  'border', 'Pulse',     'win_10_ranked_streak',  '2px solid rgba(88,166,255,0.8)'),
+        ('border_prismatic',       'border', 'Prismatic', 'own_prismatic_skin',    '2px solid transparent'),
+        ('border_champion',        'border', 'Champion',  'top10_season_end',      '3px solid #ffd700'),
+        ('border_oblivion',        'border', 'Oblivion',  'own_oblivion_skin',     '2px solid rgba(180,0,255,0.8)')
+      ON CONFLICT (id) DO NOTHING;
+
+      -- Seed card_unlockables (titles)
+      INSERT INTO card_unlockables (id, type, name, unlock_condition, preview_css) VALUES
+        ('title_newcomer',     'title', 'Fresh Spawn',       'default',              ''),
+        ('title_grinder',      'title', 'Wave Junkie',       'clear_500_waves',      ''),
+        ('title_trader',       'title', 'Market Shark',      'complete_50_trades',   ''),
+        ('title_collector',    'title', 'Skin Hoarder',      'own_100_skins',        ''),
+        ('title_apex_predator','title', 'Apex Predator',     'reach_apex',           ''),
+        ('title_sovereign',    'title', 'The One',           'reach_sovereign',      'text-shadow:0 0 12px #c0a000,0 0 24px #806000'),
+        ('title_whale',        'title', 'Money Pit',         'spend_500k_coins',     ''),
+        ('title_lucky',        'title', 'Cracked RNG',       'pull_mythic_crate',    ''),
+        ('title_dedicated',    'title', 'Terminally Online', 'play_1000_games',      ''),
+        ('title_unbreakable',  'title', 'Built Different',   'win_20_ranked_streak', ''),
+        ('title_number_one',   'title', 'Him.',              'hold_number_one',      'text-shadow:0 0 8px #fff,0 0 16px rgba(255,255,255,0.5)'),
+        ('title_custom',       'title', 'Custom',            'admin_granted',        '')
+      ON CONFLICT (id) DO NOTHING;
     `);
     console.log('[DB] Schema ready');
   } finally {

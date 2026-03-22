@@ -109,6 +109,7 @@ app.use('/api/trades',             require('./routes/trades'));
 app.use('/api/crates',             require('./routes/crates'));
 app.use('/api/shop',               require('./routes/shop'));
 app.use('/api/admin/rotation',     require('./routes/admin-rotation'));
+app.use('/api/profile',            require('./routes/profile'));
 
 app.post('/api/marketplace/buy',    writeLimiter);
 app.post('/api/marketplace/list',   writeLimiter);

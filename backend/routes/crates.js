@@ -8,36 +8,66 @@ const { requireAuth } = require('../middleware/auth');
 const { withTransaction, query } = require('../config/db');
 const { addSkin } = require('../models/inventory');
 const { addCrate, removeCrate, getOwnedCrates } = require('../models/crate-inventory');
+const { checkUnlocks } = require('../utils/unlock-checker');
 
 // ── Crate definitions (must stay in sync with frontend crate-system.js) ──────
 const CRATES = [
-  { id: 'common-crate', price: 300, rarityWeights: { common: 0.70, uncommon: 0.25, rare: 0.05 } },
-  { id: 'rare-crate', price: 750, rarityWeights: { common: 0.40, uncommon: 0.40, rare: 0.15, epic: 0.05 } },
+  { id: 'common-crate', price: 300, rarityWeights: { common: 0.67, uncommon: 0.25, rare: 0.08 } },
+  { id: 'rare-crate', price: 750, rarityWeights: { common: 0.37, uncommon: 0.40, rare: 0.15, epic: 0.08 } },
   { id: 'epic-crate', price: 1500, rarityWeights: { uncommon: 0.30, rare: 0.40, epic: 0.25, legendary: 0.05 } },
-  { id: 'legendary-crate', price: 4000, rarityWeights: { rare: 0.20, epic: 0.50, legendary: 0.25, mythic: 0.05 } },
+  { id: 'legendary-crate', price: 4000, rarityWeights: { rare: 0.20, epic: 0.55, legendary: 0.20, mythic: 0.05 } },
   { id: 'icon-crate', price: 750, rarityWeights: { icon: 0.995, creator: 0.005 } },
   { id: 'oblivion-crate', price: 10000, rarityWeights: { ob_epic: 0.50, ob_legendary: 0.30, ob_mythic: 0.15, ob_ultra: 0.05 } },
+  { id: 'neon-crate', price: 2000, rarityWeights: { uncommon: 0.30, rare: 0.40, epic: 0.25, legendary: 0.05 } },
+  { id: 'frost-crate', price: 2500, rarityWeights: { uncommon: 0.30, rare: 0.40, epic: 0.25, legendary: 0.05 } },
+  { id: 'infernal-crate', price: 2500, rarityWeights: { uncommon: 0.30, rare: 0.40, epic: 0.25, legendary: 0.05 } },
+  { id: 'void-crate', price: 6000, rarityWeights: { rare: 0.25, epic: 0.40, legendary: 0.30, mythic: 0.05 } },
 ];
 
 const SKIN_RARITIES = {
-  common:    ['c_static', 'c_rust', 'c_slate', 'c_olive', 'c_maroon', 'inferno', 'venom', 'ice'],
-  uncommon:  ['c_cobalt', 'c_teal', 'c_coral', 'c_sand', 'c_chrome', 'shadow', 'amber', 'crimson', 'gold', 'ocean', 'toxic'],
-  rare:      ['c_prism', 'c_aurora', 'c_lava', 'c_storm', 'c_neon', 'magma', 'plasma', 'emerald', 'frost', 'midnight', 'sakura'],
-  epic:      ['c_glitch', 'c_nebula', 'c_biohazard', 'c_arctic', 'c_wildfire', 'c_spectre', 'electric', 'ruby', 'lime', 'violet', 'rainbow', 'copper', 'cyber', 'sunset'],
-  legendary: ['c_supernova', 'c_wraith', 'c_titan', 'c_astral', 'galaxy', 'phoenix', 'void', 'diamond'],
-  mythic:    ['c_omnichrome', 'c_singularity', 'c_ultraviolet', 'c_godmode', 'c_rift', 'quantum', 'celestial'],
+  common:    ['c_static', 'c_rust', 'c_slate', 'c_olive', 'c_maroon', 'inferno', 'venom', 'ice', 'c_moss', 'c_ash', 'c_dusk', 'c_clay'],
+  uncommon:  ['c_cobalt', 'c_teal', 'c_coral', 'c_sand', 'c_chrome', 'shadow', 'amber', 'crimson', 'gold', 'ocean', 'toxic', 'c_sapphire', 'c_mint', 'c_bronze_skin', 'c_storm_grey'],
+  rare:      ['c_prism', 'c_aurora', 'c_lava', 'c_storm', 'c_neon', 'magma', 'plasma', 'emerald', 'frost', 'midnight', 'sakura', 'c_bloodmoon', 'c_frostfire', 'c_vortex', 'c_toxic_waste'],
+  epic:      ['c_glitch', 'c_nebula', 'c_biohazard', 'c_arctic', 'c_wildfire', 'c_spectre', 'electric', 'ruby', 'lime', 'violet', 'rainbow', 'copper', 'cyber', 'sunset', 'c_blackhole', 'c_dragonscale', 'c_hologram', 'c_thunderstrike'],
+  legendary: ['c_supernova', 'c_wraith', 'c_titan', 'c_astral', 'galaxy', 'phoenix', 'void', 'diamond', 'c_eclipse', 'c_abyssal_flame', 'c_zero_point'],
+  mythic:    ['c_omnichrome', 'c_singularity', 'c_ultraviolet', 'c_godmode', 'c_rift', 'quantum', 'celestial', 'c_entropy', 'c_dimension_rift', 'c_eternal'],
 };
 
 const OBLIVION_SKIN_RARITIES = {
-  ob_epic:      ['ob_duskblade', 'ob_voidborn', 'ob_ashwalker'],
-  ob_legendary: ['ob_soulreaper', 'ob_eclipsar', 'ob_phantomking'],
-  ob_mythic:    ['ob_abyssal', 'ob_eventide'],
-  ob_ultra:     ['ob_worldeater', 'ob_eternium'],
+  ob_epic:      ['ob_duskblade', 'ob_voidborn', 'ob_ashwalker', 'ob_nightcrawler', 'ob_ironwraith'],
+  ob_legendary: ['ob_soulreaper', 'ob_eclipsar', 'ob_phantomking', 'ob_hellforge', 'ob_gravemind'],
+  ob_mythic:    ['ob_abyssal', 'ob_eventide', 'ob_voidwalker', 'ob_deathbloom'],
+  ob_ultra:     ['ob_worldeater', 'ob_eternium', 'ob_apocalypse'],
 };
 
 const ICON_SKIN_RARITIES = {
   icon:    ['icon_noah_brown', 'icon_keegan_baseball', 'icon_dpoe_fade', 'icon_evan_watermelon', 'icon_gavin_tzl', 'icon_carter_cosmic', 'icon_brody_flag', 'icon_sterling', 'icon_justin_clover', 'icon_profe_spain', 'icon_kayden_duck', 'icon_troy_puck'],
   creator: ['icon_the_creator'],
+};
+
+const NEON_SKIN_RARITIES = {
+  uncommon:  ['neon_pulse', 'neon_grid'],
+  rare:      ['neon_surge', 'neon_cipher'],
+  epic:      ['neon_overload'],
+  legendary: ['neon_synthwave'],
+};
+const FROST_SKIN_RARITIES = {
+  uncommon:  ['frost_snowdrift', 'frost_icicle'],
+  rare:      ['frost_blizzard', 'frost_permafrost'],
+  epic:      ['frost_avalanche'],
+  legendary: ['frost_absolute_zero'],
+};
+const INFERNAL_SKIN_RARITIES = {
+  uncommon:  ['infernal_ember', 'infernal_cinder'],
+  rare:      ['infernal_wildfire', 'infernal_eruption'],
+  epic:      ['infernal_hellstorm'],
+  legendary: ['infernal_solar_flare'],
+};
+const VOID_SKIN_RARITIES = {
+  rare:      ['void_hollow'],
+  epic:      ['void_nebula_core', 'void_dark_matter'],
+  legendary: ['void_event_horizon'],
+  mythic:    ['void_big_bang'],
 };
 
 const MUTATION_CONFIG = {
@@ -77,6 +107,10 @@ const ALL_VALID_BASE_SKINS = new Set();
 for (const pool of Object.values(SKIN_RARITIES)) pool.forEach(s => ALL_VALID_BASE_SKINS.add(s));
 for (const pool of Object.values(OBLIVION_SKIN_RARITIES)) pool.forEach(s => ALL_VALID_BASE_SKINS.add(s));
 for (const pool of Object.values(ICON_SKIN_RARITIES)) pool.forEach(s => ALL_VALID_BASE_SKINS.add(s));
+for (const pool of Object.values(NEON_SKIN_RARITIES)) pool.forEach(s => ALL_VALID_BASE_SKINS.add(s));
+for (const pool of Object.values(FROST_SKIN_RARITIES)) pool.forEach(s => ALL_VALID_BASE_SKINS.add(s));
+for (const pool of Object.values(INFERNAL_SKIN_RARITIES)) pool.forEach(s => ALL_VALID_BASE_SKINS.add(s));
+for (const pool of Object.values(VOID_SKIN_RARITIES)) pool.forEach(s => ALL_VALID_BASE_SKINS.add(s));
 // Special skins not from crates but still valid to own
 ['agent', 'transcendence', 'gold-champion', 'silver-champion', 'bronze-champion',
  'bp1_striker', 'bp1_guardian', 'bp1_phantom', 'bp1_tempest', 'bp1_eclipse', 'bp1_sovereign', 'bp1_apex',
@@ -99,6 +133,10 @@ function getRandomSkin(rarity, crateId) {
   let pool;
   if (crateId === 'icon-crate') pool = ICON_SKIN_RARITIES[rarity] || ICON_SKIN_RARITIES.icon;
   else if (crateId === 'oblivion-crate') pool = OBLIVION_SKIN_RARITIES[rarity] || OBLIVION_SKIN_RARITIES.ob_epic;
+  else if (crateId === 'neon-crate')      pool = NEON_SKIN_RARITIES[rarity]     || [];
+  else if (crateId === 'frost-crate')     pool = FROST_SKIN_RARITIES[rarity]    || [];
+  else if (crateId === 'infernal-crate')  pool = INFERNAL_SKIN_RARITIES[rarity] || [];
+  else if (crateId === 'void-crate')      pool = VOID_SKIN_RARITIES[rarity]     || [];
   else pool = SKIN_RARITIES[rarity] || SKIN_RARITIES.common;
   return pool[Math.floor(Math.random() * pool.length)];
 }
@@ -239,6 +277,15 @@ router.post('/open', requireAuth, async (req, res) => {
       // Add skin
       await addSkin(req.user.uid, finalSkinId, client);
 
+      // Track stats
+      await client.query(`
+        INSERT INTO player_stats (uid, total_crates_opened, total_coins_spent)
+        VALUES ($1, 1, $2)
+        ON CONFLICT (uid) DO UPDATE SET
+          total_crates_opened = player_stats.total_crates_opened + 1,
+          total_coins_spent   = player_stats.total_coins_spent + $2
+      `, [req.user.uid, finalPrice]);
+
       // Get updated balance
       const { rows: updated } = await client.query('SELECT total_coins FROM users WHERE uid = $1', [req.user.uid]);
 
@@ -253,7 +300,8 @@ router.post('/open', requireAuth, async (req, res) => {
       };
     });
 
-    return res.json({ success: true, ...result });
+    const newUnlocks = await checkUnlocks(req.user.uid, { rolledRarity: result.rarity }).catch(() => []);
+    return res.json({ success: true, ...result, newUnlocks });
   } catch (err) {
     console.error('[Crates] /open error:', err.message);
     return res.status(400).json({ error: err.message });

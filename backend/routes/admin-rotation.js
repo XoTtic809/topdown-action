@@ -266,4 +266,47 @@ router.post('/schedule/cancel', requireAuth, requireAdmin, async (req, res) => {
   }
 });
 
+// ─── POST /api/admin/profile/custom-title ─────────────────────────────────────
+// Grant a custom title to a specific player.
+router.post('/profile/custom-title', requireAuth, requireAdmin, async (req, res) => {
+  const { targetUid, customTitleText } = req.body;
+  if (!targetUid) return res.status(400).json({ error: 'targetUid required' });
+  if (!customTitleText || typeof customTitleText !== 'string') {
+    return res.status(400).json({ error: 'customTitleText required' });
+  }
+
+  const clean = customTitleText.replace(/<[^>]*>/g, '').trim().slice(0, 40);
+  if (!clean) return res.status(400).json({ error: 'Custom title text is empty after sanitization' });
+
+  try {
+    // Verify target user exists
+    const { rows: userRows } = await query('SELECT uid, username FROM users WHERE uid = $1', [targetUid]);
+    if (!userRows.length) return res.status(404).json({ error: 'User not found' });
+
+    await query(`
+      INSERT INTO player_profiles (uid, card_title, custom_title_text, updated_at)
+      VALUES ($1, 'title_custom', $2, NOW())
+      ON CONFLICT (uid) DO UPDATE SET
+        card_title = 'title_custom',
+        custom_title_text = $2,
+        updated_at = NOW()
+    `, [targetUid, clean]);
+
+    await query(`
+      INSERT INTO player_unlocks (uid, unlockable_id)
+      VALUES ($1, 'title_custom') ON CONFLICT DO NOTHING
+    `, [targetUid]);
+
+    await query(`
+      INSERT INTO activity_logs (admin_id, admin_name, action, target_uid, details, created_at)
+      VALUES ($1, $2, 'grant_custom_title', $3, $4, NOW())
+    `, [req.user.uid, req.user.username, targetUid, `Custom title: "${clean}" granted to ${userRows[0].username}`]);
+
+    return res.json({ success: true, username: userRows[0].username, customTitleText: clean });
+  } catch (err) {
+    console.error('[Admin] POST /profile/custom-title error:', err.message);
+    return res.status(500).json({ error: 'Failed to grant custom title' });
+  }
+});
+
 module.exports = router;

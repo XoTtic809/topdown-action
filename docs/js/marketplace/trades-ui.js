@@ -303,6 +303,7 @@ function renderLiveSession(session) {
   const theirCrates = isInitiator ? (session.target_crates || [])    : (session.initiator_crates || []);
   const myReady     = isInitiator ? session.initiator_ready  : session.target_ready;
   const theirReady  = isInitiator ? session.target_ready     : session.initiator_ready;
+  const theirUid    = isInitiator ? session.target_id        : session.initiator_id;
 
   if (session.status === 'done') {
     el.innerHTML = `<div class="trade-live-done">
@@ -348,7 +349,7 @@ function renderLiveSession(session) {
 
   el.innerHTML = `
     <div class="trade-live-header">
-      <span class="trade-live-vs">⚔️ Trade with <strong>${escapeHtmlUI(theirName)}</strong></span>
+      <span class="trade-live-vs">⚔️ Trade with <span class="trade-profile-link" data-uid="${theirUid}" style="cursor:pointer;text-decoration:underline dotted"><strong>${escapeHtmlUI(theirName)}</strong></span></span>
       <button class="trade-btn trade-btn-danger trade-btn-sm" onclick="cancelLiveSession()">Cancel</button>
     </div>
 
@@ -385,7 +386,7 @@ function renderLiveSession(session) {
       <!-- Their offer -->
       <div class="trade-live-side ${theirReady ? 'trade-side-ready' : ''}">
         <div class="trade-side-header">
-          <span>${escapeHtmlUI(theirName)}</span>
+          <span class="trade-profile-link" data-uid="${theirUid}" style="cursor:pointer;text-decoration:underline dotted">${escapeHtmlUI(theirName)}</span>
           ${theirReady ? '<span class="trade-ready-badge">✓ READY</span>' : '<span class="trade-not-ready">Editing...</span>'}
         </div>
         <div class="trade-side-body">
@@ -804,6 +805,12 @@ function _tradeToast(msg, type) {
   clearTimeout(el._timer);
   el._timer = setTimeout(() => el.classList.add('hidden'), 3000);
 }
+
+// Trade opponent name → profile popup
+document.addEventListener('click', e => {
+  const link = e.target.closest('.trade-profile-link');
+  if (link && typeof openProfilePopup === 'function') openProfilePopup(link.dataset.uid);
+});
 
 // Refresh player's local skin state after a completed trade
 async function refreshInventoryFromServer() {

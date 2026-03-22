@@ -281,6 +281,10 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // ── Admin panel ─────────────────────────────────────────────
+  document.getElementById('myProfileBtn')?.addEventListener('click', () => {
+    if (typeof openOwnProfileCard === 'function') openOwnProfileCard();
+  });
+
   document.getElementById('adminBtn')?.addEventListener('click', () => {
     if (!isAdmin) return;
     document.getElementById('homeScreen')?.classList.add('hidden');

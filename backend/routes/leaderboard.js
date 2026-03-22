@@ -4,6 +4,7 @@ const express = require('express');
 const router  = express.Router();
 const { query } = require('../config/db');
 const { requireAuth } = require('../middleware/auth');
+const { checkUnlocks } = require('../utils/unlock-checker');
 
 // ─── Classic leaderboards ────────────────────────────────────────────────────
 
@@ -108,12 +109,21 @@ router.get('/bossrush', async (req, res) => {
 router.post('/submit/horde', requireAuth, async (req, res) => {
   const { kills } = req.body;
   if (typeof kills !== 'number' || kills < 0 || kills > 50000) return res.status(400).json({ error: 'Invalid kills' });
+  const uid = req.user.uid;
   try {
     await query(`
       UPDATE users SET horde_best_kills = GREATEST(horde_best_kills, $1), updated_at = NOW()
       WHERE uid = $2
-    `, [kills, req.user.uid]);
-    return res.json({ success: true });
+    `, [kills, uid]);
+    query(`
+      INSERT INTO player_stats (uid, total_games, total_kills)
+      VALUES ($1, 1, $2)
+      ON CONFLICT (uid) DO UPDATE SET
+        total_games = player_stats.total_games + 1,
+        total_kills = player_stats.total_kills + $2
+    `, [uid, kills]).catch(err => console.error('[Stats] horde upsert:', err.message));
+    const newUnlocks = await checkUnlocks(uid, {}).catch(() => []);
+    return res.json({ success: true, newUnlocks });
   } catch (err) {
     return res.status(500).json({ error: 'Failed to submit score' });
   }
@@ -123,12 +133,21 @@ router.post('/submit/horde', requireAuth, async (req, res) => {
 router.post('/submit/timeattack', requireAuth, async (req, res) => {
   const { kills } = req.body;
   if (typeof kills !== 'number' || kills < 0 || kills > 10000) return res.status(400).json({ error: 'Invalid kills' });
+  const uid = req.user.uid;
   try {
     await query(`
       UPDATE users SET ta_best_kills = GREATEST(ta_best_kills, $1), updated_at = NOW()
       WHERE uid = $2
-    `, [kills, req.user.uid]);
-    return res.json({ success: true });
+    `, [kills, uid]);
+    query(`
+      INSERT INTO player_stats (uid, total_games, total_kills)
+      VALUES ($1, 1, $2)
+      ON CONFLICT (uid) DO UPDATE SET
+        total_games = player_stats.total_games + 1,
+        total_kills = player_stats.total_kills + $2
+    `, [uid, kills]).catch(err => console.error('[Stats] timeattack upsert:', err.message));
+    const newUnlocks = await checkUnlocks(uid, {}).catch(() => []);
+    return res.json({ success: true, newUnlocks });
   } catch (err) {
     return res.status(500).json({ error: 'Failed to submit score' });
   }
@@ -138,11 +157,17 @@ router.post('/submit/timeattack', requireAuth, async (req, res) => {
 router.post('/submit/bossrush', requireAuth, async (req, res) => {
   const { bosses } = req.body;
   if (typeof bosses !== 'number' || bosses < 0 || bosses > 500) return res.status(400).json({ error: 'Invalid bosses' });
+  const uid = req.user.uid;
   try {
     await query(`
       UPDATE users SET br_bosses_beaten = GREATEST(br_bosses_beaten, $1), updated_at = NOW()
       WHERE uid = $2
-    `, [bosses, req.user.uid]);
+    `, [bosses, uid]);
+    query(`
+      INSERT INTO player_stats (uid, total_games)
+      VALUES ($1, 1)
+      ON CONFLICT (uid) DO UPDATE SET total_games = player_stats.total_games + 1
+    `, [uid]).catch(err => console.error('[Stats] bossrush upsert:', err.message));
     return res.json({ success: true });
   } catch (err) {
     return res.status(500).json({ error: 'Failed to submit score' });
