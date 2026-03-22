@@ -108,8 +108,8 @@ async function tradeGetSession(sessionId) {
   return _tradeGet(`/session/${sessionId}`);
 }
 
-async function tradeSetOffer(sessionId, skins, coins) {
-  return _tradePost(`/session/${sessionId}/offer`, { skins, coins });
+async function tradeSetOffer(sessionId, skins, coins, crates) {
+  return _tradePost(`/session/${sessionId}/offer`, { skins, coins, crates: crates || [] });
 }
 
 async function tradeToggleReady(sessionId) {
@@ -147,13 +147,15 @@ function stopSessionPoll() {
 }
 
 // ─── Offline Offers ───────────────────────────────────────────────────────────
-async function tradeSendOffer(receiverUid, senderSkins, receiverSkins, senderCoins, receiverCoins, message) {
+async function tradeSendOffer(receiverUid, senderSkins, receiverSkins, senderCoins, receiverCoins, message, senderCrates, receiverCrates) {
   return _tradePost('/offer/send', {
     receiverUid,
     senderSkins:   senderSkins   || [],
     receiverSkins: receiverSkins || [],
     senderCoins:   senderCoins   || 0,
     receiverCoins: receiverCoins || 0,
+    senderCrates:  senderCrates  || [],
+    receiverCrates: receiverCrates || [],
     message:       message       || '',
   });
 }

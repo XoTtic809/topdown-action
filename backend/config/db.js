@@ -108,6 +108,23 @@ async function initSchema() {
         added_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
       );
 
+      CREATE TABLE IF NOT EXISTS marketplace_history (
+        id          SERIAL PRIMARY KEY,
+        item_id     TEXT NOT NULL,
+        item_type   TEXT NOT NULL,
+        price       INT  NOT NULL,
+        seller_uid  TEXT NOT NULL,
+        buyer_uid   TEXT NOT NULL,
+        sold_at     TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+
+      CREATE TABLE IF NOT EXISTS crate_stock (
+        crate_id   TEXT PRIMARY KEY,
+        stock      INT  NOT NULL DEFAULT -1,
+        sold_count INT  NOT NULL DEFAULT 0,
+        reset_at   TIMESTAMPTZ
+      );
+
       CREATE INDEX IF NOT EXISTS idx_listings_expires       ON listings(expires_at);
       CREATE INDEX IF NOT EXISTS idx_listings_seller        ON listings(seller_id);
       CREATE INDEX IF NOT EXISTS idx_listings_price         ON listings(price);
@@ -117,6 +134,8 @@ async function initSchema() {
       CREATE INDEX IF NOT EXISTS idx_users_high_score       ON users(high_score DESC);
       CREATE INDEX IF NOT EXISTS idx_users_total_coins      ON users(total_coins DESC);
       CREATE INDEX IF NOT EXISTS idx_announcements_active   ON announcements(active, created_at DESC);
+      CREATE INDEX IF NOT EXISTS idx_mh_item_date           ON marketplace_history (item_id, sold_at DESC);
+      CREATE INDEX IF NOT EXISTS idx_mh_sold_at             ON marketplace_history (sold_at DESC);
 
       ALTER TABLE users ADD COLUMN IF NOT EXISTS battle_pass_data    JSONB NOT NULL DEFAULT '{}';
       ALTER TABLE users ADD COLUMN IF NOT EXISTS crate_inventory      JSONB NOT NULL DEFAULT '{"common-crate":0,"rare-crate":0,"epic-crate":0,"legendary-crate":0,"icon-crate":0,"oblivion-crate":0}';
@@ -126,6 +145,22 @@ async function initSchema() {
       ALTER TABLE users ADD COLUMN IF NOT EXISTS ta_best_kills        INTEGER NOT NULL DEFAULT 0;
       ALTER TABLE users ADD COLUMN IF NOT EXISTS br_bosses_beaten     INTEGER NOT NULL DEFAULT 0;
 
+      ALTER TABLE users ADD COLUMN IF NOT EXISTS owned_crates         TEXT[] NOT NULL DEFAULT ARRAY[]::TEXT[];
+
+      ALTER TABLE listings ADD COLUMN IF NOT EXISTS listing_type      TEXT NOT NULL DEFAULT 'skin';
+      ALTER TABLE listings ADD COLUMN IF NOT EXISTS crate_id          TEXT;
+
+      ALTER TABLE trade_sessions ADD COLUMN IF NOT EXISTS initiator_crates TEXT[] NOT NULL DEFAULT ARRAY[]::TEXT[];
+      ALTER TABLE trade_sessions ADD COLUMN IF NOT EXISTS target_crates    TEXT[] NOT NULL DEFAULT ARRAY[]::TEXT[];
+
+      ALTER TABLE trade_offers ADD COLUMN IF NOT EXISTS sender_crates     TEXT[] NOT NULL DEFAULT ARRAY[]::TEXT[];
+      ALTER TABLE trade_offers ADD COLUMN IF NOT EXISTS receiver_crates   TEXT[] NOT NULL DEFAULT ARRAY[]::TEXT[];
+
+      ALTER TABLE peer_trade_logs ADD COLUMN IF NOT EXISTS a_gave_crates  TEXT[] NOT NULL DEFAULT ARRAY[]::TEXT[];
+      ALTER TABLE peer_trade_logs ADD COLUMN IF NOT EXISTS b_gave_crates  TEXT[] NOT NULL DEFAULT ARRAY[]::TEXT[];
+
+      ALTER TABLE users ADD COLUMN IF NOT EXISTS weekly_crate_drops    INT NOT NULL DEFAULT 0;
+      ALTER TABLE users ADD COLUMN IF NOT EXISTS crate_drops_week_start TIMESTAMPTZ;
 
       CREATE TABLE IF NOT EXISTS reports (
         id           TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
@@ -234,6 +269,56 @@ async function initSchema() {
       CREATE INDEX IF NOT EXISTS idx_trade_offers_receiver    ON trade_offers(receiver_id, status);
       CREATE INDEX IF NOT EXISTS idx_peer_trade_logs_a        ON peer_trade_logs(user_a_id, timestamp DESC);
       CREATE INDEX IF NOT EXISTS idx_peer_trade_logs_b        ON peer_trade_logs(user_b_id, timestamp DESC);
+
+      INSERT INTO crate_stock (crate_id, stock, sold_count) VALUES
+        ('common-crate',    -1, 0),
+        ('rare-crate',      -1, 0),
+        ('epic-crate',      -1, 0),
+        ('legendary-crate', -1, 0),
+        ('icon-crate',      -1, 0),
+        ('oblivion-crate',  100, 0)
+      ON CONFLICT (crate_id) DO NOTHING;
+
+      CREATE TABLE IF NOT EXISTS crate_rotation (
+        crate_id                     TEXT PRIMARY KEY,
+        active                       BOOLEAN     NOT NULL DEFAULT false,
+        price_override               INTEGER,
+        stock_limit                  INTEGER,
+        stock_remaining              INTEGER,
+        marketplace_floor_override   INTEGER,
+        marketplace_ceiling_override INTEGER,
+        discount_percent             INTEGER     NOT NULL DEFAULT 0,
+        starts_at                    TIMESTAMPTZ,
+        ends_at                      TIMESTAMPTZ,
+        retired                      BOOLEAN     NOT NULL DEFAULT false,
+        weekend_only                 BOOLEAN     NOT NULL DEFAULT false,
+        timer_visible                BOOLEAN     NOT NULL DEFAULT false,
+        rotation_label               TEXT,
+        updated_at                   TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+
+      CREATE TABLE IF NOT EXISTS crate_schedule (
+        id           SERIAL PRIMARY KEY,
+        crate_id     TEXT        NOT NULL REFERENCES crate_rotation(crate_id) ON DELETE CASCADE,
+        action       TEXT        NOT NULL,
+        scheduled_at TIMESTAMPTZ NOT NULL,
+        payload      JSONB,
+        executed     BOOLEAN     NOT NULL DEFAULT false,
+        created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_crate_schedule_pending
+        ON crate_schedule (scheduled_at) WHERE executed = false;
+
+      INSERT INTO crate_rotation (crate_id, active, weekend_only)
+      VALUES
+        ('common-crate',    true,  false),
+        ('rare-crate',      true,  false),
+        ('epic-crate',      true,  false),
+        ('legendary-crate', true,  false),
+        ('icon-crate',      true,  false),
+        ('oblivion-crate',  false, true )
+      ON CONFLICT (crate_id) DO NOTHING;
     `);
     console.log('[DB] Schema ready');
   } finally {

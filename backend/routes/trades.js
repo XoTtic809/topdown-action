@@ -66,6 +66,24 @@ function removeSkinsCopy(owned, toRemove) {
   return result;
 }
 
+// ── Crate trade helpers ───────────────────────────────────────────────────────
+const VALID_CRATE_IDS = new Set([
+  'common-crate', 'rare-crate', 'epic-crate', 'legendary-crate', 'icon-crate', 'oblivion-crate',
+]);
+const MAX_CRATES_PER_OFFER = 6;
+
+function validCrateList(arr) {
+  if (!Array.isArray(arr)) return false;
+  if (arr.length > MAX_CRATES_PER_OFFER) return false;
+  return arr.every(c => typeof c === 'string' && VALID_CRATE_IDS.has(c));
+}
+
+function ownsAllCrates(userOwnedCrates, offerCrates) {
+  const owned  = countMap(userOwnedCrates || []);
+  const needed = countMap(offerCrates);
+  return Object.entries(needed).every(([c, n]) => (owned[c] || 0) >= n);
+}
+
 // ── Presence ─────────────────────────────────────────────────────────────────
 
 // POST /api/trades/heartbeat — called every 30s by frontend
@@ -262,11 +280,12 @@ router.get('/session/:id', requireAuth, async (req, res) => {
   }
 });
 
-// POST /api/trades/session/:id/offer — update your offer (skins + coins)
-// Body: { skins: string[], coins: number }
+// POST /api/trades/session/:id/offer — update your offer (skins + coins + crates)
+// Body: { skins: string[], coins: number, crates: string[] }
 router.post('/session/:id/offer', requireAuth, async (req, res) => {
-  const { skins = [], coins = 0 } = req.body;
+  const { skins = [], coins = 0, crates = [] } = req.body;
   if (!validSkinList(skins)) return res.status(400).json({ error: 'Invalid skins list' });
+  if (!validCrateList(crates)) return res.status(400).json({ error: 'Invalid crates list' });
   if (typeof coins !== 'number' || coins < 0 || coins > MAX_COINS_PER_OFFER) {
     return res.status(400).json({ error: `Coins must be 0–${MAX_COINS_PER_OFFER}` });
   }
@@ -283,23 +302,25 @@ router.post('/session/:id/offer', requireAuth, async (req, res) => {
 
     const isInitiator = session.initiator_id === req.user.uid;
 
-    // Verify user owns the skins they're offering
-    const { rows: userRows } = await query(`SELECT owned_skins, total_coins FROM users WHERE uid = $1`, [req.user.uid]);
+    // Verify user owns the skins and crates they're offering
+    const { rows: userRows } = await query(`SELECT owned_skins, owned_crates, total_coins FROM users WHERE uid = $1`, [req.user.uid]);
     const user = userRows[0];
     if (!ownsAllSkins(user.owned_skins, skins)) return res.status(409).json({ error: 'You don\'t own all offered skins' });
+    if (!ownsAllCrates(user.owned_crates, crates)) return res.status(409).json({ error: 'You don\'t own all offered crates' });
     if (coins > user.total_coins) return res.status(409).json({ error: 'Not enough coins' });
 
-    const skinsCol = isInitiator ? 'initiator_skins' : 'target_skins';
-    const coinsCol = isInitiator ? 'initiator_coins' : 'target_coins';
+    const skinsCol  = isInitiator ? 'initiator_skins'  : 'target_skins';
+    const coinsCol  = isInitiator ? 'initiator_coins'  : 'target_coins';
+    const cratesCol = isInitiator ? 'initiator_crates' : 'target_crates';
 
     // Changing the offer resets both ready flags
     const { rows: updated } = await query(`
       UPDATE trade_sessions
-      SET ${skinsCol} = $2, ${coinsCol} = $3,
+      SET ${skinsCol} = $2, ${coinsCol} = $3, ${cratesCol} = $4,
           initiator_ready = FALSE, target_ready = FALSE,
           updated_at = NOW()
       WHERE id = $1 RETURNING *
-    `, [req.params.id, skins, Math.floor(coins)]);
+    `, [req.params.id, skins, Math.floor(coins), crates]);
 
     return res.json({ session: updated[0] });
   } catch (err) {
@@ -374,7 +395,7 @@ async function _commitLiveTrade(sessionId, session, res) {
 
       // Re-read current state of both users
       const { rows: userRows } = await client.query(
-        `SELECT uid, owned_skins, total_coins FROM users WHERE uid IN ($1,$2)`,
+        `SELECT uid, owned_skins, owned_crates, total_coins FROM users WHERE uid IN ($1,$2)`,
         [session.initiator_id, session.target_id]
       );
       const initiatorUser = userRows.find(u => u.uid === session.initiator_id);
@@ -389,7 +410,7 @@ async function _commitLiveTrade(sessionId, session, res) {
         throw Object.assign(new Error('Trade no longer valid'), { code: 'STALE' });
       }
 
-      // Validate tradeability + ownership
+      // Validate tradeability + ownership (skins)
       if (s.initiator_skins.some(sk => !isTradeableSkinId(sk))) {
         throw Object.assign(new Error('Initiator offered a non-tradeable skin'), { code: 'OWNS' });
       }
@@ -401,6 +422,13 @@ async function _commitLiveTrade(sessionId, session, res) {
       }
       if (!ownsAllSkins(targetUser.owned_skins, s.target_skins)) {
         throw Object.assign(new Error('Target no longer owns offered skins'), { code: 'OWNS' });
+      }
+      // Validate crate ownership
+      if (!ownsAllCrates(initiatorUser.owned_crates, s.initiator_crates || [])) {
+        throw Object.assign(new Error('Initiator no longer owns offered crates'), { code: 'OWNS' });
+      }
+      if (!ownsAllCrates(targetUser.owned_crates, s.target_crates || [])) {
+        throw Object.assign(new Error('Target no longer owns offered crates'), { code: 'OWNS' });
       }
       if (s.initiator_coins > initiatorUser.total_coins) {
         throw Object.assign(new Error('Initiator lacks coins'), { code: 'COINS' });
@@ -416,24 +444,30 @@ async function _commitLiveTrade(sessionId, session, res) {
       const initiatorsNewSkins = [...newInitiatorSkins, ...s.target_skins];
       const targetsNewSkins    = [...newTargetSkins, ...s.initiator_skins];
 
-      // Apply skin swap — reset active_skin to 'agent' if the equipped skin was traded away
+      // Remove offered crates from each user, add received crates
+      const newInitiatorCrates = removeSkinsCopy(initiatorUser.owned_crates || [], s.initiator_crates || []);
+      const newTargetCrates    = removeSkinsCopy(targetUser.owned_crates || [], s.target_crates || []);
+      const initiatorsNewCrates = [...newInitiatorCrates, ...(s.target_crates || [])];
+      const targetsNewCrates    = [...newTargetCrates, ...(s.initiator_crates || [])];
+
+      // Apply skin + crate swap — reset active_skin to 'agent' if the equipped skin was traded away
       // 5% tax on received coins (both sides)
       const initiatorReceives = Math.floor(s.target_coins * (1 - PEER_TRADE_TAX_RATE));
       const targetReceives    = Math.floor(s.initiator_coins * (1 - PEER_TRADE_TAX_RATE));
 
       await client.query(
-        `UPDATE users SET owned_skins = $2, total_coins = total_coins - $3 + $4,
+        `UPDATE users SET owned_skins = $2, owned_crates = $5, total_coins = total_coins - $3 + $4,
          active_skin = CASE WHEN NOT (active_skin = ANY($2::text[])) THEN 'agent' ELSE active_skin END,
          updated_at = NOW()
          WHERE uid = $1`,
-        [session.initiator_id, initiatorsNewSkins, s.initiator_coins, initiatorReceives]
+        [session.initiator_id, initiatorsNewSkins, s.initiator_coins, initiatorReceives, initiatorsNewCrates]
       );
       await client.query(
-        `UPDATE users SET owned_skins = $2, total_coins = total_coins - $3 + $4,
+        `UPDATE users SET owned_skins = $2, owned_crates = $5, total_coins = total_coins - $3 + $4,
          active_skin = CASE WHEN NOT (active_skin = ANY($2::text[])) THEN 'agent' ELSE active_skin END,
          updated_at = NOW()
          WHERE uid = $1`,
-        [session.target_id, targetsNewSkins, s.target_coins, targetReceives]
+        [session.target_id, targetsNewSkins, s.target_coins, targetReceives, targetsNewCrates]
       );
 
       // Mark session done
@@ -445,12 +479,14 @@ async function _commitLiveTrade(sessionId, session, res) {
       await client.query(`
         INSERT INTO peer_trade_logs
           (trade_type, user_a_id, user_a_name, user_b_id, user_b_name,
-           a_gave_skins, b_gave_skins, a_gave_coins, b_gave_coins)
-        VALUES ('live', $1,$2,$3,$4,$5,$6,$7,$8)
+           a_gave_skins, b_gave_skins, a_gave_coins, b_gave_coins,
+           a_gave_crates, b_gave_crates)
+        VALUES ('live', $1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
       `, [session.initiator_id, session.initiator_name,
           session.target_id,    session.target_name,
           s.initiator_skins,    s.target_skins,
-          s.initiator_coins,    s.target_coins]);
+          s.initiator_coins,    s.target_coins,
+          s.initiator_crates || [], s.target_crates || []]);
     });
 
     // Record pair trade for rate limiting
@@ -472,7 +508,7 @@ async function _commitLiveTrade(sessionId, session, res) {
 // ── Offline Trade Offers ──────────────────────────────────────────────────────
 
 // POST /api/trades/offer/send
-// Body: { receiverUid, senderSkins[], receiverSkins[], senderCoins, receiverCoins, message }
+// Body: { receiverUid, senderSkins[], receiverSkins[], senderCoins, receiverCoins, senderCrates[], receiverCrates[], message }
 router.post('/offer/send', requireAuth, async (req, res) => {
   const {
     receiverUid,
@@ -480,6 +516,8 @@ router.post('/offer/send', requireAuth, async (req, res) => {
     receiverSkins = [],
     senderCoins   = 0,
     receiverCoins = 0,
+    senderCrates  = [],
+    receiverCrates = [],
     message       = '',
   } = req.body;
 
@@ -487,6 +525,8 @@ router.post('/offer/send', requireAuth, async (req, res) => {
   if (receiverUid === req.user.uid) return res.status(400).json({ error: 'Cannot trade with yourself' });
   if (!validSkinList(senderSkins))   return res.status(400).json({ error: 'Invalid sender skins' });
   if (!validSkinList(receiverSkins)) return res.status(400).json({ error: 'Invalid receiver skins' });
+  if (!validCrateList(senderCrates))  return res.status(400).json({ error: 'Invalid sender crates' });
+  if (!validCrateList(receiverCrates)) return res.status(400).json({ error: 'Invalid receiver crates' });
   if (typeof senderCoins !== 'number' || senderCoins < 0 || senderCoins > MAX_COINS_PER_OFFER) {
     return res.status(400).json({ error: 'Invalid sender coins' });
   }
@@ -503,11 +543,14 @@ router.post('/offer/send', requireAuth, async (req, res) => {
 
     // Validate sender ownership
     const { rows: senderRows } = await query(
-      `SELECT owned_skins, total_coins FROM users WHERE uid = $1`, [req.user.uid]
+      `SELECT owned_skins, owned_crates, total_coins FROM users WHERE uid = $1`, [req.user.uid]
     );
     const sender = senderRows[0];
     if (!ownsAllSkins(sender.owned_skins, senderSkins)) {
       return res.status(409).json({ error: 'You don\'t own all offered skins' });
+    }
+    if (!ownsAllCrates(sender.owned_crates, senderCrates)) {
+      return res.status(409).json({ error: 'You don\'t own all offered crates' });
     }
     if (senderCoins > sender.total_coins) {
       return res.status(409).json({ error: 'Not enough coins' });
@@ -526,13 +569,15 @@ router.post('/offer/send', requireAuth, async (req, res) => {
       INSERT INTO trade_offers
         (sender_id, sender_name, receiver_id, receiver_name,
          sender_skins, receiver_skins, sender_coins, receiver_coins,
+         sender_crates, receiver_crates,
          message, expires_at)
-      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9, NOW() + INTERVAL '${OFFER_EXPIRE_DAYS} days')
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11, NOW() + INTERVAL '${OFFER_EXPIRE_DAYS} days')
       RETURNING *
     `, [req.user.uid, req.user.username,
         receiverUid, receiverRows[0].username,
         senderSkins, receiverSkins,
         Math.floor(senderCoins), Math.floor(receiverCoins),
+        senderCrates, receiverCrates,
         message.slice(0, 200)]);
 
     return res.json({ offer: rows[0] });
@@ -597,7 +642,7 @@ async function _commitOfferTrade(offerId, offer, res) {
 
       // Re-read users
       const { rows: userRows } = await client.query(
-        `SELECT uid, owned_skins, total_coins FROM users WHERE uid IN ($1,$2)`,
+        `SELECT uid, owned_skins, owned_crates, total_coins FROM users WHERE uid IN ($1,$2)`,
         [offer.sender_id, offer.receiver_id]
       );
       const senderUser   = userRows.find(u => u.uid === offer.sender_id);
@@ -612,7 +657,7 @@ async function _commitOfferTrade(offerId, offer, res) {
         throw Object.assign(new Error('Offer no longer valid'), { code: 'STALE' });
       }
 
-      // Validate tradeability + ownership
+      // Validate tradeability + ownership (skins)
       if (o.sender_skins.some(sk => !isTradeableSkinId(sk))) {
         throw Object.assign(new Error('Sender offered a non-tradeable skin'), { code: 'OWNS' });
       }
@@ -625,6 +670,13 @@ async function _commitOfferTrade(offerId, offer, res) {
       if (!ownsAllSkins(receiverUser.owned_skins, o.receiver_skins)) {
         throw Object.assign(new Error('You no longer own the requested skins'), { code: 'OWNS' });
       }
+      // Validate crate ownership
+      if (!ownsAllCrates(senderUser.owned_crates, o.sender_crates || [])) {
+        throw Object.assign(new Error('Sender no longer owns offered crates'), { code: 'OWNS' });
+      }
+      if (!ownsAllCrates(receiverUser.owned_crates, o.receiver_crates || [])) {
+        throw Object.assign(new Error('You no longer own the requested crates'), { code: 'OWNS' });
+      }
       if (o.sender_coins > senderUser.total_coins) {
         throw Object.assign(new Error('Sender no longer has enough coins'), { code: 'COINS' });
       }
@@ -636,21 +688,25 @@ async function _commitOfferTrade(offerId, offer, res) {
       const newSenderSkins   = [...removeSkinsCopy(senderUser.owned_skins, o.sender_skins), ...o.receiver_skins];
       const newReceiverSkins = [...removeSkinsCopy(receiverUser.owned_skins, o.receiver_skins), ...o.sender_skins];
 
+      // Compute new crate arrays
+      const newSenderCrates   = [...removeSkinsCopy(senderUser.owned_crates || [], o.sender_crates || []), ...(o.receiver_crates || [])];
+      const newReceiverCrates = [...removeSkinsCopy(receiverUser.owned_crates || [], o.receiver_crates || []), ...(o.sender_crates || [])];
+
       // 5% tax on received coins (both sides)
       const senderReceives   = Math.floor(o.receiver_coins * (1 - PEER_TRADE_TAX_RATE));
       const receiverReceives = Math.floor(o.sender_coins * (1 - PEER_TRADE_TAX_RATE));
 
       await client.query(
-        `UPDATE users SET owned_skins = $2, total_coins = total_coins - $3 + $4,
+        `UPDATE users SET owned_skins = $2, owned_crates = $5, total_coins = total_coins - $3 + $4,
          active_skin = CASE WHEN NOT (active_skin = ANY($2::text[])) THEN 'agent' ELSE active_skin END,
          updated_at = NOW() WHERE uid = $1`,
-        [offer.sender_id, newSenderSkins, o.sender_coins, senderReceives]
+        [offer.sender_id, newSenderSkins, o.sender_coins, senderReceives, newSenderCrates]
       );
       await client.query(
-        `UPDATE users SET owned_skins = $2, total_coins = total_coins - $3 + $4,
+        `UPDATE users SET owned_skins = $2, owned_crates = $5, total_coins = total_coins - $3 + $4,
          active_skin = CASE WHEN NOT (active_skin = ANY($2::text[])) THEN 'agent' ELSE active_skin END,
          updated_at = NOW() WHERE uid = $1`,
-        [offer.receiver_id, newReceiverSkins, o.receiver_coins, receiverReceives]
+        [offer.receiver_id, newReceiverSkins, o.receiver_coins, receiverReceives, newReceiverCrates]
       );
 
       await client.query(`UPDATE trade_offers SET status = 'accepted' WHERE id = $1`, [offerId]);
@@ -658,12 +714,14 @@ async function _commitOfferTrade(offerId, offer, res) {
       await client.query(`
         INSERT INTO peer_trade_logs
           (trade_type, user_a_id, user_a_name, user_b_id, user_b_name,
-           a_gave_skins, b_gave_skins, a_gave_coins, b_gave_coins)
-        VALUES ('offer', $1,$2,$3,$4,$5,$6,$7,$8)
+           a_gave_skins, b_gave_skins, a_gave_coins, b_gave_coins,
+           a_gave_crates, b_gave_crates)
+        VALUES ('offer', $1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
       `, [offer.sender_id, offer.sender_name,
           offer.receiver_id, offer.receiver_name,
           o.sender_skins, o.receiver_skins,
-          o.sender_coins, o.receiver_coins]);
+          o.sender_coins, o.receiver_coins,
+          o.sender_crates || [], o.receiver_crates || []]);
     });
 
     // Record pair trade for rate limiting
@@ -716,7 +774,7 @@ router.get('/offers/sent', requireAuth, async (req, res) => {
 router.get('/profile/:uid', requireAuth, async (req, res) => {
   try {
     const { rows } = await query(
-      `SELECT uid, username, owned_skins, active_skin, high_score
+      `SELECT uid, username, owned_skins, owned_crates, active_skin, high_score
        FROM users WHERE uid = $1`,
       [req.params.uid]
     );
@@ -732,11 +790,12 @@ router.get('/profile/:uid', requireAuth, async (req, res) => {
       : false;
 
     return res.json({
-      uid:        u.uid,
-      username:   u.username,
-      activeSkin: u.active_skin,
-      highScore:  u.high_score,
-      ownedSkins: u.owned_skins,
+      uid:         u.uid,
+      username:    u.username,
+      activeSkin:  u.active_skin,
+      highScore:   u.high_score,
+      ownedSkins:  u.owned_skins,
+      ownedCrates: u.owned_crates || [],
       online,
     });
   } catch (err) {

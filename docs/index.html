@@ -395,6 +395,7 @@
       
       <!-- Crates Tab Content -->
       <div id="shopTab-crates" class="shop-tab-content hidden">
+        <div id="crateInventorySection"></div>
         <div class="crates-info">
           <p>🎁 Each crate gives you 1 item • Duplicates stack in your inventory</p>
         </div>
@@ -436,6 +437,7 @@
           <!-- Filters -->
           <div class="mp-controls">
             <button class="mp-filter-btn active" data-rarity="all">All</button>
+            <button class="mp-filter-btn" data-rarity="crate" style="border-color: rgba(255,167,38,0.3)">Crates</button>
             <button class="mp-filter-btn" data-rarity="icon" style="border-color: rgba(0,229,255,0.3)">Icon</button>
             <button class="mp-filter-btn" data-rarity="mythic" style="border-color: rgba(255,105,255,0.3)">Mythic</button>
             <button class="mp-filter-btn" data-rarity="legendary" style="border-color: rgba(255,215,0,0.3)">Legendary</button>
@@ -448,6 +450,21 @@
           <!-- Search -->
           <input id="mpSearchInput" class="mp-search-input" type="text"
                  placeholder="🔍  Search by skin or seller name…" autocomplete="off" />
+
+          <!-- Price range + trending filter -->
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:6px;">
+            <input id="mpPriceMin" type="number" min="0" placeholder="Min price"
+              style="background:rgba(255,255,255,0.06);border:1px solid #333;color:#ccc;
+                     padding:6px 10px;border-radius:6px;width:110px;font-family:inherit;font-size:12px;" />
+            <span style="color:#666;font-size:12px;">–</span>
+            <input id="mpPriceMax" type="number" min="0" placeholder="Max price"
+              style="background:rgba(255,255,255,0.06);border:1px solid #333;color:#ccc;
+                     padding:6px 10px;border-radius:6px;width:110px;font-family:inherit;font-size:12px;" />
+            <button id="mpTrendingFilterBtn" class="mp-filter-btn"
+              style="border-color:rgba(107,255,123,0.4);font-size:11px;">
+              🔥 Trending
+            </button>
+          </div>
 
           <!-- Message Bar -->
           <div id="mpMessage" class="mp-message hidden"></div>
@@ -644,11 +661,13 @@
                 <div class="trade-offer-col">
                   <div class="trade-offer-col-title">You Give</div>
                   <div class="trade-offer-checks" id="tradeSendMySkinsChecks"></div>
+                  <div class="trade-offer-checks" id="tradeSendMyCratesChecks"></div>
                   <input type="number" id="tradeSendMyCoins" class="trade-coins-input" placeholder="Your coins (optional)" min="0" max="100000" />
                 </div>
                 <div class="trade-offer-col">
                   <div class="trade-offer-col-title">You Want</div>
                   <div class="trade-offer-checks" id="tradeSendTheirSkinsChecks"></div>
+                  <div class="trade-offer-checks" id="tradeSendTheirCratesChecks"></div>
                   <input type="number" id="tradeSendTheirCoins" class="trade-coins-input" placeholder="Their coins (optional)" min="0" max="100000" />
                 </div>
               </div>
@@ -1230,6 +1249,7 @@
         <button class="admin-tab" data-tab="reports">📩 Reports</button>
         <button class="admin-tab" data-tab="chat">💬 Chat</button>
         <button class="admin-tab" data-tab="ranked">⚔️ Ranked</button>
+        <button class="admin-tab" data-tab="rotation">🔄 Rotation</button>
       </div>
 
       <!-- Global message bar -->
@@ -2053,6 +2073,12 @@
 
       </div>
 
+      <!-- ── ROTATION TAB ── -->
+      <div id="adminTab-rotation" class="admin-tab-content hidden">
+        <div id="rotationManagerCards"></div>
+        <div id="schedulePanel"></div>
+      </div>
+
       <button class="panel-back-btn" id="adminBackBtn">← BACK</button>
     </div>
   </div>
@@ -2265,6 +2291,7 @@
   })();
 </script>
 <script src="js/admin/anticheat.js"></script>
+<script src="js/admin/rotation.js"></script>
 <!-- Load systems that game.js depends on first -->
 <script src="js/shop/crate-system.js"></script>
 <script src="js/shop/battlepass-system.js"></script>

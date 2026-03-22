@@ -4,16 +4,22 @@ const { query } = require('../config/db');
 const PAGE_SIZE = 20;
 
 // ── Fetch active (non-expired) listings with optional rarity filter + pagination
-async function getListings({ rarity = 'all', sort = 'price_asc', page = 1 } = {}) {
+async function getListings({ rarity = 'all', sort = 'price_asc', page = 1, type = 'all' } = {}) {
   const offset = (page - 1) * PAGE_SIZE;
   const orderClause = sort === 'price_desc' ? 'price DESC' : 'price ASC';
 
   let sql = `
-    SELECT id, seller_id, seller_name, skin_id, skin_name, rarity, price, created_at, expires_at
+    SELECT id, seller_id, seller_name, skin_id, skin_name, rarity, price, created_at, expires_at,
+           listing_type, crate_id
     FROM listings
     WHERE expires_at > NOW()
   `;
   const params = [];
+
+  if (type !== 'all') {
+    params.push(type);
+    sql += ` AND listing_type = $${params.length}`;
+  }
 
   if (rarity !== 'all') {
     params.push(rarity);
@@ -55,13 +61,13 @@ async function getListingsBySeller(uid) {
 }
 
 // ── Create a listing (called inside a transaction)
-async function createListing(client, { sellerId, sellerName, skinId, skinName, rarity, price }) {
+async function createListing(client, { sellerId, sellerName, skinId, skinName, rarity, price, listingType = 'skin', crateId = null }) {
   const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
   const { rows } = await client.query(`
-    INSERT INTO listings (seller_id, seller_name, skin_id, skin_name, rarity, price, expires_at)
-    VALUES ($1, $2, $3, $4, $5, $6, $7)
+    INSERT INTO listings (seller_id, seller_name, skin_id, skin_name, rarity, price, expires_at, listing_type, crate_id)
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
     RETURNING *
-  `, [sellerId, sellerName, skinId, skinName, rarity, price, expiresAt]);
+  `, [sellerId, sellerName, skinId, skinName, rarity, price, expiresAt, listingType, crateId]);
   return rows[0];
 }
 

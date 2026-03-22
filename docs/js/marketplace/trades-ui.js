@@ -299,6 +299,8 @@ function renderLiveSession(session) {
   const theirSkins  = isInitiator ? session.target_skins     : session.initiator_skins;
   const myCoins     = isInitiator ? session.initiator_coins  : session.target_coins;
   const theirCoins  = isInitiator ? session.target_coins     : session.initiator_coins;
+  const myCrates    = isInitiator ? (session.initiator_crates || []) : (session.target_crates || []);
+  const theirCrates = isInitiator ? (session.target_crates || [])    : (session.initiator_crates || []);
   const myReady     = isInitiator ? session.initiator_ready  : session.target_ready;
   const theirReady  = isInitiator ? session.target_ready     : session.initiator_ready;
 
@@ -330,7 +332,19 @@ function renderLiveSession(session) {
   }
 
   // Status = 'active'
-  const skinOptions = _buildMySkinsOptions(mySkins);
+  const skinOptions  = _buildMySkinsOptions(mySkins);
+  const crateOptions = _buildMyCratesOptions('trade-crate-check', myCrates);
+
+  // Format crate chips for display
+  const myCrateChips = myCrates.length > 0
+    ? myCrates.map(c => `<div class="trade-skin-chip" style="border-color:rgba(255,167,38,0.4);color:#ffa726">${TRADE_CRATE_NAMES[c] || c}</div>`).join('')
+    : '';
+  const theirCrateChips = theirCrates.length > 0
+    ? theirCrates.map(c => `<div class="trade-skin-chip" style="border-color:rgba(255,167,38,0.4);color:#ffa726">${TRADE_CRATE_NAMES[c] || c}</div>`).join('')
+    : '';
+
+  const myHasNothing = mySkins.length === 0 && myCrates.length === 0 && myCoins === 0;
+  const theirHasNothing = theirSkins.length === 0 && theirCrates.length === 0 && theirCoins === 0;
 
   el.innerHTML = `
     <div class="trade-live-header">
@@ -349,7 +363,9 @@ function renderLiveSession(session) {
           <div class="trade-offer-skins">
             ${mySkins.length > 0
               ? mySkins.map(s => `<div class="trade-skin-chip">${escapeHtmlUI(tradeGetSkinLabel(s))}</div>`).join('')
-              : '<div class="trade-skin-placeholder">Nothing offered</div>'}
+              : ''}
+            ${myCrateChips}
+            ${myHasNothing ? '<div class="trade-skin-placeholder">Nothing offered</div>' : ''}
           </div>
           ${myCoins > 0 ? `<div class="trade-coins-chip">🪙 ${myCoins.toLocaleString()} coins</div>` : ''}
         </div>
@@ -358,6 +374,7 @@ function renderLiveSession(session) {
           <div id="tradeMySkinChecks" class="trade-skin-checks">
             ${skinOptions}
           </div>
+          ${crateOptions ? `<div id="tradeMyCrateChecks" class="trade-skin-checks">${crateOptions}</div>` : ''}
           <label class="trade-label">Offer coins:</label>
           <input type="number" id="tradeMyCoins" min="0" max="100000" value="${myCoins}"
                  class="trade-coins-input" placeholder="0" />
@@ -375,7 +392,9 @@ function renderLiveSession(session) {
           <div class="trade-offer-skins">
             ${theirSkins.length > 0
               ? theirSkins.map(s => `<div class="trade-skin-chip">${escapeHtmlUI(tradeGetSkinLabel(s))}</div>`).join('')
-              : '<div class="trade-skin-placeholder">Nothing offered</div>'}
+              : ''}
+            ${theirCrateChips}
+            ${theirHasNothing ? '<div class="trade-skin-placeholder">Nothing offered</div>' : ''}
           </div>
           ${theirCoins > 0 ? `<div class="trade-coins-chip">🪙 ${theirCoins.toLocaleString()} coins</div>` : ''}
         </div>
@@ -420,12 +439,71 @@ function updateLiveOfferCount(e) {
   }
 }
 
+// ─── Crate options for trades ─────────────────────────────────────────────────
+const TRADE_CRATE_NAMES = {
+  'common-crate': '📦 Common Crate', 'rare-crate': '🎁 Rare Crate',
+  'epic-crate': '🎭 Epic Crate', 'legendary-crate': '⭐ Legendary Crate',
+  'icon-crate': '🎯 Icon Crate', 'oblivion-crate': '🌑 Oblivion Crate',
+};
+
+function _buildMyCratesOptions(cssClass, currentlyOffered) {
+  if (typeof ownedCratesCache === 'undefined' || !Array.isArray(ownedCratesCache) || ownedCratesCache.length === 0) {
+    return '';
+  }
+  const counts = {};
+  for (const c of ownedCratesCache) counts[c] = (counts[c] || 0) + 1;
+  const unique = [...new Set(ownedCratesCache)];
+  if (unique.length === 0) return '';
+
+  const offered = currentlyOffered || [];
+  let html = '<div style="margin-top:8px;padding-top:8px;border-top:1px solid rgba(255,167,38,0.2);font-size:10px;color:#ffa726;font-weight:600;margin-bottom:4px;letter-spacing:0.5px;">YOUR CRATES</div>';
+  html += unique.map(crateId => {
+    const count = counts[crateId];
+    const label = TRADE_CRATE_NAMES[crateId] || crateId;
+    const checked = offered.includes(crateId) ? 'checked' : '';
+    return `<label class="trade-skin-check-label">
+      <input type="checkbox" class="${cssClass}" value="${crateId}" ${checked}
+             onchange="updateLiveCrateOfferCount(event, '${cssClass}')">
+      <span>${label}${count > 1 ? ` ×${count}` : ''}</span>
+    </label>`;
+  }).join('');
+  return html;
+}
+
+function _buildTheirCratesOptions(ownedCrates, cssClass) {
+  if (!Array.isArray(ownedCrates) || ownedCrates.length === 0) return '';
+  const counts = {};
+  for (const c of ownedCrates) counts[c] = (counts[c] || 0) + 1;
+  const unique = [...new Set(ownedCrates)];
+  if (unique.length === 0) return '';
+
+  let html = '<div style="margin-top:8px;padding-top:8px;border-top:1px solid rgba(255,167,38,0.2);font-size:10px;color:#ffa726;font-weight:600;margin-bottom:4px;letter-spacing:0.5px;">THEIR CRATES</div>';
+  html += unique.map(crateId => {
+    const count = counts[crateId];
+    const label = TRADE_CRATE_NAMES[crateId] || crateId;
+    return `<label class="trade-skin-check-label">
+      <input type="checkbox" class="${cssClass}" value="${crateId}">
+      <span>${label}${count > 1 ? ` ×${count}` : ''}</span>
+    </label>`;
+  }).join('');
+  return html;
+}
+
+function updateLiveCrateOfferCount(e, cssClass) {
+  const checked = document.querySelectorAll(`.${cssClass}:checked`);
+  if (checked.length > 6) {
+    if (e && e.target) e.target.checked = false;
+    _tradeToast('Max 6 crates per trade', 'error');
+  }
+}
+
 async function submitLiveOffer() {
   if (!tradeState.activeSessionId) return;
-  const checked = [...document.querySelectorAll('.trade-skin-check:checked')].map(cb => cb.value);
-  const coins   = parseInt(document.getElementById('tradeMyCoins')?.value || '0', 10) || 0;
+  const checkedSkins  = [...document.querySelectorAll('.trade-skin-check:checked')].map(cb => cb.value);
+  const checkedCrates = [...document.querySelectorAll('.trade-crate-check:checked')].map(cb => cb.value);
+  const coins = parseInt(document.getElementById('tradeMyCoins')?.value || '0', 10) || 0;
   try {
-    const data = await tradeSetOffer(tradeState.activeSessionId, checked, coins);
+    const data = await tradeSetOffer(tradeState.activeSessionId, checkedSkins, coins, checkedCrates);
     if (data.error) { _tradeToast(data.error, 'error'); return; }
     tradeState.activeSession = data.session;
     renderLiveSession(data.session);
@@ -501,6 +579,12 @@ function openSendOffer(receiverUid, receiverName) {
     }
   }
 
+  // Populate my crates checkboxes
+  const crateEl = document.getElementById('tradeSendMyCratesChecks');
+  if (crateEl) {
+    crateEl.innerHTML = _buildMyCratesOptions('trade-offer-my-crate', []);
+  }
+
   // Load receiver's inventory for their side
   _loadReceiverSkins(receiverUid);
 
@@ -523,18 +607,30 @@ async function _loadReceiverSkins(uid) {
     const data = await tradeGetProfile(uid);
     const canTrade = typeof isSkinTradeable === 'function' ? isSkinTradeable : () => true;
     const skins = (data.ownedSkins || []).filter(s => s !== 'agent' && canTrade(s));
-    if (skins.length === 0) { el.innerHTML = '<em>No tradeable skins</em>'; return; }
-    const counts = {};
-    for (const s of skins) counts[s] = (counts[s] || 0) + 1;
-    const unique = [...new Set(skins)];
-    el.innerHTML = unique.map(skinId => {
-      const label = tradeGetSkinLabel(skinId);
-      const count = counts[skinId];
-      return `<label class="trade-skin-check-label">
-        <input type="checkbox" class="trade-offer-their-skin" value="${skinId}">
-        <span>${escapeHtmlUI(label)}${count > 1 ? ` ×${count}` : ''}</span>
-      </label>`;
-    }).join('');
+
+    let html = '';
+    if (skins.length === 0) {
+      html = '<em>No tradeable skins</em>';
+    } else {
+      const counts = {};
+      for (const s of skins) counts[s] = (counts[s] || 0) + 1;
+      const unique = [...new Set(skins)];
+      html = unique.map(skinId => {
+        const label = tradeGetSkinLabel(skinId);
+        const count = counts[skinId];
+        return `<label class="trade-skin-check-label">
+          <input type="checkbox" class="trade-offer-their-skin" value="${skinId}">
+          <span>${escapeHtmlUI(label)}${count > 1 ? ` ×${count}` : ''}</span>
+        </label>`;
+      }).join('');
+    }
+    el.innerHTML = html;
+
+    // Load their crates
+    const theirCrateEl = document.getElementById('tradeSendTheirCratesChecks');
+    if (theirCrateEl) {
+      theirCrateEl.innerHTML = _buildTheirCratesOptions(data.ownedCrates || [], 'trade-offer-their-crate');
+    }
   } catch (_) {
     el.innerHTML = '<em>Failed to load</em>';
   }
@@ -549,12 +645,14 @@ async function submitSendOffer() {
   const receiverUid  = document.getElementById('tradeSendOfferReceiverId')?.value;
   const mySkins      = [...document.querySelectorAll('.trade-offer-my-skin:checked')].map(cb => cb.value);
   const theirSkins   = [...document.querySelectorAll('.trade-offer-their-skin:checked')].map(cb => cb.value);
+  const myCrates     = [...document.querySelectorAll('.trade-offer-my-crate:checked')].map(cb => cb.value);
+  const theirCrates  = [...document.querySelectorAll('.trade-offer-their-crate:checked')].map(cb => cb.value);
   const myCoins      = parseInt(document.getElementById('tradeSendMyCoins')?.value   || '0', 10) || 0;
   const theirCoins   = parseInt(document.getElementById('tradeSendTheirCoins')?.value || '0', 10) || 0;
   const message      = document.getElementById('tradeSendMessage')?.value || '';
 
   if (!receiverUid) return;
-  if (mySkins.length === 0 && theirSkins.length === 0 && myCoins === 0 && theirCoins === 0) {
+  if (mySkins.length === 0 && theirSkins.length === 0 && myCrates.length === 0 && theirCrates.length === 0 && myCoins === 0 && theirCoins === 0) {
     _tradeToast('Add something to the offer', 'error');
     return;
   }
@@ -563,7 +661,7 @@ async function submitSendOffer() {
   if (submitBtn) submitBtn.disabled = true;
 
   try {
-    const data = await tradeSendOffer(receiverUid, mySkins, theirSkins, myCoins, theirCoins, message);
+    const data = await tradeSendOffer(receiverUid, mySkins, theirSkins, myCoins, theirCoins, message, myCrates, theirCrates);
     if (data.error) {
       _tradeToast(data.error, 'error');
       if (submitBtn) submitBtn.disabled = false;
@@ -604,9 +702,18 @@ async function loadTradeSent() {
   }
 }
 
+function _formatCrateList(crates) {
+  if (!crates || crates.length === 0) return '';
+  return crates.map(c => TRADE_CRATE_NAMES[c] || c).join(', ');
+}
+
 function _renderOfferCard(o, mode) {
-  const skinsSent   = (o.sender_skins   || []).map(tradeGetSkinLabel).join(', ') || '—';
-  const skinsWanted = (o.receiver_skins || []).map(tradeGetSkinLabel).join(', ') || '—';
+  const skinsSent   = (o.sender_skins   || []).map(tradeGetSkinLabel).join(', ') || '';
+  const cratesSent  = _formatCrateList(o.sender_crates);
+  const skinsWanted = (o.receiver_skins || []).map(tradeGetSkinLabel).join(', ') || '';
+  const cratesWanted = _formatCrateList(o.receiver_crates);
+  const sentItems   = [skinsSent, cratesSent].filter(Boolean).join(', ') || '—';
+  const wantedItems = [skinsWanted, cratesWanted].filter(Boolean).join(', ') || '—';
   const coinsSent   = o.sender_coins   > 0 ? ` + ${o.sender_coins} coins`   : '';
   const coinsWanted = o.receiver_coins > 0 ? ` + ${o.receiver_coins} coins` : '';
 
@@ -627,8 +734,8 @@ function _renderOfferCard(o, mode) {
         <span>${mode === 'inbox' ? 'From' : 'To'}: <strong>${escapeHtmlUI(mode === 'inbox' ? o.sender_name : o.receiver_name)}</strong></span>
         <span class="trade-status ${statusClass}">${o.status.toUpperCase()}</span>
       </div>
-      <div class="trade-offer-row"><span class="trade-offer-label">They give:</span><span>${escapeHtmlUI(skinsSent)}${escapeHtmlUI(coinsSent)}</span></div>
-      <div class="trade-offer-row"><span class="trade-offer-label">You give:</span><span>${escapeHtmlUI(skinsWanted)}${escapeHtmlUI(coinsWanted)}</span></div>
+      <div class="trade-offer-row"><span class="trade-offer-label">They give:</span><span>${escapeHtmlUI(sentItems)}${escapeHtmlUI(coinsSent)}</span></div>
+      <div class="trade-offer-row"><span class="trade-offer-label">You give:</span><span>${escapeHtmlUI(wantedItems)}${escapeHtmlUI(coinsWanted)}</span></div>
       ${o.message ? `<div class="trade-offer-msg">"${escapeHtmlUI(o.message)}"</div>` : ''}
       <div class="trade-offer-meta">Sent ${formatTradeDate(o.created_at)} · Expires ${formatTradeDate(o.expires_at)}</div>
       ${actionBtns ? `<div class="trade-notif-actions">${actionBtns}</div>` : ''}
@@ -657,8 +764,12 @@ async function loadTradeHistory() {
       const iAmA   = t.user_a_id === myUid;
       const meName = iAmA ? t.user_a_name : t.user_b_name;
       const thName = iAmA ? t.user_b_name : t.user_a_name;
-      const meSkins = (iAmA ? t.a_gave_skins : t.b_gave_skins).map(tradeGetSkinLabel).join(', ') || '—';
-      const thSkins = (iAmA ? t.b_gave_skins : t.a_gave_skins).map(tradeGetSkinLabel).join(', ') || '—';
+      const meSkinsList = (iAmA ? t.a_gave_skins : t.b_gave_skins).map(tradeGetSkinLabel).join(', ') || '';
+      const thSkinsList = (iAmA ? t.b_gave_skins : t.a_gave_skins).map(tradeGetSkinLabel).join(', ') || '';
+      const meCratesList = _formatCrateList(iAmA ? t.a_gave_crates : t.b_gave_crates);
+      const thCratesList = _formatCrateList(iAmA ? t.b_gave_crates : t.a_gave_crates);
+      const meItems = [meSkinsList, meCratesList].filter(Boolean).join(', ') || '—';
+      const thItems = [thSkinsList, thCratesList].filter(Boolean).join(', ') || '—';
       const meCoins = iAmA ? t.a_gave_coins : t.b_gave_coins;
       const thCoins = iAmA ? t.b_gave_coins : t.a_gave_coins;
       return `
@@ -668,8 +779,8 @@ async function loadTradeHistory() {
             <span class="trade-history-type">${t.trade_type === 'live' ? '⚔️ Live' : '📬 Offer'}</span>
             <span class="trade-history-date">${formatTradeDate(t.timestamp)}</span>
           </div>
-          <div class="trade-offer-row"><span class="trade-offer-label">You gave:</span><span>${escapeHtmlUI(meSkins)}${meCoins > 0 ? ` + ${meCoins} coins` : ''}</span></div>
-          <div class="trade-offer-row"><span class="trade-offer-label">You received:</span><span>${escapeHtmlUI(thSkins)}${thCoins > 0 ? ` + ${thCoins} coins` : ''}</span></div>
+          <div class="trade-offer-row"><span class="trade-offer-label">You gave:</span><span>${escapeHtmlUI(meItems)}${meCoins > 0 ? ` + ${meCoins} coins` : ''}</span></div>
+          <div class="trade-offer-row"><span class="trade-offer-label">You received:</span><span>${escapeHtmlUI(thItems)}${thCoins > 0 ? ` + ${thCoins} coins` : ''}</span></div>
         </div>`;
     }).join('');
   } catch (_) {

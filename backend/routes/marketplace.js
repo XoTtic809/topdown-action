@@ -8,6 +8,7 @@ const { requireAuth, requireAdmin } = require('../middleware/auth');
 const { withTransaction, query }    = require('../config/db');
 const { getUserById, isWhitelisted } = require('../models/user');
 const { removeSkin, addSkin }       = require('../models/inventory');
+const { addCrate, removeCrate }    = require('../models/crate-inventory');
 const {
   getListings, getListingById, countActiveListingsBySeller,
   getListingsBySeller, createListing, deleteListing, getExpiredListings,
@@ -66,6 +67,31 @@ const RARITY_PRICING = {
   icon:      { floor: 500,    ceiling: 4000   },
 };
 
+const CRATE_PRICING = {
+  'common-crate':    { floor: 200,  ceiling: 600    },
+  'rare-crate':      { floor: 500,  ceiling: 1200   },
+  'epic-crate':      { floor: 1000, ceiling: 2500   },
+  'legendary-crate': { floor: 3000, ceiling: 8000   },
+  'icon-crate':      { floor: 500,  ceiling: 1200   },
+  'oblivion-crate':  { floor: 8000, ceiling: 20000  },
+};
+
+// Crates that are no longer available to buy — their marketplace floor is raised 25%
+const DISCONTINUED_CRATES = new Set([
+  // e.g. 'icon-crate'  — add crate IDs here when removing from the shop
+]);
+
+const VALID_CRATE_IDS = new Set(Object.keys(CRATE_PRICING));
+
+const CRATE_DISPLAY_NAMES = {
+  'common-crate':    'Common Crate',
+  'rare-crate':      'Rare Crate',
+  'epic-crate':      'Epic Crate',
+  'legendary-crate': 'Legendary Crate',
+  'icon-crate':      'Icon Crate',
+  'oblivion-crate':  'Oblivion Crate',
+};
+
 // XP → level formula — matches the battle pass tier system in battlepass-system.js.
 // CUMULATIVE_XP[i] is the total XP needed to reach tier (i+1).
 const CUMULATIVE_XP = [
@@ -121,12 +147,12 @@ async function checkEligibility(user, userIsAdmin, userIsWhitelisted) {
 
 // ─────────────────────────────────────────────────────────────
 // GET /api/marketplace/listings
-// Query params: rarity, sort, page
+// Query params: rarity, sort, page, type (skin|crate|all)
 // ─────────────────────────────────────────────────────────────
 router.get('/listings', async (req, res) => {
   try {
-    const { rarity = 'all', sort = 'price_asc', page = 1 } = req.query;
-    const listings = await getListings({ rarity, sort, page: parseInt(page) });
+    const { rarity = 'all', sort = 'price_asc', page = 1, type = 'all' } = req.query;
+    const listings = await getListings({ rarity, sort, page: parseInt(page), type });
     return res.json({ listings, hasMore: listings.length === 20 });
   } catch (err) {
     console.error('[MP] GET /listings error:', err.message);
@@ -146,10 +172,86 @@ router.get('/my-listings', requireAuth, async (req, res) => {
 
 // ─────────────────────────────────────────────────────────────
 // POST /api/marketplace/list
-// Body: { skinId, skinName, rarity, price }
+// Body: { skinId, skinName, rarity, price } — skin listing
+//   OR: { listingType: 'crate', crateId, price } — crate listing
 // ─────────────────────────────────────────────────────────────
 router.post('/list', requireAuth, async (req, res) => {
-  const { skinId, skinName, rarity, price: rawPrice } = req.body;
+  const { listingType = 'skin', price: rawPrice } = req.body;
+
+  // ── Crate listing path ──
+  if (listingType === 'crate') {
+    const { crateId } = req.body;
+    if (!crateId || !VALID_CRATE_IDS.has(crateId) || rawPrice == null) {
+      return res.status(400).json({ error: 'Valid crateId and price are required' });
+    }
+
+    const price = Math.floor(Number(rawPrice));
+    const limits = CRATE_PRICING[crateId];
+    if (price < limits.floor || price > limits.ceiling) {
+      return res.status(400).json({
+        error: `${CRATE_DISPLAY_NAMES[crateId]}: ${limits.floor.toLocaleString()}–${limits.ceiling.toLocaleString()} coins.`,
+      });
+    }
+
+    try {
+      const result = await withTransaction(async (client) => {
+        const { rows: userRows } = await client.query(
+          'SELECT * FROM users WHERE uid = $1 FOR UPDATE', [req.user.uid]
+        );
+        const user = userRows[0];
+        if (!user) throw new Error('User account not found.');
+
+        const userIsAdmin      = user.is_admin;
+        const userIsWhitelisted = await isWhitelisted(req.user.uid);
+        const elig = await checkEligibility(user, userIsAdmin, userIsWhitelisted);
+        if (!elig.eligible) throw new Error(elig.reason);
+
+        if (!user.owned_crates || !user.owned_crates.includes(crateId)) {
+          throw new Error('You do not own this crate.');
+        }
+
+        const activeCount = await countActiveListingsBySeller(req.user.uid);
+        if (activeCount >= MAX_LISTINGS_PER_PLAYER) {
+          throw new Error(`Maximum ${MAX_LISTINGS_PER_PLAYER} active listings.`);
+        }
+
+        const listingFee = Math.floor(price * LISTING_FEE_RATE);
+        if (listingFee > 0) {
+          if (user.total_coins < listingFee) {
+            throw new Error(`Not enough coins for listing fee (${listingFee.toLocaleString()} coins).`);
+          }
+          await client.query(
+            'UPDATE users SET total_coins = total_coins - $2, updated_at = NOW() WHERE uid = $1',
+            [req.user.uid, listingFee]
+          );
+        }
+
+        await removeCrate(req.user.uid, crateId, client);
+
+        const listing = await createListing(client, {
+          sellerId:    req.user.uid,
+          sellerName:  user.username,
+          skinId:      crateId,
+          skinName:    CRATE_DISPLAY_NAMES[crateId] || crateId,
+          rarity:      'crate',
+          price,
+          listingType: 'crate',
+          crateId,
+        });
+
+        return listing;
+      });
+
+      return res.json({ success: true, listing: result });
+    } catch (err) {
+      console.error('[MP] /list crate error:', err.message);
+      return res.status(400).json({ error: err.message });
+    }
+    return; // eslint: unreachable safety
+  }
+
+  // ── Skin listing path (original) ──
+  const { skinId, skinName, rarity } = req.body;
 
   if (!skinId || !skinName || !rarity || rawPrice == null) {
     return res.status(400).json({ error: 'skinId, skinName, rarity, and price are required' });
@@ -258,18 +360,22 @@ router.post('/cancel', requireAuth, async (req, res) => {
   if (!listingId) return res.status(400).json({ error: 'listingId required' });
 
   try {
-    const returnedSkinId = await withTransaction(async (client) => {
+    const result = await withTransaction(async (client) => {
       const listing = await getListingById(listingId, client);
       if (!listing)                            throw new Error('Listing no longer exists.');
       if (listing.seller_id !== req.user.uid)  throw new Error('Not your listing.');
 
-      await addSkin(req.user.uid, listing.skin_id, client);
+      if (listing.listing_type === 'crate') {
+        await addCrate(req.user.uid, listing.crate_id, client);
+      } else {
+        await addSkin(req.user.uid, listing.skin_id, client);
+      }
 
       await deleteListing(client, listingId);
-      return listing.skin_id;
+      return { skinId: listing.skin_id, listingType: listing.listing_type, crateId: listing.crate_id };
     });
 
-    return res.json({ success: true, skinId: returnedSkinId });
+    return res.json({ success: true, ...result });
   } catch (err) {
     console.error('[MP] /cancel error:', err.message);
     return res.status(400).json({ error: err.message });
@@ -295,7 +401,9 @@ router.post('/buy', requireAuth, async (req, res) => {
       if (new Date(listing.expires_at) < new Date()) throw new Error('This listing has expired.');
       if (listing.seller_id === req.user.uid) throw new Error('You cannot buy your own listing.');
 
-      if (!isMarketplaceTradeableSkinId(listing.skin_id)) {
+      const isCrateListing = listing.listing_type === 'crate';
+
+      if (!isCrateListing && !isMarketplaceTradeableSkinId(listing.skin_id)) {
         throw new Error('This skin cannot be traded. This listing will be purged.');
       }
 
@@ -329,16 +437,33 @@ router.post('/buy', requireAuth, async (req, res) => {
       const tax            = Math.floor(price * TAX_RATE);
       const sellerReceives = price - tax;
 
-      const { rows: buyerAfter } = await client.query(`
-        UPDATE users SET
-          total_coins = total_coins - $2,
-          owned_skins = array_append(owned_skins, $3),
-          skin_received_times = skin_received_times || jsonb_build_object($3, NOW()::TEXT),
-          last_trade_at = NOW(),
-          updated_at = NOW()
-        WHERE uid = $1
-        RETURNING total_coins
-      `, [req.user.uid, price, listing.skin_id]);
+      let buyerAfter;
+      if (isCrateListing) {
+        // Crate purchase — add to owned_crates
+        await addCrate(req.user.uid, listing.crate_id, client);
+        const result = await client.query(`
+          UPDATE users SET
+            total_coins = total_coins - $2,
+            last_trade_at = NOW(),
+            updated_at = NOW()
+          WHERE uid = $1
+          RETURNING total_coins
+        `, [req.user.uid, price]);
+        buyerAfter = result.rows;
+      } else {
+        // Skin purchase — add to owned_skins (original path)
+        const result = await client.query(`
+          UPDATE users SET
+            total_coins = total_coins - $2,
+            owned_skins = array_append(owned_skins, $3),
+            skin_received_times = skin_received_times || jsonb_build_object($3, NOW()::TEXT),
+            last_trade_at = NOW(),
+            updated_at = NOW()
+          WHERE uid = $1
+          RETURNING total_coins
+        `, [req.user.uid, price, listing.skin_id]);
+        buyerAfter = result.rows;
+      }
 
       await client.query(`
         UPDATE users SET
@@ -349,6 +474,18 @@ router.post('/buy', requireAuth, async (req, res) => {
       `, [listing.seller_id, sellerReceives]);
 
       await deleteListing(client, listingId);
+
+      await client.query(
+        `INSERT INTO marketplace_history (item_id, item_type, price, seller_uid, buyer_uid)
+         VALUES ($1, $2, $3, $4, $5)`,
+        [
+          isCrateListing ? listing.crate_id : listing.skin_id,
+          isCrateListing ? 'crate' : 'skin',
+          price,
+          listing.seller_id,
+          req.user.uid,
+        ]
+      );
 
       await logTrade(client, {
         buyerId:        req.user.uid,
@@ -394,6 +531,141 @@ router.get('/recent-trades', async (req, res) => {
 });
 
 // ─────────────────────────────────────────────────────────────
+// ANALYTICS ROUTES  (public — no auth required)
+// ─────────────────────────────────────────────────────────────
+
+// GET /api/marketplace/history/:itemId?period=7d|30d|all
+router.get('/history/:itemId', async (req, res) => {
+  const { itemId } = req.params;
+  const { period = '7d' } = req.query;
+  if (!itemId) return res.status(400).json({ error: 'itemId required' });
+
+  let intervalClause = "AND sold_at >= NOW() - INTERVAL '7 days'";
+  if (period === '30d') intervalClause = "AND sold_at >= NOW() - INTERVAL '30 days'";
+  else if (period === 'all') intervalClause = '';
+
+  try {
+    const { rows } = await query(
+      `SELECT price, sold_at AS "soldAt"
+         FROM marketplace_history
+        WHERE item_id = $1 ${intervalClause}
+        ORDER BY sold_at ASC
+        LIMIT 500`,
+      [itemId]
+    );
+    return res.json({ prices: rows });
+  } catch (err) {
+    console.error('[MP] /history error:', err.message);
+    return res.status(500).json({ error: 'Failed to load price history' });
+  }
+});
+
+// GET /api/marketplace/stats/:itemId
+router.get('/stats/:itemId', async (req, res) => {
+  const { itemId } = req.params;
+  if (!itemId) return res.status(400).json({ error: 'itemId required' });
+
+  try {
+    const { rows: [stats] } = await query(
+      `SELECT
+         ROUND(AVG(price) FILTER (WHERE sold_at >= NOW() - INTERVAL '7 days'))::INT  AS "avgPrice7d",
+         ROUND(AVG(price) FILTER (WHERE sold_at >= NOW() - INTERVAL '1 day'))::INT   AS "avgPrice24h",
+         COUNT(*)        FILTER (WHERE sold_at >= NOW() - INTERVAL '7 days')::INT    AS "totalSold7d",
+         COUNT(*)        FILTER (WHERE sold_at >= NOW() - INTERVAL '1 day')::INT     AS "totalSold24h"
+       FROM marketplace_history
+      WHERE item_id = $1`,
+      [itemId]
+    );
+
+    const { rows: [countRow] } = await query(
+      `SELECT COUNT(*)::INT AS "activeListings"
+         FROM listings
+        WHERE (skin_id = $1 OR crate_id = $1)`,
+      [itemId]
+    );
+
+    // Determine price floor/ceiling
+    let priceFloor = null;
+    let priceCeiling = null;
+    if (CRATE_PRICING[itemId]) {
+      const crateIsDiscontinued = DISCONTINUED_CRATES.has(itemId);
+      priceFloor   = crateIsDiscontinued
+        ? Math.floor(CRATE_PRICING[itemId].floor * 1.25)
+        : CRATE_PRICING[itemId].floor;
+      priceCeiling = CRATE_PRICING[itemId].ceiling;
+    } else {
+      // Derive rarity from an active listing or recent history entry
+      const { rows: rarityRows } = await query(
+        `SELECT rarity FROM listings WHERE skin_id = $1 LIMIT 1`,
+        [itemId]
+      );
+      if (rarityRows[0] && RARITY_PRICING[rarityRows[0].rarity]) {
+        priceFloor   = RARITY_PRICING[rarityRows[0].rarity].floor;
+        priceCeiling = RARITY_PRICING[rarityRows[0].rarity].ceiling;
+      }
+    }
+
+    const suggestedPrice = stats.avgPrice7d || stats.avgPrice24h || null;
+
+    return res.json({
+      avgPrice7d:     stats.avgPrice7d,
+      avgPrice24h:    stats.avgPrice24h,
+      totalSold7d:    stats.totalSold7d,
+      totalSold24h:   stats.totalSold24h,
+      activeListings: countRow.activeListings,
+      suggestedPrice,
+      priceFloor,
+      priceCeiling,
+    });
+  } catch (err) {
+    console.error('[MP] /stats error:', err.message);
+    return res.status(500).json({ error: 'Failed to load stats' });
+  }
+});
+
+// GET /api/marketplace/trending
+// Returns top 10 rising + top 10 falling items (24h vs 7d avg, min 3 sales in 24h)
+router.get('/trending', async (req, res) => {
+  try {
+    const { rows } = await query(`
+      WITH item_stats AS (
+        SELECT
+          item_id                                                                     AS "itemId",
+          item_type                                                                   AS "itemType",
+          ROUND(AVG(price) FILTER (WHERE sold_at >= NOW() - INTERVAL '1 day'))::INT  AS "avgPrice24h",
+          ROUND(AVG(price) FILTER (WHERE sold_at >= NOW() - INTERVAL '7 days'))::INT AS "avgPrice7d",
+          COUNT(*)        FILTER (WHERE sold_at >= NOW() - INTERVAL '1 day')::INT    AS "sales24h"
+        FROM marketplace_history
+        WHERE sold_at >= NOW() - INTERVAL '7 days'
+        GROUP BY item_id, item_type
+        HAVING COUNT(*) FILTER (WHERE sold_at >= NOW() - INTERVAL '1 day') >= 3
+      ),
+      active_counts AS (
+        SELECT COALESCE(skin_id, crate_id) AS item_id, COUNT(*)::INT AS "activeListings"
+          FROM listings
+         GROUP BY COALESCE(skin_id, crate_id)
+      )
+      SELECT
+        s."itemId", s."itemType", s."avgPrice24h", s."avgPrice7d",
+        ROUND(((s."avgPrice24h"::FLOAT / NULLIF(s."avgPrice7d", 0)) - 1) * 100, 1) AS "pctChange",
+        COALESCE(a."activeListings", 0) AS "activeListings"
+      FROM item_stats s
+      LEFT JOIN active_counts a ON a.item_id = s."itemId"
+      WHERE s."avgPrice7d" IS NOT NULL AND s."avgPrice7d" > 0
+      ORDER BY "pctChange" DESC
+      LIMIT 20
+    `);
+
+    const rising  = rows.filter(r => r.pctChange > 0).slice(0, 10);
+    const falling = rows.filter(r => r.pctChange < 0).reverse().slice(0, 10);
+    return res.json({ rising, falling });
+  } catch (err) {
+    console.error('[MP] /trending error:', err.message);
+    return res.status(500).json({ error: 'Failed to load trending data' });
+  }
+});
+
+// ─────────────────────────────────────────────────────────────
 // ADMIN MARKETPLACE ROUTES
 // ─────────────────────────────────────────────────────────────
 
@@ -416,11 +688,15 @@ router.delete('/admin/listings/:id', requireAuth, requireAdmin, async (req, res)
       const listing = await getListingById(req.params.id, client);
       if (!listing) throw new Error('Listing not found.');
 
-      const { rows } = await client.query(
-        'SELECT owned_skins FROM users WHERE uid = $1', [listing.seller_id]
-      );
-      if (rows[0] && !rows[0].owned_skins.includes(listing.skin_id)) {
-        await addSkin(listing.seller_id, listing.skin_id, client);
+      if (listing.listing_type === 'crate') {
+        await addCrate(listing.seller_id, listing.crate_id, client);
+      } else {
+        const { rows } = await client.query(
+          'SELECT owned_skins FROM users WHERE uid = $1', [listing.seller_id]
+        );
+        if (rows[0] && !rows[0].owned_skins.includes(listing.skin_id)) {
+          await addSkin(listing.seller_id, listing.skin_id, client);
+        }
       }
       await deleteListing(client, req.params.id);
     });
@@ -438,11 +714,15 @@ router.post('/admin/purge-expired', requireAuth, requireAdmin, async (req, res) 
     for (const listing of expired) {
       try {
         await withTransaction(async (client) => {
-          const { rows } = await client.query(
-            'SELECT owned_skins FROM users WHERE uid = $1', [listing.seller_id]
-          );
-          if (rows[0] && !rows[0].owned_skins.includes(listing.skin_id)) {
-            await addSkin(listing.seller_id, listing.skin_id, client);
+          if (listing.listing_type === 'crate') {
+            await addCrate(listing.seller_id, listing.crate_id, client);
+          } else {
+            const { rows } = await client.query(
+              'SELECT owned_skins FROM users WHERE uid = $1', [listing.seller_id]
+            );
+            if (rows[0] && !rows[0].owned_skins.includes(listing.skin_id)) {
+              await addSkin(listing.seller_id, listing.skin_id, client);
+            }
           }
           await deleteListing(client, listing.id);
         });

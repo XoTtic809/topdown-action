@@ -539,6 +539,10 @@ async function endRankedRun(won) {
 
   updateRankedBadge();
   showRankedEndOverlay({ rpDelta: serverRpDelta, won, result, wavesCleared: _rankedWavesCleared, targetWaves });
+  // Post-game crate drop (fire-and-forget)
+  if (typeof _triggerPostGameDrop === 'function') {
+    _triggerPostGameDrop('ranked', (_rankedProfile && _rankedProfile.tier) || 'bronze');
+  }
   return { rpDelta: serverRpDelta, won, result, wavesCleared: _rankedWavesCleared };
 }
 

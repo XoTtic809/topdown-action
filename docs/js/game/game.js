@@ -7867,6 +7867,8 @@ if (gameSettings.screenShake) screenShakeAmt = 1;
         : 700;
 
       setTimeout(() => {
+        // Post-game crate drop (fire-and-forget)
+        if (typeof _triggerPostGameDrop === 'function') _triggerPostGameDrop('classic', null);
 
         const homeScreen = document.getElementById('homeScreen');
         const gameOverMsg = document.getElementById('gameOverMsg');

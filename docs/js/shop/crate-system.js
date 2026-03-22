@@ -1079,13 +1079,402 @@ function getCratePreviewStyle(skinId) {
   return styles[skinId] || null;
 }
 
-function initCratesTab() {
+// ══════════════════════════════════════════════════════════════
+// POST-GAME CRATE DROPS
+// ══════════════════════════════════════════════════════════════
+
+const CRATE_DROP_ICONS = {
+  'common-crate':    '📦',
+  'rare-crate':      '💠',
+  'epic-crate':      '🟣',
+  'legendary-crate': '🌟',
+  'icon-crate':      '👑',
+  'oblivion-crate':  '🌑',
+};
+const CRATE_DROP_NAMES = {
+  'common-crate':    'Common Crate',
+  'rare-crate':      'Rare Crate',
+  'epic-crate':      'Epic Crate',
+  'legendary-crate': 'Legendary Crate',
+  'icon-crate':      'Icon Crate',
+  'oblivion-crate':  'Oblivion Crate',
+};
+
+async function _triggerPostGameDrop(mode, tier) {
+  const isLoggedIn = typeof currentUser !== 'undefined' && currentUser
+    && !(typeof isGuest !== 'undefined' && isGuest);
+  if (!isLoggedIn) return;
+  try {
+    const data = await apiPost('/crates/drop', { mode, tier: tier || 'bronze' });
+    if (data && data.dropped) {
+      ownedCratesCache.push(data.crateId);
+      _showCrateDropNotification(data.crateId, data.weeklyDrops);
+    }
+  } catch (_) { /* silent — drops are best-effort */ }
+}
+
+function _showCrateDropNotification(crateId, weekCount) {
+  const existing = document.getElementById('crateDropBanner');
+  if (existing) existing.remove();
+
+  const icon = CRATE_DROP_ICONS[crateId] || '📦';
+  const name = CRATE_DROP_NAMES[crateId] || crateId;
+
+  const banner = document.createElement('div');
+  banner.id = 'crateDropBanner';
+  banner.style.cssText = `
+    position:fixed; bottom:80px; left:50%; transform:translateX(-50%) translateY(20px);
+    background:linear-gradient(135deg,#1a1a2e,#16213e); border:2px solid #f39c12;
+    border-radius:12px; padding:16px 24px; z-index:99999; color:#fff;
+    font-family:inherit; text-align:center; min-width:260px; box-shadow:0 8px 32px rgba(0,0,0,.6);
+    opacity:0; transition:all .4s ease;
+  `;
+  banner.innerHTML = `
+    <div style="font-size:2rem;margin-bottom:6px;">${icon}</div>
+    <div style="font-size:1rem;font-weight:700;color:#f39c12;">🎁 Crate Drop!</div>
+    <div style="font-size:.85rem;margin-top:4px;">${name}</div>
+    <div style="font-size:.75rem;color:#aaa;margin-top:4px;">${weekCount}/${5} drops this week</div>
+  `;
+  document.body.appendChild(banner);
+  // Animate in
+  requestAnimationFrame(() => {
+    banner.style.opacity = '1';
+    banner.style.transform = 'translateX(-50%) translateY(0)';
+  });
+  // Auto-dismiss after 4s
+  setTimeout(() => {
+    banner.style.opacity = '0';
+    banner.style.transform = 'translateX(-50%) translateY(20px)';
+    setTimeout(() => banner.remove(), 400);
+  }, 4000);
+}
+
+// ══════════════════════════════════════════════════════════════
+// CRATE INVENTORY (owned unopened crates)
+// ══════════════════════════════════════════════════════════════
+
+// Crate shop status cache (stock levels, availability)
+var crateShopStatus = { stock: {}, soldCount: {}, discontinued: [], oblivionAvailableNow: true };
+
+async function fetchCrateShopStatus() {
+  try {
+    const resp = await fetch(`${API_BASE}/crates/shop`);
+    if (!resp.ok) return crateShopStatus;
+    const data = await resp.json();
+    crateShopStatus = data;
+    return data;
+  } catch (_) { return crateShopStatus; }
+}
+
+// ── New shop API (rotation-driven) ───────────────────────────────────────────
+var shopCratesData = [];
+
+async function fetchShopCrates() {
+  try {
+    const resp = await fetch(`${API_BASE}/shop/crates`);
+    if (!resp.ok) return shopCratesData;
+    const data = await resp.json();
+    shopCratesData = data.crates || [];
+    return shopCratesData;
+  } catch (_) { return shopCratesData; }
+}
+
+function createCountdownTimer(endsAt) {
+  const el = document.createElement('div');
+  el.className = 'crate-countdown';
+  el.style.cssText = 'font-size:11px;color:#f90;font-weight:700;letter-spacing:1px;margin-top:4px;';
+  const endMs = new Date(endsAt).getTime();
+  const update = () => {
+    const ms = endMs - Date.now();
+    if (ms <= 0) { el.textContent = 'EXPIRED'; clearInterval(el._timer); return; }
+    const d = Math.floor(ms / 86400000);
+    const h = Math.floor((ms % 86400000) / 3600000);
+    const m = Math.floor((ms % 3600000) / 60000);
+    const s = Math.floor((ms % 60000) / 1000);
+    el.textContent = d > 0 ? `⏱ Leaves in: ${d}d ${h}h ${m}m` : `⏱ ${h}h ${m}m ${s}s`;
+  };
+  update();
+  el._timer = setInterval(update, 1000);
+  return el;
+}
+
+var _shopPollTimer = null;
+
+function startShopPoll() {
+  if (_shopPollTimer) return;
+  _shopPollTimer = setInterval(async () => {
+    const prev = JSON.stringify(shopCratesData);
+    const fresh = await fetchShopCrates();
+    if (JSON.stringify(fresh) !== prev) {
+      await initCratesTab();
+      showCrateMessage('🔄 Shop updated!');
+    }
+  }, 60000);
+}
+
+// Local cache of owned crates — refreshed on buy/open/load
+var ownedCratesCache = [];
+
+async function fetchOwnedCrates() {
+  const isLoggedIn = typeof currentUser !== 'undefined' && currentUser
+    && !(typeof isGuest !== 'undefined' && isGuest);
+  if (!isLoggedIn) { ownedCratesCache = []; return []; }
+
+  try {
+    const token = typeof getToken === 'function' ? getToken() : localStorage.getItem('topdown_token');
+    const resp = await fetch(`${API_BASE}/crates/owned`, {
+      headers: { 'Authorization': `Bearer ${token}` },
+    });
+    if (!resp.ok) return ownedCratesCache;
+    const data = await resp.json();
+    ownedCratesCache = data.ownedCrates || [];
+    return ownedCratesCache;
+  } catch (e) {
+    return ownedCratesCache;
+  }
+}
+
+async function buyCrateToInventory(crate) {
+  const isLoggedIn = typeof currentUser !== 'undefined' && currentUser
+    && !(typeof isGuest !== 'undefined' && isGuest);
+  if (!isLoggedIn) {
+    showCrateMessage('Log in to buy crates to inventory', true);
+    return;
+  }
+  if (playerCoins < crate.price) {
+    showCrateMessage('Not enough coins!', true);
+    return;
+  }
+
+  // Confirmation dialog
+  showCrateConfirm(
+    { ...crate, name: `Buy ${crate.name} to Inventory` },
+    `${crate.price.toLocaleString()} coins`,
+    async () => {
+      try {
+        const token = typeof getToken === 'function' ? getToken() : localStorage.getItem('topdown_token');
+        const resp = await fetch(`${API_BASE}/crates/buy`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+          body: JSON.stringify({ crateId: crate.id }),
+        });
+        if (!resp.ok) {
+          const err = await resp.json().catch(() => ({}));
+          showCrateMessage(err.error || 'Failed to buy crate', true);
+          return;
+        }
+        const data = await resp.json();
+        playerCoins = data.newBalance;
+        if (typeof saveCoins === 'function') saveCoins();
+
+        // Refresh crate inventory cache + UI
+        ownedCratesCache.push(crate.id);
+        renderCrateInventorySection();
+        initCratesTab(); // refresh button disabled states
+
+        showCrateMessage(`${crate.name} added to inventory!`);
+      } catch (e) {
+        showCrateMessage('Network error buying crate', true);
+      }
+    }
+  );
+}
+
+async function openOwnedCrate(crateId) {
+  const crate = CRATES.find(c => c.id === crateId);
+  if (!crate) return;
+
+  const isLoggedIn = typeof currentUser !== 'undefined' && currentUser
+    && !(typeof isGuest !== 'undefined' && isGuest);
+  if (!isLoggedIn) return;
+
+  try {
+    const token = typeof getToken === 'function' ? getToken() : localStorage.getItem('topdown_token');
+    const resp = await fetch(`${API_BASE}/crates/open-owned`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+      body: JSON.stringify({ crateId }),
+    });
+    if (!resp.ok) {
+      const err = await resp.json().catch(() => ({}));
+      showCrateMessage(err.error || 'Failed to open crate', true);
+      return null;
+    }
+    const data = await resp.json();
+
+    // Update local state
+    playerCoins = data.newBalance;
+    if (!ownedSkins.includes(data.skinId)) ownedSkins.push(data.skinId);
+    if (typeof saveCoins === 'function') saveCoins();
+    ownedCratesCache = data.ownedCrates || [];
+
+    _updatePityCounters(crateId, data.rarity);
+
+    const skin = SKINS.find(s => s.id === data.baseSkinId);
+    return {
+      crate,
+      rewards: [{
+        skin: skin || { id: data.baseSkinId, name: data.baseSkinId, color: '#888' },
+        skinId: data.skinId,
+        rarity: data.rarity,
+        isDuplicate: data.isDuplicate || false,
+        coinValue: data.coinRefund || 0,
+        mutation: data.mutation || null,
+      }],
+    };
+  } catch (e) {
+    showCrateMessage('Network error opening crate', true);
+    return null;
+  }
+}
+
+async function openOwnedCrateWithAnimation(crateId) {
+  if (isOpeningCrate) return;
+
+  const result = await openOwnedCrate(crateId);
+  if (!result) return;
+
+  // Reuse the crate opening animation display
+  isOpeningCrate = true;
+  const modal = document.getElementById('crateOpenModal');
+  if (modal) modal.classList.remove('hidden');
+
+  // Build reel and run animation (same as showCrateOpeningAnimation internals)
+  // Use displayCrateResults directly
+  displayCrateResults(result);
+  renderCrateInventorySection();
+  isOpeningCrate = false;
+}
+
+function renderCrateInventorySection() {
+  const section = document.getElementById('crateInventorySection');
+  if (!section) return;
+
+  const isLoggedIn = typeof currentUser !== 'undefined' && currentUser
+    && !(typeof isGuest !== 'undefined' && isGuest);
+  if (!isLoggedIn || ownedCratesCache.length === 0) {
+    section.innerHTML = '';
+    return;
+  }
+
+  // Group crates by type
+  const counts = {};
+  for (const id of ownedCratesCache) counts[id] = (counts[id] || 0) + 1;
+
+  const crateEntries = Object.entries(counts).sort((a, b) => {
+    const ai = CRATES.findIndex(c => c.id === a[0]);
+    const bi = CRATES.findIndex(c => c.id === b[0]);
+    return ai - bi;
+  });
+
+  const totalCount = ownedCratesCache.length;
+
+  section.innerHTML = `
+    <div style="
+      background: linear-gradient(135deg, rgba(255,167,38,0.08), rgba(255,167,38,0.02));
+      border: 1px solid rgba(255,167,38,0.25);
+      border-radius: 12px;
+      padding: 16px 20px;
+      margin-bottom: 16px;
+    ">
+      <div style="
+        display: flex; align-items: center; justify-content: space-between;
+        margin-bottom: 12px;
+      ">
+        <span style="
+          font-family: 'Orbitron', sans-serif;
+          font-size: 12px; font-weight: 700;
+          color: #ffa726; letter-spacing: 1px;
+        ">MY CRATE INVENTORY (${totalCount})</span>
+      </div>
+      <div id="crateInvGrid" style="
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+        gap: 10px;
+      "></div>
+    </div>
+  `;
+
+  const grid = document.getElementById('crateInvGrid');
+
+  for (const [crateId, count] of crateEntries) {
+    const crate = CRATES.find(c => c.id === crateId);
+    if (!crate) continue;
+
+    const item = document.createElement('div');
+    item.style.cssText = `
+      background: rgba(0,0,0,0.3);
+      border: 1px solid ${crate.color || '#4a9eff'}40;
+      border-radius: 8px;
+      padding: 12px;
+      text-align: center;
+      display: flex; flex-direction: column; align-items: center; gap: 6px;
+    `;
+
+    item.innerHTML = `
+      <div style="font-size: 28px;">${crate.icon}</div>
+      <div style="font-size: 11px; font-weight: 600; color: #dbe7ff; font-family: 'Orbitron', sans-serif;">
+        ${crate.name} <span style="color: ${crate.color}; font-size: 13px;">x${count}</span>
+      </div>
+      <div style="display: flex; gap: 6px; margin-top: 4px;">
+        <button class="crate-inv-open-btn" style="
+          background: ${crate.color || '#4a9eff'}22;
+          border: 1px solid ${crate.color || '#4a9eff'};
+          color: #dbe7ff; padding: 5px 14px; border-radius: 6px; cursor: pointer;
+          font-family: 'Orbitron', sans-serif; font-size: 9px; font-weight: 700;
+          letter-spacing: 0.5px;
+        ">OPEN</button>
+        <button class="crate-inv-sell-btn" style="
+          background: rgba(255,167,38,0.12);
+          border: 1px solid rgba(255,167,38,0.5);
+          color: #ffa726; padding: 5px 14px; border-radius: 6px; cursor: pointer;
+          font-family: 'Orbitron', sans-serif; font-size: 9px; font-weight: 700;
+          letter-spacing: 0.5px;
+        ">SELL</button>
+      </div>
+    `;
+
+    const openBtn = item.querySelector('.crate-inv-open-btn');
+    openBtn.onclick = () => {
+      showCrateConfirm(
+        { ...crate, name: `Open ${crate.name} from Inventory` },
+        'FREE (already owned)',
+        () => openOwnedCrateWithAnimation(crateId)
+      );
+    };
+
+    const sellBtn = item.querySelector('.crate-inv-sell-btn');
+    sellBtn.onclick = () => {
+      // Switch to marketplace tab and trigger crate listing flow
+      if (typeof openMarketplaceCrateListingFlow === 'function') {
+        openMarketplaceCrateListingFlow(crateId);
+      } else {
+        showCrateMessage('Marketplace not available', true);
+      }
+    };
+
+    grid.appendChild(item);
+  }
+}
+
+async function initCratesTab() {
   const grid = document.getElementById('cratesGrid');
   if (!grid) return;
 
+  // Fetch active shop crates + owned crates in parallel
+  const [shopEntries] = await Promise.all([
+    fetchShopCrates(),
+    fetchOwnedCrates().then(() => renderCrateInventorySection()),
+  ]);
+
   grid.innerHTML = '';
 
-  CRATES.forEach(crate => {
+  shopEntries.forEach(entry => {
+    // Merge API entry with static crate display data
+    const crateData = CRATES.find(c => c.id === entry.crateId);
+    if (!crateData) return; // unknown crate — skip
+    const crate = { ...crateData, price: entry.price };
+
     const card = document.createElement('div');
     card.className = 'crate-card';
     card.style.borderColor = crate.glowColor || crate.color;
@@ -1095,6 +1484,18 @@ function initCratesTab() {
       card.style.borderStyle = 'solid';
       card.style.borderImage = 'linear-gradient(135deg, #8a2be2, #ff2060, #8a2be2) 1';
       card.style.boxShadow = '0 0 20px rgba(138, 43, 226, 0.3), inset 0 0 30px rgba(138, 43, 226, 0.05)';
+    }
+
+    // Rotation label banner
+    if (entry.rotationLabel) {
+      const banner = document.createElement('div');
+      banner.textContent = entry.rotationLabel;
+      banner.style.cssText = `
+        background:linear-gradient(90deg,#f90,#ff5500); color:#000; font-weight:700;
+        font-size:9px; letter-spacing:2px; text-align:center; padding:4px 8px;
+        border-radius:4px 4px 0 0; margin-bottom:4px;
+      `;
+      card.appendChild(banner);
     }
 
     const icon = document.createElement('div');
@@ -1116,11 +1517,7 @@ function initCratesTab() {
     // Show possible rewards
     const rarities = Object.keys(crate.rarityWeights);
     rarities.forEach(rarity => {
-      // Hide 'creator' rarity unless player owns THE CREATOR
-      if (rarity === 'creator' && !ownedSkins.includes('icon_the_creator')) {
-        return; // Skip displaying this rarity tag
-      }
-
+      if (rarity === 'creator' && !ownedSkins.includes('icon_the_creator')) return;
       const tag = document.createElement('span');
       tag.className = 'crate-rarity-tag';
       tag.textContent = getRarityName(rarity);
@@ -1138,12 +1535,13 @@ function initCratesTab() {
 
     const price = document.createElement('div');
     price.className = 'crate-price';
-    
+
     if (freeCount > 0) {
-      // Show free crate count with special styling
-      price.innerHTML = `<span style="color: #6bff7b; font-weight: 600;">🎁 ${freeCount} FREE</span> <span style="opacity: 0.5;">/ 🪙 ${crate.price}</span>`;
+      price.innerHTML = `<span style="color:#6bff7b;font-weight:600;">🎁 ${freeCount} FREE</span> <span style="opacity:0.5;">/ 🪙 ${crate.price.toLocaleString()}</span>`;
+    } else if (entry.originalPrice && entry.originalPrice !== crate.price) {
+      price.innerHTML = `🪙 ${crate.price.toLocaleString()} <span style="text-decoration:line-through;opacity:0.5;font-size:11px;">🪙 ${entry.originalPrice.toLocaleString()}</span>`;
     } else {
-      price.textContent = `🪙 ${crate.price}`;
+      price.textContent = `🪙 ${crate.price.toLocaleString()}`;
     }
 
     // Browse contents button
@@ -1154,26 +1552,84 @@ function initCratesTab() {
 
     const btn = document.createElement('button');
     btn.className = 'crate-btn';
-    
+
     if (freeCount > 0) {
-      // Has free crates - show special button
       btn.textContent = 'OPEN FREE CRATE';
       btn.disabled = false;
       btn.style.background = 'linear-gradient(135deg, #6bff7b, #48bb78)';
       btn.style.color = '#000';
       btn.style.fontWeight = '600';
     } else {
-      // No free crates - normal purchase
       btn.textContent = 'OPEN CRATE';
       btn.disabled = playerCoins < crate.price;
     }
-    
+
     btn.onclick = () => {
       const isFree = typeof battlePassData !== 'undefined'
         && battlePassData.crateInventory?.[crate.id] > 0;
       const costText = isFree ? 'FREE' : `${crate.price.toLocaleString()} coins`;
       showCrateConfirm(crate, costText, () => showCrateOpeningAnimation(crate.id));
     };
+
+    // Buy to inventory button (logged-in only)
+    const buyInvBtn = document.createElement('button');
+    buyInvBtn.className = 'crate-btn crate-buy-inv-btn';
+    buyInvBtn.textContent = 'BUY TO INVENTORY';
+    buyInvBtn.style.cssText = `
+      background: linear-gradient(135deg, #ffa726, #fb8c00);
+      color: #000; font-weight: 700; margin-top: 6px;
+      border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer;
+      font-family: 'Orbitron', sans-serif; font-size: 11px; letter-spacing: 1px;
+      width: 100%; transition: opacity 0.15s;
+    `;
+    buyInvBtn.disabled = playerCoins < crate.price;
+    if (buyInvBtn.disabled) buyInvBtn.style.opacity = '0.4';
+    buyInvBtn.onclick = () => buyCrateToInventory(crate);
+
+    // ── Shop status badges (API-driven) ──────────────────────────────────────
+    const stockRemaining = entry.stockRemaining;
+    const isSoldOut      = typeof stockRemaining === 'number' && stockRemaining === 0;
+
+    if (isSoldOut) {
+      btn.disabled = true;
+      buyInvBtn.disabled = true;
+      btn.style.opacity = '0.4';
+      buyInvBtn.style.opacity = '0.4';
+      const soldBadge = document.createElement('div');
+      soldBadge.textContent = 'SOLD OUT';
+      soldBadge.style.cssText = `
+        display:inline-block; background:#c0392b33; color:#e74c3c; border:1px solid #e74c3c;
+        border-radius:4px; padding:3px 8px; font-size:10px; font-weight:700;
+        letter-spacing:1px; margin-top:4px;
+      `;
+      card.insertBefore(soldBadge, browseBtn);
+    } else if (entry.weekendOnly) {
+      const weBadge = document.createElement('div');
+      weBadge.textContent = '⏳ WEEKEND ONLY';
+      weBadge.style.cssText = `
+        display:inline-block; background:#6c3483; color:#c39bd3; border:1px solid #c39bd3;
+        border-radius:4px; padding:3px 8px; font-size:10px; font-weight:700;
+        letter-spacing:1px; margin-top:4px;
+      `;
+      card.insertBefore(weBadge, browseBtn);
+    } else if (typeof stockRemaining === 'number') {
+      const stockBadge = document.createElement('div');
+      const lowStock = stockRemaining <= 20;
+      stockBadge.textContent = `🎲 ${stockRemaining} left`;
+      stockBadge.style.cssText = `
+        display:inline-block; background:${lowStock ? '#7b241c33' : '#1a5276'};
+        color:${lowStock ? '#e74c3c' : '#85c1e9'}; border:1px solid ${lowStock ? '#e74c3c' : '#85c1e9'};
+        border-radius:4px; padding:3px 8px; font-size:10px; font-weight:700;
+        letter-spacing:1px; margin-top:4px;
+      `;
+      card.insertBefore(stockBadge, browseBtn);
+    }
+
+    // Countdown timer
+    if (entry.timerVisible && entry.endsAt) {
+      const timer = createCountdownTimer(entry.endsAt);
+      card.insertBefore(timer, browseBtn);
+    }
 
     card.appendChild(icon);
     card.appendChild(name);
@@ -1182,8 +1638,15 @@ function initCratesTab() {
     card.appendChild(price);
     card.appendChild(browseBtn);
     card.appendChild(btn);
+    card.appendChild(buyInvBtn);
     grid.appendChild(card);
   });
+
+  // Render crate inventory section above the grid
+  renderCrateInventorySection();
+
+  // Start polling for shop updates
+  startShopPoll();
 }
 
 // ══════════════════════════════════════════════════════════════

@@ -313,6 +313,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (targetTab === 'skins'    && typeof adminInitSkinGiveDropdown === 'function') adminInitSkinGiveDropdown();
       if (targetTab === 'reports'  && typeof adminLoadReports === 'function') adminLoadReports('open');
       if (targetTab === 'ranked'   && typeof adminRankedLoadLb === 'function') adminRankedLoadLb();
+      if (targetTab === 'rotation' && typeof initRotationManager === 'function') initRotationManager();
     });
   });
 

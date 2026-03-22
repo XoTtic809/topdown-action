@@ -177,7 +177,33 @@ const marketplaceState = {
   skinReceivedTimes: {},
   isWhitelisted:     false,
   eligibilityLoaded: false,
+
+  // Filter state
+  priceMin:          null,
+  priceMax:          null,
+  showTrendingOnly:  false,
 };
+
+// ════════════════════════════════════════════════════════════
+//  LISTING STATS CACHE  (price history, trending, supply/demand)
+// ════════════════════════════════════════════════════════════
+
+var _listingStatsCache = {};   // keyed by itemId
+
+async function fetchListingStats(itemId) {
+  if (_listingStatsCache[itemId]) return _listingStatsCache[itemId];
+  try {
+    const data = await apiGet(`/marketplace/stats/${encodeURIComponent(itemId)}`);
+    _listingStatsCache[itemId] = data;
+    return data;
+  } catch (_) { return null; }
+}
+
+async function fetchPriceHistory(itemId, period = '7d') {
+  try {
+    return await apiGet(`/marketplace/history/${encodeURIComponent(itemId)}?period=${period}`);
+  } catch (_) { return { prices: [] }; }
+}
 
 // ════════════════════════════════════════════════════════════
 //  LISTING NORMALISATION  (snake_case DB rows → camelCase)
@@ -185,17 +211,19 @@ const marketplaceState = {
 
 function _normalizeListing(row) {
   return {
-    id:         row.id,
-    sellerId:   row.seller_id,
-    sellerName: row.seller_name,
-    skinId:     row.skin_id,
-    skinName:   row.skin_name,
-    rarity:     row.rarity,
-    price:      row.price,
-    expiresAt:  row.expires_at
+    id:          row.id,
+    sellerId:    row.seller_id,
+    sellerName:  row.seller_name,
+    skinId:      row.skin_id,
+    skinName:    row.skin_name,
+    rarity:      row.rarity,
+    price:       row.price,
+    listingType: row.listing_type || 'skin',
+    crateId:     row.crate_id || null,
+    expiresAt:   row.expires_at
       ? { seconds: Math.floor(new Date(row.expires_at).getTime() / 1000) }
       : null,
-    createdAt:  row.created_at
+    createdAt:   row.created_at
       ? { seconds: Math.floor(new Date(row.created_at).getTime() / 1000) }
       : null,
   };
@@ -339,7 +367,8 @@ async function fetchMarketplaceListings(reset = false) {
 
   try {
     const nextPage = marketplaceState.currentPage + 1;
-    const data = await apiGet(`/marketplace/listings?page=${nextPage}`);
+    const typeParam = marketplaceState.currentFilter === 'crate' ? '&type=crate' : '';
+    const data = await apiGet(`/marketplace/listings?page=${nextPage}${typeParam}`);
 
     if (data.error) {
       return { status: 'error', error: data.error };
@@ -439,6 +468,182 @@ async function createListing(skinId, price) {
 }
 
 // ════════════════════════════════════════════════════════════
+//  CREATE CRATE LISTING
+// ════════════════════════════════════════════════════════════
+
+const CRATE_PRICING_CLIENT = {
+  'common-crate':    { floor: 200,  ceiling: 600,    name: 'Common Crate'    },
+  'rare-crate':      { floor: 500,  ceiling: 1200,   name: 'Rare Crate'      },
+  'epic-crate':      { floor: 1000, ceiling: 2500,   name: 'Epic Crate'      },
+  'legendary-crate': { floor: 3000, ceiling: 8000,   name: 'Legendary Crate' },
+  'icon-crate':      { floor: 500,  ceiling: 1200,   name: 'Icon Crate'      },
+  'oblivion-crate':  { floor: 8000, ceiling: 20000,  name: 'Oblivion Crate'  },
+};
+
+async function createCrateListing(crateId, price) {
+  if (!currentUser || isGuest) return { success: false, error: 'Must be logged in.' };
+
+  const eligibility = await checkMarketplaceEligibility();
+  if (!eligibility.eligible) return { success: false, error: eligibility.reason };
+
+  const limits = CRATE_PRICING_CLIENT[crateId];
+  if (!limits) return { success: false, error: 'Invalid crate type.' };
+
+  price = Math.floor(price);
+  if (price < limits.floor || price > limits.ceiling) {
+    return {
+      success: false,
+      error: `${limits.name}: ${limits.floor.toLocaleString()}–${limits.ceiling.toLocaleString()} coins.`,
+    };
+  }
+
+  if (marketplaceState.myListings.length >= MARKETPLACE_CONFIG.MAX_LISTINGS_PER_PLAYER) {
+    return { success: false, error: `Maximum ${MARKETPLACE_CONFIG.MAX_LISTINGS_PER_PLAYER} active listings.` };
+  }
+
+  try {
+    const result = await apiPost('/marketplace/list', {
+      listingType: 'crate',
+      crateId,
+      price,
+    });
+
+    if (result.error) return { success: false, error: result.error };
+
+    // Remove crate from local cache
+    if (typeof ownedCratesCache !== 'undefined') {
+      const idx = ownedCratesCache.indexOf(crateId);
+      if (idx !== -1) ownedCratesCache.splice(idx, 1);
+      if (typeof renderCrateInventorySection === 'function') renderCrateInventorySection();
+    }
+
+    await fetchMyListings();
+    return { success: true };
+
+  } catch (err) {
+    console.error('[MP] createCrateListing failed:', err);
+    return { success: false, error: err.message };
+  }
+}
+
+// Opens a price-input dialog for listing a crate on the marketplace.
+// Called from the crate inventory "SELL" button.
+async function openMarketplaceCrateListingFlow(crateId) {
+  const limits = CRATE_PRICING_CLIENT[crateId];
+  if (!limits) return;
+
+  // Remove any existing dialog
+  const existing = document.getElementById('crateListingOverlay');
+  if (existing) existing.remove();
+
+  const overlay = document.createElement('div');
+  overlay.id = 'crateListingOverlay';
+  overlay.style.cssText = `
+    position:fixed;inset:0;background:rgba(0,0,0,0.75);
+    display:flex;align-items:center;justify-content:center;
+    z-index:10000;backdrop-filter:blur(4px);
+  `;
+
+  const crate = typeof CRATES !== 'undefined' ? CRATES.find(c => c.id === crateId) : null;
+  const crateName = limits.name;
+  const crateIcon = crate ? crate.icon : '📦';
+
+  const box = document.createElement('div');
+  box.style.cssText = `
+    background:linear-gradient(135deg,#0d1525 0%,#0a0f1e 100%);
+    border:1px solid rgba(255,167,38,0.4);
+    border-radius:16px;padding:28px 32px;text-align:center;
+    max-width:340px;width:90%;
+    box-shadow:0 0 40px rgba(255,167,38,0.15);
+    font-family:'Orbitron',sans-serif;
+  `;
+
+  box.innerHTML = `
+    <div style="font-size:32px;margin-bottom:10px">${crateIcon}</div>
+    <div style="font-size:14px;font-weight:700;color:#dbe7ff;letter-spacing:1px;margin-bottom:6px">
+      List ${crateName}
+    </div>
+    <div style="font-size:11px;color:rgba(219,231,255,0.55);margin-bottom:4px">
+      Price range: ${limits.floor.toLocaleString()} – ${limits.ceiling.toLocaleString()} coins
+    </div>
+    <div id="crateListingMarketHint" style="font-size:11px;color:#4a9eff;margin-bottom:10px;min-height:14px;"></div>
+    <div style="margin-bottom:16px">
+      <input type="number" id="crateListingPrice" min="${limits.floor}" max="${limits.ceiling}"
+        value="${limits.floor}" style="
+        background:rgba(255,255,255,0.06);border:1px solid rgba(255,167,38,0.3);
+        color:#dbe7ff;padding:10px 14px;border-radius:8px;width:120px;
+        font-family:'Orbitron',sans-serif;font-size:13px;text-align:center;
+      "/>
+    </div>
+    <div id="crateListingPriceWarn" style="font-size:10px;color:#f39c12;margin-bottom:8px;min-height:12px;"></div>
+    <div style="font-size:10px;color:rgba(219,231,255,0.4);margin-bottom:14px">
+      2% listing fee deducted on list
+    </div>
+    <div style="display:flex;gap:10px;justify-content:center">
+      <button id="crateListConfirm" style="
+        background:rgba(255,167,38,0.15);border:1px solid #ffa726;
+        color:#ffa726;padding:9px 28px;border-radius:8px;cursor:pointer;
+        font-family:'Orbitron',sans-serif;font-size:11px;font-weight:700;letter-spacing:1px;
+      ">LIST</button>
+      <button id="crateListCancel" style="
+        background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.12);
+        color:rgba(219,231,255,0.55);padding:9px 28px;border-radius:8px;cursor:pointer;
+        font-family:'Orbitron',sans-serif;font-size:11px;font-weight:700;letter-spacing:1px;
+      ">CANCEL</button>
+    </div>
+  `;
+
+  overlay.appendChild(box);
+  document.body.appendChild(overlay);
+
+  const close = () => overlay.remove();
+
+  // Async: fetch market stats and prefill suggested price
+  let _crateSuggestedPrice = null;
+  fetchListingStats(crateId).then(stats => {
+    if (!stats || !stats.suggestedPrice) return;
+    _crateSuggestedPrice = stats.suggestedPrice;
+    const priceInput = document.getElementById('crateListingPrice');
+    const hintEl     = document.getElementById('crateListingMarketHint');
+    if (priceInput) {
+      const clamped = Math.max(limits.floor, Math.min(limits.ceiling, stats.suggestedPrice));
+      priceInput.value = clamped;
+    }
+    if (hintEl) hintEl.textContent = `Market avg: 💰 ${stats.suggestedPrice.toLocaleString()} (7d)`;
+  });
+
+  // Live price warning
+  const priceInputEl = document.getElementById('crateListingPrice');
+  const warnEl       = document.getElementById('crateListingPriceWarn');
+  if (priceInputEl) {
+    priceInputEl.addEventListener('input', () => {
+      if (!_crateSuggestedPrice || !warnEl) return;
+      const p = parseInt(priceInputEl.value) || 0;
+      warnEl.textContent = p < _crateSuggestedPrice * 0.70
+        ? `⚠ Price is ${Math.round((1 - p / _crateSuggestedPrice) * 100)}% below market average`
+        : '';
+    });
+  }
+
+  document.getElementById('crateListConfirm').onclick = async () => {
+    const price = parseInt(document.getElementById('crateListingPrice').value);
+    if (isNaN(price)) return;
+
+    const result = await createCrateListing(crateId, price);
+    close();
+
+    if (result.success) {
+      if (typeof showCrateMessage === 'function') showCrateMessage(`${crateName} listed for ${price.toLocaleString()} coins!`);
+    } else {
+      if (typeof showCrateMessage === 'function') showCrateMessage(result.error || 'Failed to list crate', true);
+    }
+  };
+
+  document.getElementById('crateListCancel').onclick = close;
+  overlay.addEventListener('click', e => { if (e.target === overlay) close(); });
+}
+
+// ════════════════════════════════════════════════════════════
 //  CANCEL LISTING
 //  Returns the skin to the seller atomically.
 // ════════════════════════════════════════════════════════════
@@ -453,13 +658,22 @@ async function cancelListing(listingId) {
 
     if (result.error) return { success: false, error: result.error };
 
-    const returnedSkinId = result.skinId || localListing?.skinId;
-    if (returnedSkinId && !ownedSkins.includes(returnedSkinId)) ownedSkins.push(returnedSkinId);
-    if (typeof saveSkins  === 'function') saveSkins();
+    if (result.listingType === 'crate' || localListing?.listingType === 'crate') {
+      // Crate was returned — refresh crate inventory cache
+      const crateId = result.crateId || localListing?.crateId;
+      if (crateId && typeof ownedCratesCache !== 'undefined') {
+        ownedCratesCache.push(crateId);
+        if (typeof renderCrateInventorySection === 'function') renderCrateInventorySection();
+      }
+    } else {
+      const returnedSkinId = result.skinId || localListing?.skinId;
+      if (returnedSkinId && !ownedSkins.includes(returnedSkinId)) ownedSkins.push(returnedSkinId);
+      if (typeof saveSkins  === 'function') saveSkins();
+    }
     if (typeof initShopUI === 'function') initShopUI();
 
     await fetchMyListings();
-    return { success: true, skinId: returnedSkinId };
+    return { success: true, skinId: result.skinId };
 
   } catch (err) {
     console.error('[MP] cancelListing failed:', err);
@@ -488,8 +702,20 @@ async function buyListing(listingId) {
 
     // Sync local state from authoritative server response
     playerCoins = result.newBuyerBalance;
-    if (!ownedSkins.includes(result.skinId)) ownedSkins.push(result.skinId);
-    marketplaceState.skinReceivedTimes[result.skinId] = { seconds: Math.floor(Date.now() / 1000) };
+
+    // Check if this was a crate listing by looking at the listing we just bought
+    const boughtListing = marketplaceState.listings.find(l => l.id === listingId);
+    if (boughtListing && boughtListing.listingType === 'crate') {
+      // Crate purchase — add to crate inventory cache
+      if (typeof ownedCratesCache !== 'undefined' && boughtListing.crateId) {
+        ownedCratesCache.push(boughtListing.crateId);
+        if (typeof renderCrateInventorySection === 'function') renderCrateInventorySection();
+      }
+    } else {
+      // Skin purchase
+      if (!ownedSkins.includes(result.skinId)) ownedSkins.push(result.skinId);
+      marketplaceState.skinReceivedTimes[result.skinId] = { seconds: Math.floor(Date.now() / 1000) };
+    }
 
     if (typeof initShopUI === 'function') initShopUI();
 
@@ -520,8 +746,29 @@ function getFilteredListings() {
     return expMs > now;
   });
 
-  if (marketplaceState.currentFilter !== 'all') {
-    filtered = filtered.filter(l => l.rarity === marketplaceState.currentFilter);
+  if (marketplaceState.currentFilter === 'crate') {
+    filtered = filtered.filter(l => l.listingType === 'crate');
+  } else if (marketplaceState.currentFilter !== 'all') {
+    filtered = filtered.filter(l => l.rarity === marketplaceState.currentFilter && l.listingType !== 'crate');
+  }
+
+  // Price range filter
+  if (marketplaceState.priceMin != null) {
+    filtered = filtered.filter(l => l.price >= marketplaceState.priceMin);
+  }
+  if (marketplaceState.priceMax != null) {
+    filtered = filtered.filter(l => l.price <= marketplaceState.priceMax);
+  }
+
+  // Trending filter — uses cached stats
+  if (marketplaceState.showTrendingOnly && typeof _listingStatsCache !== 'undefined') {
+    filtered = filtered.filter(l => {
+      const itemId = l.listingType === 'crate' ? l.crateId : (l.skinId || '').split('__')[0];
+      const stats  = _listingStatsCache[itemId];
+      if (!stats || !stats.avgPrice24h || !stats.avgPrice7d || stats.avgPrice7d === 0) return false;
+      const ratio = stats.avgPrice24h / stats.avgPrice7d;
+      return ratio >= 1.05 || ratio <= 0.95;
+    });
   }
 
   switch (marketplaceState.currentSort) {

@@ -107,6 +107,8 @@ app.use('/api/chat',               require('./routes/chat'));
 app.use('/api/ranked',             require('./routes/ranked'));
 app.use('/api/trades',             require('./routes/trades'));
 app.use('/api/crates',             require('./routes/crates'));
+app.use('/api/shop',               require('./routes/shop'));
+app.use('/api/admin/rotation',     require('./routes/admin-rotation'));
 
 app.post('/api/marketplace/buy',    writeLimiter);
 app.post('/api/marketplace/list',   writeLimiter);
@@ -527,6 +529,8 @@ io.on('connection', (socket) => {
 async function boot() {
   try {
     await initSchema();
+    const { startRotationScheduler } = require('./jobs/rotation-scheduler');
+    startRotationScheduler();
     server.listen(PORT, () => {
       console.log(`\n🚀  topdown-backend v2 running on port ${PORT}`);
       console.log(`    Health:  http://localhost:${PORT}/health\n`);

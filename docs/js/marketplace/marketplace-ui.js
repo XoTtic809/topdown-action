@@ -44,10 +44,18 @@ function initMarketplaceUI() {
   // Rarity filter buttons
   document.querySelectorAll('.mp-filter-btn').forEach(btn => {
     btn.addEventListener('click', () => {
+      const prev = marketplaceState.currentFilter;
       document.querySelectorAll('.mp-filter-btn').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       marketplaceState.currentFilter = btn.dataset.rarity;
-      renderMarketplaceListings();
+
+      // Re-fetch from server when switching to/from 'crate' filter (server-side type filter)
+      const switchedCrate = (prev === 'crate') !== (btn.dataset.rarity === 'crate');
+      if (switchedCrate) {
+        mpRefresh(true);
+      } else {
+        renderMarketplaceListings();
+      }
     });
   });
 
@@ -74,6 +82,34 @@ function initMarketplaceUI() {
   if (sellModal) {
     sellModal.addEventListener('click', (e) => {
       if (e.target === sellModal) closeSellModal();
+    });
+  }
+
+  // Price range inputs
+  const priceMinInput = document.getElementById('mpPriceMin');
+  const priceMaxInput = document.getElementById('mpPriceMax');
+  if (priceMinInput) {
+    priceMinInput.addEventListener('input', () => {
+      const v = parseInt(priceMinInput.value);
+      marketplaceState.priceMin = isNaN(v) || v === 0 ? null : v;
+      renderMarketplaceListings();
+    });
+  }
+  if (priceMaxInput) {
+    priceMaxInput.addEventListener('input', () => {
+      const v = parseInt(priceMaxInput.value);
+      marketplaceState.priceMax = isNaN(v) || v === 0 ? null : v;
+      renderMarketplaceListings();
+    });
+  }
+
+  // Trending filter button
+  const trendingBtn = document.getElementById('mpTrendingFilterBtn');
+  if (trendingBtn) {
+    trendingBtn.addEventListener('click', () => {
+      marketplaceState.showTrendingOnly = !marketplaceState.showTrendingOnly;
+      trendingBtn.classList.toggle('active', marketplaceState.showTrendingOnly);
+      renderMarketplaceListings();
     });
   }
 
@@ -207,12 +243,18 @@ function renderMarketplaceListings() {
 
   let filtered = getFilteredListings();
 
-  // Apply text search — matches skin name or seller name
+  // Apply text search — matches skin name, crate name, or seller name
   if (_mpSearchQuery) {
-    filtered = filtered.filter(l =>
-      (l.skinName  || '').toLowerCase().includes(_mpSearchQuery) ||
-      (l.sellerName|| '').toLowerCase().includes(_mpSearchQuery)
-    );
+    const CRATE_NAMES_LOWER = {
+      'common-crate': 'common crate', 'rare-crate': 'rare crate', 'epic-crate': 'epic crate',
+      'legendary-crate': 'legendary crate', 'icon-crate': 'icon crate', 'oblivion-crate': 'oblivion crate',
+    };
+    filtered = filtered.filter(l => {
+      const name   = (l.skinName   || '').toLowerCase();
+      const seller = (l.sellerName || '').toLowerCase();
+      const crate  = l.crateId ? (CRATE_NAMES_LOWER[l.crateId] || l.crateId) : '';
+      return name.includes(_mpSearchQuery) || seller.includes(_mpSearchQuery) || crate.includes(_mpSearchQuery);
+    });
   }
 
   if (countEl) {
@@ -241,9 +283,17 @@ function renderMarketplaceListings() {
   if (loadMoreBtn) {
     loadMoreBtn.classList.toggle('hidden', !marketplaceState.hasMore);
   }
+
+  // Async: fetch stats for all visible items and update badges in-place (fire-and-forget)
+  _batchUpdateListingBadges(filtered);
 }
 
 function createListingCard(listing) {
+  // ── Crate listing card ──
+  if (listing.listingType === 'crate') {
+    return _createCrateListingCard(listing);
+  }
+
   const rarity   = RARITY_PRICING[listing.rarity] || RARITY_PRICING.common;
   const skinInfo = getSkinInfo(listing.skinId);
   const { mutation } = typeof parseMutatedSkinId === 'function' ? parseMutatedSkinId(listing.skinId) : { mutation: null };
@@ -262,8 +312,12 @@ function createListingCard(listing) {
   const mutTag     = mc ? `<span class="mp-mutation-tag" style="color:${mc.color};text-shadow:0 0 8px ${mc.glowColor}">${mc.label}</span>` : '';
   const rarityLabel = mc ? `${rarity.label} <span style="color:${mc.color}">[${mc.label}]</span>` : rarity.label;
 
+  const itemId = (listing.skinId || '').split('__')[0]; // base skin ID for stats lookup
+
   const card = document.createElement('div');
   card.className   = 'mp-listing-card';
+  card.dataset.itemId   = itemId;
+  card.dataset.itemType = 'skin';
   card.style.setProperty('--rarity-color', mc ? mc.color : rarity.color);
   card.style.borderColor = (mc ? mc.color : rarity.color) + '40';
 
@@ -274,20 +328,95 @@ function createListingCard(listing) {
       <div class="mp-listing-rarity" style="color:${mc ? mc.color : rarity.color}">${rarityLabel}</div>
       <div class="mp-listing-seller">by ${_esc(listing.sellerName || 'Unknown')}</div>
       <div class="mp-listing-time">${timeText}</div>
+      <div class="mp-stats-badges" style="margin-top:4px;display:flex;gap:4px;flex-wrap:wrap;"></div>
+      <div class="mp-supply-row" style="font-size:11px;color:#888;margin-top:3px;"></div>
     </div>
     <div class="mp-listing-bottom">
       <div class="mp-listing-price">${listing.price.toLocaleString()}</div>
-      <button class="mp-buy-btn${canBuy ? '' : ' disabled'}"
-              ${canBuy ? '' : 'disabled'}
-              data-listing-id="${listing.id}">
-        ${btnLabel}
-      </button>
+      <div style="display:flex;gap:4px;align-items:center;">
+        <button class="mp-history-btn" data-item-id="${_esc(itemId)}" title="Price History"
+          style="background:none;border:1px solid #555;border-radius:4px;color:#aaa;
+                 padding:4px 6px;cursor:pointer;font-size:11px;">📊</button>
+        <button class="mp-buy-btn${canBuy ? '' : ' disabled'}"
+                ${canBuy ? '' : 'disabled'}
+                data-listing-id="${listing.id}">
+          ${btnLabel}
+        </button>
+      </div>
     </div>
   `;
 
   if (canBuy) {
     card.querySelector('.mp-buy-btn').addEventListener('click', () => openBuyModal(listing));
   }
+  card.querySelector('.mp-history-btn').addEventListener('click', () => showPriceHistoryModal(itemId, 'skin'));
+
+  return card;
+}
+
+// Crate-specific listing card
+const CRATE_CARD_ICONS = {
+  'common-crate': '📦', 'rare-crate': '🎁', 'epic-crate': '🎭',
+  'legendary-crate': '⭐', 'icon-crate': '🎯', 'oblivion-crate': '🌑',
+};
+const CRATE_CARD_COLORS = {
+  'common-crate': '#78b7ff', 'rare-crate': '#9d7aff', 'epic-crate': '#ff6bcb',
+  'legendary-crate': '#ffd700', 'icon-crate': '#00e5ff', 'oblivion-crate': '#8a2be2',
+};
+
+function _createCrateListingCard(listing) {
+  const crateIcon  = CRATE_CARD_ICONS[listing.crateId]  || '📦';
+  const crateColor = CRATE_CARD_COLORS[listing.crateId] || '#4a9eff';
+
+  const expiresMs = listing.expiresAt?.seconds ? listing.expiresAt.seconds * 1000 : 0;
+  const hoursLeft = Math.max(0, Math.floor((expiresMs - Date.now()) / 3600000));
+  const timeText  = hoursLeft > 24 ? `${Math.floor(hoursLeft / 24)}d left` : `${hoursLeft}h left`;
+
+  const canAfford = typeof playerCoins !== 'undefined' && playerCoins >= listing.price;
+  const isOwn     = currentUser && listing.sellerId === currentUser.uid;
+  const canBuy    = !isOwn && canAfford;
+  const btnLabel  = isOwn ? 'YOUR LISTING' : !canAfford ? 'NOT ENOUGH' : 'BUY';
+
+  const card = document.createElement('div');
+  card.className = 'mp-listing-card';
+  card.dataset.itemId   = listing.crateId || '';
+  card.dataset.itemType = 'crate';
+  card.style.setProperty('--rarity-color', crateColor);
+  card.style.borderColor = crateColor + '40';
+
+  card.innerHTML = `
+    <div class="mp-listing-preview" style="
+      display:flex;align-items:center;justify-content:center;
+      font-size:40px;
+      background:radial-gradient(circle, ${crateColor}15, transparent);
+    ">${crateIcon}</div>
+    <div class="mp-listing-info">
+      <div class="mp-listing-name">${_esc(listing.skinName || listing.crateId)}</div>
+      <div class="mp-listing-rarity" style="color:${crateColor}">Crate</div>
+      <div class="mp-listing-seller">by ${_esc(listing.sellerName || 'Unknown')}</div>
+      <div class="mp-listing-time">${timeText}</div>
+      <div class="mp-stats-badges" style="margin-top:4px;display:flex;gap:4px;flex-wrap:wrap;"></div>
+      <div class="mp-supply-row" style="font-size:11px;color:#888;margin-top:3px;"></div>
+    </div>
+    <div class="mp-listing-bottom">
+      <div class="mp-listing-price">${listing.price.toLocaleString()}</div>
+      <div style="display:flex;gap:4px;align-items:center;">
+        <button class="mp-history-btn" title="Price History"
+          style="background:none;border:1px solid #555;border-radius:4px;color:#aaa;
+                 padding:4px 6px;cursor:pointer;font-size:11px;">📊</button>
+        <button class="mp-buy-btn${canBuy ? '' : ' disabled'}"
+                ${canBuy ? '' : 'disabled'}
+                data-listing-id="${listing.id}">
+          ${btnLabel}
+        </button>
+      </div>
+    </div>
+  `;
+
+  if (canBuy) {
+    card.querySelector('.mp-buy-btn').addEventListener('click', () => openBuyModal(listing));
+  }
+  card.querySelector('.mp-history-btn').addEventListener('click', () => showPriceHistoryModal(listing.crateId, 'crate'));
 
   return card;
 }
@@ -644,7 +773,10 @@ function closeSellModal() {
   if (modal) modal.classList.add('hidden');
 }
 
-function onSkinSelectChange() {
+// Tracks the market-average suggested price for the currently selected sell skin
+let _sellSuggestedPrice = null;
+
+async function onSkinSelectChange() {
   const select = document.getElementById('mpSellSkinSelect');
   const skinId = select?.value;
 
@@ -652,6 +784,7 @@ function onSkinSelectChange() {
   if (select && skinId) select._lastSelected = skinId;
 
   _hide('mpSellError');
+  _sellSuggestedPrice = null;
 
   if (!skinId) {
     _set('mpSellPriceHint', 'Select a skin first');
@@ -664,16 +797,32 @@ function onSkinSelectChange() {
   const limits = RARITY_PRICING[rarity];
   if (!limits) return;
 
-  _set('mpSellPriceHint', `${limits.label}: ${limits.floor.toLocaleString()}–${limits.ceiling.toLocaleString()} coins`);
+  const baseId = skinId.split('__')[0];
 
+  // Set range hint and default to floor while stats load
+  _set('mpSellPriceHint', `${limits.label}: ${limits.floor.toLocaleString()}–${limits.ceiling.toLocaleString()} coins`);
   const priceInput = document.getElementById('mpSellPrice');
   if (priceInput) {
     priceInput.min   = limits.floor;
     priceInput.max   = limits.ceiling;
     priceInput.value = limits.floor;
   }
-
   validateSellPrice();
+
+  // Async: fetch market stats and update suggested price
+  const stats = await fetchListingStats(baseId);
+  if (stats && stats.suggestedPrice) {
+    _sellSuggestedPrice = stats.suggestedPrice;
+    const clamped = Math.max(limits.floor, Math.min(limits.ceiling, stats.suggestedPrice));
+    if (priceInput && document.getElementById('mpSellSkinSelect')?.value === skinId) {
+      priceInput.value = clamped;
+      _set('mpSellPriceHint',
+        `${limits.label}: ${limits.floor.toLocaleString()}–${limits.ceiling.toLocaleString()} · ` +
+        `Market avg: 💰 ${stats.suggestedPrice.toLocaleString()} (7d)`
+      );
+      validateSellPrice();
+    }
+  }
 }
 
 function validateSellPrice() {
@@ -701,6 +850,18 @@ function validateSellPrice() {
   }
 
   _hide('mpSellError');
+
+  // Warn if price is 30%+ below market average
+  if (_sellSuggestedPrice && price < _sellSuggestedPrice * 0.70) {
+    if (errorEl) {
+      errorEl.textContent = `⚠ Price is ${Math.round((1 - price / _sellSuggestedPrice) * 100)}% below market average (💰 ${_sellSuggestedPrice.toLocaleString()})`;
+      errorEl.classList.remove('hidden');
+      errorEl.style.color = '#f39c12';
+    }
+  } else {
+    if (errorEl) errorEl.style.color = '';
+  }
+
   const tax     = Math.floor(price * MARKETPLACE_CONFIG.TAX_RATE);
   const receive = price - tax;
   if (taxEl) taxEl.textContent = `Tax: ${tax.toLocaleString()} · You receive: ${receive.toLocaleString()} coins`;
@@ -909,3 +1070,251 @@ function _hide(id) {
 }
 
 console.log('🏪 Marketplace UI module loaded');
+
+// ════════════════════════════════════════════════════════════
+//  LISTING STATS: BADGES + SUPPLY/DEMAND
+// ════════════════════════════════════════════════════════════
+
+async function _batchUpdateListingBadges(listings) {
+  // Deduplicate item IDs
+  const seen = new Set();
+  const unique = listings.filter(l => {
+    const id = l.listingType === 'crate' ? l.crateId : (l.skinId || '').split('__')[0];
+    if (!id || seen.has(id)) return false;
+    seen.add(id);
+    return true;
+  });
+
+  await Promise.all(unique.map(async (listing) => {
+    const itemId = listing.listingType === 'crate' ? listing.crateId : (listing.skinId || '').split('__')[0];
+    const stats = await fetchListingStats(itemId);
+    if (!stats) return;
+
+    // Find all cards for this item ID and update them
+    document.querySelectorAll(`.mp-listing-card[data-item-id="${CSS.escape(itemId)}"]`).forEach(card => {
+      _applyStatsBadges(card, stats);
+    });
+  }));
+}
+
+function _applyStatsBadges(card, stats) {
+  const badgesEl   = card.querySelector('.mp-stats-badges');
+  const supplyEl   = card.querySelector('.mp-supply-row');
+  if (!badgesEl) return;
+
+  // Trending badge
+  badgesEl.innerHTML = '';
+  if (stats.avgPrice24h && stats.avgPrice7d && stats.avgPrice7d > 0) {
+    const ratio = stats.avgPrice24h / stats.avgPrice7d;
+    if (ratio >= 1.05) {
+      const badge = document.createElement('span');
+      badge.textContent = '📈 TRENDING UP';
+      badge.style.cssText = 'background:#145214;color:#6bff7b;border:1px solid #6bff7b;border-radius:3px;padding:2px 5px;font-size:10px;font-weight:700;';
+      badgesEl.appendChild(badge);
+    } else if (ratio <= 0.95) {
+      const badge = document.createElement('span');
+      badge.textContent = '📉 PRICE DROP';
+      badge.style.cssText = 'background:#521414;color:#ff6b6b;border:1px solid #ff6b6b;border-radius:3px;padding:2px 5px;font-size:10px;font-weight:700;';
+      badgesEl.appendChild(badge);
+    }
+  }
+  if (stats.activeListings <= 3 && stats.activeListings > 0) {
+    const badge = document.createElement('span');
+    badge.textContent = '⚠ LOW STOCK';
+    badge.style.cssText = 'background:#7b5800;color:#ffc107;border:1px solid #ffc107;border-radius:3px;padding:2px 5px;font-size:10px;font-weight:700;';
+    badgesEl.appendChild(badge);
+  }
+
+  // Supply/demand row
+  if (supplyEl) {
+    const parts = [];
+    if (stats.activeListings != null) parts.push(`${stats.activeListings} listed`);
+    if (stats.totalSold7d) parts.push(`${stats.totalSold7d} sold this week`);
+    supplyEl.textContent = parts.join(' · ');
+  }
+}
+
+// ════════════════════════════════════════════════════════════
+//  PRICE HISTORY CHART MODAL
+// ════════════════════════════════════════════════════════════
+
+async function showPriceHistoryModal(itemId, itemType) {
+  const existing = document.getElementById('priceHistoryModal');
+  if (existing) existing.remove();
+
+  const modal = document.createElement('div');
+  modal.id = 'priceHistoryModal';
+  modal.style.cssText = `
+    position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:10000;
+    display:flex;align-items:center;justify-content:center;
+  `;
+
+  const box = document.createElement('div');
+  box.style.cssText = `
+    background:#0f0f1a;border:1px solid #333;border-radius:12px;
+    padding:20px;width:660px;max-width:96vw;color:#fff;font-family:inherit;
+  `;
+
+  box.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+      <div style="font-size:1rem;font-weight:700;">📊 Price History — ${_esc(itemId)}</div>
+      <button id="phCloseBtn" style="background:none;border:none;color:#aaa;cursor:pointer;font-size:1.2rem;">✕</button>
+    </div>
+    <div style="display:flex;gap:6px;margin-bottom:10px;">
+      <button class="ph-tab active" data-period="7d"  style="padding:5px 12px;border-radius:6px;cursor:pointer;background:#1a3a5c;border:1px solid #4a9eff;color:#4a9eff;font-size:12px;">7D</button>
+      <button class="ph-tab"        data-period="30d" style="padding:5px 12px;border-radius:6px;cursor:pointer;background:#111;border:1px solid #555;color:#aaa;font-size:12px;">30D</button>
+      <button class="ph-tab"        data-period="all" style="padding:5px 12px;border-radius:6px;cursor:pointer;background:#111;border:1px solid #555;color:#aaa;font-size:12px;">ALL</button>
+    </div>
+    <canvas id="priceHistoryCanvas" style="width:100%;border-radius:6px;background:#0a0a14;display:block;"></canvas>
+    <div id="phStatsRow" style="display:flex;gap:16px;margin-top:10px;font-size:12px;color:#aaa;flex-wrap:wrap;"></div>
+    <div id="phTooltip" style="position:absolute;background:#1a1a2e;border:1px solid #4a9eff;border-radius:4px;padding:4px 8px;font-size:11px;pointer-events:none;display:none;"></div>
+  `;
+
+  modal.appendChild(box);
+  document.body.appendChild(modal);
+
+  const canvas = box.querySelector('#priceHistoryCanvas');
+  const statsRow = box.querySelector('#phStatsRow');
+  const tooltip  = box.querySelector('#phTooltip');
+  let currentPrices = [];
+
+  async function loadChart(period) {
+    canvas.textContent = 'Loading…';
+    const [histData, statsData] = await Promise.all([
+      fetchPriceHistory(itemId, period),
+      fetchListingStats(itemId),
+    ]);
+    currentPrices = (histData.prices || []).map(p => ({
+      price: p.price,
+      date:  new Date(p.soldAt),
+    }));
+
+    // Set canvas actual pixel dimensions
+    const W = canvas.offsetWidth || 620;
+    const H = 200;
+    canvas.width  = W;
+    canvas.height = H;
+    const ctx = canvas.getContext('2d');
+    _drawPriceChart(ctx, currentPrices, W, H);
+
+    // Stats row
+    if (statsData) {
+      const fmt = n => n != null ? `💰 ${n.toLocaleString()}` : '—';
+      statsRow.innerHTML = `
+        <span>Avg 7d: ${fmt(statsData.avgPrice7d)}</span>
+        <span>Avg 24h: ${fmt(statsData.avgPrice24h)}</span>
+        <span>Sold 7d: ${statsData.totalSold7d || 0}</span>
+        <span>Listed: ${statsData.activeListings || 0}</span>
+      `;
+    }
+
+    // Hover tooltip
+    canvas.onmousemove = (e) => {
+      if (currentPrices.length < 2) return;
+      const rect = canvas.getBoundingClientRect();
+      const mx   = (e.clientX - rect.left) * (canvas.width / rect.width);
+      const pad  = 40;
+      const chartW = canvas.width - pad - 10;
+      const idx  = Math.min(currentPrices.length - 1,
+        Math.max(0, Math.round((mx - pad) / chartW * (currentPrices.length - 1))));
+      const pt = currentPrices[idx];
+      tooltip.textContent = `${pt.date.toLocaleDateString()} · 💰 ${pt.price.toLocaleString()}`;
+      tooltip.style.display = 'block';
+      tooltip.style.left = `${e.clientX - box.getBoundingClientRect().left + 8}px`;
+      tooltip.style.top  = `${e.clientY - box.getBoundingClientRect().top  - 28}px`;
+    };
+    canvas.onmouseleave = () => { tooltip.style.display = 'none'; };
+  }
+
+  // Tab switching
+  box.querySelectorAll('.ph-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      box.querySelectorAll('.ph-tab').forEach(t => {
+        t.style.background = '#111'; t.style.borderColor = '#555'; t.style.color = '#aaa';
+      });
+      tab.style.background = '#1a3a5c'; tab.style.borderColor = '#4a9eff'; tab.style.color = '#4a9eff';
+      loadChart(tab.dataset.period);
+    });
+  });
+
+  box.querySelector('#phCloseBtn').addEventListener('click', () => modal.remove());
+  modal.addEventListener('click', (e) => { if (e.target === modal) modal.remove(); });
+
+  await loadChart('7d');
+}
+
+function _drawPriceChart(ctx, pricePoints, W, H) {
+  ctx.clearRect(0, 0, W, H);
+
+  if (pricePoints.length === 0) {
+    ctx.fillStyle = '#555';
+    ctx.font = '13px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('No sales data yet', W / 2, H / 2);
+    return;
+  }
+
+  const padL = 52, padR = 10, padT = 10, padB = 28;
+  const chartW = W - padL - padR;
+  const chartH = H - padT - padB;
+
+  const prices = pricePoints.map(p => p.price);
+  const minP   = Math.min(...prices);
+  const maxP   = Math.max(...prices);
+  const range  = maxP - minP || 1;
+
+  const scaleX = i => padL + (i / (pricePoints.length - 1 || 1)) * chartW;
+  const scaleY = v => padT + chartH - ((v - minP) / range) * chartH;
+
+  // Grid lines
+  ctx.strokeStyle = '#222';
+  ctx.lineWidth   = 1;
+  for (let i = 0; i <= 4; i++) {
+    const y = padT + (i / 4) * chartH;
+    ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(W - padR, y); ctx.stroke();
+    const val = maxP - (i / 4) * range;
+    ctx.fillStyle = '#666';
+    ctx.font = '10px sans-serif';
+    ctx.textAlign = 'right';
+    ctx.fillText(val >= 1000 ? `${(val/1000).toFixed(1)}k` : Math.round(val).toString(), padL - 4, y + 3);
+  }
+
+  // Filled area
+  const grad = ctx.createLinearGradient(0, padT, 0, padT + chartH);
+  grad.addColorStop(0,   'rgba(74,158,255,0.35)');
+  grad.addColorStop(1,   'rgba(74,158,255,0)');
+  ctx.beginPath();
+  ctx.moveTo(scaleX(0), padT + chartH);
+  pricePoints.forEach((p, i) => ctx.lineTo(scaleX(i), scaleY(p.price)));
+  ctx.lineTo(scaleX(pricePoints.length - 1), padT + chartH);
+  ctx.closePath();
+  ctx.fillStyle = grad;
+  ctx.fill();
+
+  // Line
+  ctx.beginPath();
+  ctx.strokeStyle = '#4a9eff';
+  ctx.lineWidth   = 2;
+  pricePoints.forEach((p, i) => {
+    i === 0 ? ctx.moveTo(scaleX(i), scaleY(p.price))
+             : ctx.lineTo(scaleX(i), scaleY(p.price));
+  });
+  ctx.stroke();
+
+  // Dots on endpoints
+  [[0, pricePoints[0]], [pricePoints.length - 1, pricePoints[pricePoints.length - 1]]].forEach(([i, p]) => {
+    ctx.beginPath();
+    ctx.arc(scaleX(i), scaleY(p.price), 3, 0, Math.PI * 2);
+    ctx.fillStyle = '#4a9eff';
+    ctx.fill();
+  });
+
+  // X-axis date labels (first + last)
+  ctx.fillStyle = '#666';
+  ctx.font = '10px sans-serif';
+  ctx.textAlign = 'center';
+  if (pricePoints[0].date) {
+    ctx.fillText(pricePoints[0].date.toLocaleDateString(), scaleX(0), H - 6);
+    ctx.fillText(pricePoints[pricePoints.length - 1].date.toLocaleDateString(), scaleX(pricePoints.length - 1), H - 6);
+  }
+}
