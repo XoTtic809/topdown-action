@@ -9133,6 +9133,43 @@ function devUnlockAllSkins() {
   showAdminMessage(`All skins + all mutations unlocked! (${total} total)`, false);
 }
 
+// ── Profile unlock dev helpers ──────────────────────────────────────────────
+
+async function devGrantAllProfileUnlocks() {
+  if (!isAdmin || !currentUser) return;
+  try {
+    const data = await apiPost('/admin/rotation/profile/grant-all-unlocks', {});
+    if (data.error) { showAdminMessage('Error: ' + data.error, true); return; }
+    showAdminMessage(`✅ Granted ${data.granted} profile unlockables to your account`, false);
+  } catch (e) {
+    showAdminMessage('Error: ' + e.message, true);
+  }
+}
+
+async function devGrantS1Champion() {
+  if (!isAdmin || !currentUser) return;
+  try {
+    const data = await apiPost('/admin/rotation/profile/grant-unlock', { unlockableId: 'badge_s1_champion' });
+    if (data.error) { showAdminMessage('Error: ' + data.error, true); return; }
+    showAdminMessage('🏆 S1 Champion badge granted!', false);
+  } catch (e) {
+    showAdminMessage('Error: ' + e.message, true);
+  }
+}
+
+async function devGrantSpecificUnlock() {
+  if (!isAdmin || !currentUser) return;
+  const id = (document.getElementById('devUnlockId')?.value || '').trim();
+  if (!id) { showAdminMessage('Enter an unlockable ID', true); return; }
+  try {
+    const data = await apiPost('/admin/rotation/profile/grant-unlock', { unlockableId: id });
+    if (data.error) { showAdminMessage('Error: ' + data.error, true); return; }
+    showAdminMessage(`✅ Granted: ${data.name} (${data.unlockableId})`, false);
+  } catch (e) {
+    showAdminMessage('Error: ' + e.message, true);
+  }
+}
+
 // the creator skin
 
 // Global flag to force next icon crate to give THE CREATOR

@@ -1966,6 +1966,41 @@
         </div>
       </div>
 
+      <!-- ── PROFILE UNLOCKS SECTION ── -->
+      <div class="admin-section">
+        <h3 class="admin-subtitle">🎨 Profile Unlocks</h3>
+        <div class="dev-grid">
+
+          <!-- Grant All Unlocks -->
+          <div class="dev-card">
+            <div class="dev-card-label">🎁 Grant All Unlocks</div>
+            <div style="font-size:11px;color:rgba(255,255,255,0.55);margin-bottom:6px;">Backgrounds, borders, titles &amp; badges</div>
+            <div class="dev-row">
+              <button class="dev-btn success" onclick="devGrantAllProfileUnlocks()">GRANT ALL</button>
+            </div>
+          </div>
+
+          <!-- S1 Champion Badge -->
+          <div class="dev-card">
+            <div class="dev-card-label">🏆 S1 Champion Badge</div>
+            <div style="font-size:11px;color:rgba(255,255,255,0.55);margin-bottom:6px;">Admin-only season 1 badge</div>
+            <div class="dev-row">
+              <button class="dev-btn" style="background:linear-gradient(135deg,#302000,#c07000);box-shadow:0 0 12px rgba(180,100,0,0.4);" onclick="devGrantS1Champion()">GRANT</button>
+            </div>
+          </div>
+
+          <!-- Grant Specific Unlock -->
+          <div class="dev-card">
+            <div class="dev-card-label">🔑 Grant Specific Unlock</div>
+            <div class="dev-row">
+              <input type="text" id="devUnlockId" class="dev-input" placeholder="e.g. bg_galaxy" style="flex:1;min-width:0;">
+              <button class="dev-btn" onclick="devGrantSpecificUnlock()">GRANT</button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
       <!-- ── CHAT TAB ── -->
       <div id="adminTab-chat" class="admin-tab-content hidden">
 
