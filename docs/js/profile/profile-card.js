@@ -34,16 +34,16 @@ var PC_BORDERS = {
 
 // ── Title display text ───────────────────────────────────────────────────────
 var PC_TITLE_DISPLAY = {
-  'title_newcomer':     'Fresh Spawn',
-  'title_grinder':      'Wave Junkie',
+  'title_newcomer':     'New Here',
+  'title_grinder':      'All Day',
   'title_trader':       'Market Shark',
   'title_collector':    'Skin Hoarder',
-  'title_apex_predator':'Apex Predator',
+  'title_apex_predator':'Certified',
   'title_sovereign':    'The One',
   'title_whale':        'Money Pit',
   'title_lucky':        'Cracked RNG',
   'title_dedicated':    'Terminally Online',
-  'title_unbreakable':  'Built Different',
+  'title_unbreakable':  'Never Dies',
   'title_number_one':   'Him.',
   'title_custom':       null, // uses custom_title_text from API
 };
