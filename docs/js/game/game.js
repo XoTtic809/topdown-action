@@ -6528,6 +6528,28 @@ function applyRichSkinPreview(el, skinId, fallbackColor) {
   const styles = {
     // Default skin
     agent:      ['radial-gradient(circle at 35% 35%,#d0f4ff 0%,#9be7ff 40%,#3ab0d8 75%,#0a4a6a 100%)', '0 0 18px rgba(155,231,255,0.6)', ''],
+    // Basic shop skins
+    inferno:  ['radial-gradient(circle at 35% 35%,#ffcc55 0%,#ff6b35 40%,#cc2200 75%,#3d0800 100%)', '0 0 22px #ff6b35,0 0 38px rgba(255,107,53,0.4)', 'voidPulse 2.5s ease-in-out infinite'],
+    venom:    ['radial-gradient(circle at 35% 35%,#ccffcc 0%,#6bff7b 45%,#1faa33 80%,#073310 100%)', '0 0 20px #6bff7b,0 0 35px rgba(107,255,123,0.4)', ''],
+    ice:      ['radial-gradient(circle at 35% 35%,#ddfaff 0%,#6de6ff 40%,#009dd4 75%,#002d44 100%)', '0 0 22px #00d9ff,0 0 38px rgba(0,217,255,0.4)', 'galaxyShimmer 3s ease-in-out infinite'],
+    shadow:   ['radial-gradient(circle at 35% 35%,#dcc8ff 0%,#9966ff 45%,#4a18c8 80%,#0c0020 100%)', '0 0 22px #9966ff,0 0 40px rgba(153,102,255,0.4)', 'voidPulse 2.2s ease-in-out infinite'],
+    amber:    ['radial-gradient(circle at 35% 35%,#ffe8a0 0%,#ffaa00 45%,#c87000 80%,#3d1e00 100%)', '0 0 20px #ffaa00,0 0 35px rgba(255,170,0,0.4)', ''],
+    crimson:  ['radial-gradient(circle at 35% 35%,#ff8899 0%,#dc143c 45%,#7a0018 80%,#1c0006 100%)', '0 0 22px #dc143c,0 0 38px rgba(220,20,60,0.4)', 'voidPulse 2s ease-in-out infinite'],
+    gold:     ['radial-gradient(circle at 35% 35%,#fff8c0 0%,#ffd700 38%,#c09000 72%,#4a3200 100%)', '0 0 24px #ffd700,0 0 44px rgba(255,215,0,0.45)', 'galaxyShimmer 2.5s ease-in-out infinite'],
+    ocean:    ['radial-gradient(circle at 35% 35%,#55b8d8 0%,#006994 48%,#003555 80%,#000b18 100%)', '0 0 20px #006994,0 0 35px rgba(0,105,148,0.4)', 'voidPulse 3s ease-in-out infinite'],
+    toxic:    ['radial-gradient(circle at 35% 35%,#eaff99 0%,#9afd2e 45%,#4a8800 80%,#152900 100%)', '0 0 22px #9afd2e,0 0 38px rgba(154,253,46,0.4)', 'voidPulse 1.8s ease-in-out infinite'],
+    magma:    ['radial-gradient(circle at 35% 35%,#ffdd44 0%,#ff4500 38%,#b51800 72%,#280500 100%)', '0 0 24px #ff4500,0 0 44px rgba(255,69,0,0.5)', 'voidPulse 1.5s ease-in-out infinite'],
+    plasma:   ['radial-gradient(circle at 35% 35%,#ffccf0 0%,#ff69d9 45%,#c01880 80%,#2d0018 100%)', '0 0 22px #ff69d9,0 0 40px rgba(255,105,217,0.4)', 'voidPulse 2s ease-in-out infinite'],
+    emerald:  ['radial-gradient(circle at 35% 35%,#b8ffd8 0%,#50c878 45%,#157535 80%,#032812 100%)', '0 0 22px #50c878,0 0 38px rgba(80,200,120,0.4)', 'galaxyShimmer 3s ease-in-out infinite'],
+    frost:    ['radial-gradient(circle at 35% 35%,#ffffff 0%,#c8eeff 35%,#80c8e0 72%,#1e4e60 100%)', '0 0 18px #b0e0e6,0 0 32px rgba(176,224,230,0.5)', 'galaxyShimmer 3.5s ease-in-out infinite'],
+    midnight: ['radial-gradient(circle at 35% 35%,#7070ff 0%,#1a1aff 45%,#060680 80%,#00000f 100%)', '0 0 24px #1a1aff,0 0 44px rgba(26,26,255,0.45)', 'voidPulse 2.5s ease-in-out infinite'],
+    sakura:   ['radial-gradient(circle at 35% 35%,#ffe0ea 0%,#ffb7c5 45%,#f05878 80%,#550020 100%)', '0 0 18px #ffb7c5,0 0 32px rgba(255,183,197,0.5)', ''],
+    electric: ['radial-gradient(circle at 35% 35%,#ffffff 0%,#88ffff 25%,#00ffff 58%,#005566 100%)', '0 0 26px #00ffff,0 0 48px rgba(0,255,255,0.5)', 'quantumSpin 3.5s linear infinite'],
+    ruby:     ['radial-gradient(circle at 35% 35%,#ff9ab5 0%,#e0115f 42%,#880030 78%,#180008 100%)', '0 0 22px #e0115f,0 0 40px rgba(224,17,95,0.45)', 'voidPulse 2s ease-in-out infinite'],
+    lime:     ['radial-gradient(circle at 35% 35%,#f0ffaa 0%,#ccff00 45%,#88bb00 80%,#253000 100%)', '0 0 22px #ccff00,0 0 40px rgba(204,255,0,0.45)', 'voidPulse 1.8s ease-in-out infinite'],
+    violet:   ['radial-gradient(circle at 35% 35%,#e090ff 0%,#8f00ff 45%,#440080 80%,#0c001e 100%)', '0 0 26px #8f00ff,0 0 46px rgba(143,0,255,0.5)', 'voidPulse 2s ease-in-out infinite'],
+    copper:   ['radial-gradient(circle at 35% 35%,#f0d090 0%,#b87333 45%,#784218 80%,#2a1200 100%)', '0 0 18px #b87333,0 0 32px rgba(184,115,51,0.4)', 'galaxyShimmer 3s ease-in-out infinite'],
+    cyber:    ['radial-gradient(circle at 35% 35%,#b0ffd0 0%,#00ff41 40%,#00a020 75%,#001800 100%)', '0 0 22px #00ff41,0 0 40px rgba(0,255,65,0.5)', 'voidPulse 1.5s ease-in-out infinite'],
     // Shop specials
     rainbow:    ['conic-gradient(red,orange,yellow,green,cyan,blue,violet,red)',                                            '0 0 22px rgba(255,150,0,0.7)',                                       'quantumSpin 3s linear infinite'],
     galaxy:     ['linear-gradient(135deg,#667eea 0%,#764ba2 50%,#f093fb 100%)',                                            '0 0 25px #764ba2',                                                    'galaxyShimmer 2s ease-in-out infinite'],
@@ -6732,6 +6754,9 @@ function initShopUI() {
     } else {
       applyRichSkinPreview(preview, skin.id, skin.color);
     }
+    preview.style.cursor = 'pointer';
+    preview.title = 'View details';
+    preview.addEventListener('click', () => { if (typeof openSkinDetailModal === 'function') openSkinDetailModal(skin.id); });
 
     const name = document.createElement('div');
     name.className = 'skin-name';
@@ -8877,6 +8902,12 @@ function _buildInvCard(skinId, count) {
     if (mc.cssFilter) preview.style.filter = mc.cssFilter;
     preview.style.boxShadow += `, 0 0 16px ${mc.glowColor}`;
   }
+  preview.style.cursor = 'pointer';
+  preview.title = 'View details';
+  preview.addEventListener('click', e => {
+    e.stopPropagation();
+    if (typeof openSkinDetailModal === 'function') openSkinDetailModal(skinId);
+  });
 
   // Name + count badge
   const nameRow = document.createElement('div');
@@ -8963,6 +8994,175 @@ function _buildInvCard(skinId, count) {
   card.appendChild(meta);
   card.appendChild(btns);
   return card;
+}
+
+// ── Skin Detail Modal ─────────────────────────────────────────────────────
+const _SKIN_SOURCE = {
+  // Battle pass
+  bp1_striker:   { label: 'Battle Pass',  detail: 'Season 1 · Tier 5 Premium' },
+  bp1_guardian:  { label: 'Battle Pass',  detail: 'Season 1 · Tier 10 Premium' },
+  bp1_phantom:   { label: 'Battle Pass',  detail: 'Season 1 · Tier 20 Premium' },
+  bp1_tempest:   { label: 'Battle Pass',  detail: 'Season 1 · Tier 30 Premium' },
+  bp1_eclipse:   { label: 'Battle Pass',  detail: 'Season 1 · Tier 40 Premium' },
+  bp1_sovereign: { label: 'Battle Pass',  detail: 'Season 1 · Tier 45 Premium' },
+  bp1_apex:      { label: 'Battle Pass',  detail: 'Season 1 · Tier 50 Premium' },
+  transcendence: { label: 'Battle Pass',  detail: 'Season 1 · Final Reward' },
+  // Ranked
+  'gold-champion':   { label: 'Ranked Reward', detail: '1st Place on Leaderboard' },
+  'silver-champion': { label: 'Ranked Reward', detail: '2nd Place on Leaderboard' },
+  'bronze-champion': { label: 'Ranked Reward', detail: '3rd Place on Leaderboard' },
+};
+
+function _getSkinSource(skinId) {
+  if (_SKIN_SOURCE[skinId]) return _SKIN_SOURCE[skinId];
+  const skin = SKINS.find(s => s.id === skinId);
+  if (!skin) return null;
+  if (skin.price > 0)  return { label: 'Shop',    detail: `${skin.price.toLocaleString()} coins` };
+  if (skin.price === 0) return { label: 'Default', detail: 'Always owned' };
+  if (skin.desc)        return { label: 'Exclusive', detail: skin.desc.replace(/^[^\s·]+ /, '') };
+  return null;
+}
+
+function openSkinDetailModal(skinId) {
+  const { baseSkinId, mutation } = typeof parseMutatedSkinId === 'function'
+    ? parseMutatedSkinId(skinId)
+    : { baseSkinId: skinId, mutation: null };
+
+  const skin     = SKINS.find(s => s.id === baseSkinId);
+  const mc       = mutation && typeof MUTATION_CONFIG !== 'undefined' ? MUTATION_CONFIG[mutation] : null;
+  const rarity   = typeof getSkinRarity === 'function' ? (getSkinRarity(skinId) || 'common') : 'common';
+  const rc       = typeof getRarityColor === 'function' ? getRarityColor(rarity) : '#888';
+  const isOwned  = ownedSkins.includes(skinId);
+  const isActive = activeSkin === skinId;
+  const tradeable = typeof isSkinTradeable === 'function' && isSkinTradeable(skinId);
+  const src      = _getSkinSource(baseSkinId);
+
+  // Remove any existing modal
+  document.getElementById('skinDetailOverlay')?.remove();
+
+  const overlay = document.createElement('div');
+  overlay.className = 'skin-detail-overlay';
+  overlay.id = 'skinDetailOverlay';
+  overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
+
+  const modal = document.createElement('div');
+  modal.className = 'skin-detail-modal';
+  modal.addEventListener('click', e => e.stopPropagation());
+
+  // Close button
+  const closeBtn = document.createElement('button');
+  closeBtn.className = 'skin-detail-close';
+  closeBtn.textContent = '✕';
+  closeBtn.onclick = () => overlay.remove();
+  modal.appendChild(closeBtn);
+
+  // Preview
+  const previewWrap = document.createElement('div');
+  previewWrap.className = 'skin-detail-preview-wrap';
+  const previewEl = document.createElement('div');
+  previewEl.className = 'skin-detail-preview';
+  applyRichSkinPreview(previewEl, baseSkinId, skin ? skin.color : null);
+  if (mc) {
+    if (mc.cssFilter) previewEl.style.filter = mc.cssFilter;
+    previewEl.style.boxShadow += `, 0 0 24px ${mc.glowColor}`;
+  }
+  previewWrap.appendChild(previewEl);
+  modal.appendChild(previewWrap);
+
+  // Name
+  const nameEl = document.createElement('div');
+  nameEl.className = 'skin-detail-name';
+  nameEl.textContent = skin ? skin.name : baseSkinId;
+  if (mc) { nameEl.style.color = mc.color; nameEl.style.textShadow = `0 0 16px ${mc.color}`; }
+  modal.appendChild(nameEl);
+
+  // Rarity badge
+  const rarEl = document.createElement('div');
+  rarEl.className = 'skin-detail-rarity';
+  rarEl.textContent = rarity.toUpperCase();
+  rarEl.style.color = rc;
+  rarEl.style.borderColor = rc + '66';
+  rarEl.style.background = rc + '18';
+  modal.appendChild(rarEl);
+
+  // Mutation badge
+  if (mc) {
+    const mutEl = document.createElement('div');
+    mutEl.className = 'skin-detail-mutation';
+    mutEl.textContent = `✦ ${mc.label} Mutation`;
+    mutEl.style.color = mc.color;
+    mutEl.style.borderColor = mc.color + '55';
+    mutEl.style.background = mc.color + '14';
+    modal.appendChild(mutEl);
+  }
+
+  // Source
+  if (src) {
+    const srcEl = document.createElement('div');
+    srcEl.className = 'skin-detail-source';
+    srcEl.innerHTML = `<strong>${src.label}</strong>${src.detail ? ` · ${src.detail}` : ''}`;
+    modal.appendChild(srcEl);
+  }
+
+  // Description
+  if (skin && skin.desc) {
+    const descEl = document.createElement('div');
+    descEl.className = 'skin-detail-desc';
+    descEl.textContent = skin.desc.replace(/^[🎨📦🌑⭐🏆⚡❄️🔥]+ /, '');
+    modal.appendChild(descEl);
+  }
+
+  // Divider
+  const div = document.createElement('div');
+  div.className = 'skin-detail-divider';
+  modal.appendChild(div);
+
+  // Action buttons
+  const btns = document.createElement('div');
+  btns.className = 'skin-detail-btns';
+
+  if (isOwned) {
+    const equipBtn = document.createElement('button');
+    equipBtn.className = 'sd-btn sd-btn-equip';
+    equipBtn.textContent = isActive ? '✓ EQUIPPED' : 'EQUIP';
+    if (isActive) equipBtn.disabled = true;
+    equipBtn.onclick = () => {
+      if (_tryingSkin) stopTrySkin();
+      activeSkin = skinId;
+      saveSkins();
+      _renderInventory();
+      overlay.remove();
+    };
+    btns.appendChild(equipBtn);
+
+    const tryBtn = document.createElement('button');
+    tryBtn.className = 'sd-btn sd-btn-try';
+    tryBtn.textContent = '▶ TRY';
+    tryBtn.onclick = () => { trySkin(skinId); overlay.remove(); };
+    btns.appendChild(tryBtn);
+
+    if (tradeable && !isGuest && currentUser) {
+      const sellBtn = document.createElement('button');
+      sellBtn.className = 'sd-btn sd-btn-sell';
+      sellBtn.textContent = '🏪 SELL';
+      sellBtn.onclick = () => { quickListSkin(skinId); overlay.remove(); };
+      btns.appendChild(sellBtn);
+    }
+  } else if (skin && skin.price > 0) {
+    const buyBtn = document.createElement('button');
+    buyBtn.className = 'sd-btn sd-btn-buy';
+    buyBtn.innerHTML = `BUY — ${skin.price.toLocaleString()} 🪙`;
+    buyBtn.onclick = () => {
+      if (typeof buySkin === 'function') buySkin(baseSkinId);
+      overlay.remove();
+    };
+    btns.appendChild(buyBtn);
+  }
+
+  if (btns.children.length) modal.appendChild(btns);
+
+  overlay.appendChild(modal);
+  document.body.appendChild(overlay);
 }
 
 function trySkin(skinId) {

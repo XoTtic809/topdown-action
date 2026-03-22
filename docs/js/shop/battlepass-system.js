@@ -512,127 +512,187 @@ function initBattlePassTab() {
   const container = document.getElementById('shopTab-battlepass');
   if (!container) return;
 
-  // Skip re-render if nothing changed (dirty-flag optimization)
-  const claimKey = JSON.stringify(battlePassData.claimedFree || []) + JSON.stringify(battlePassData.claimedPremium || []);
+  const claimKey = JSON.stringify(battlePassData.claimedRewards?.free || []) + JSON.stringify(battlePassData.claimedRewards?.premium || []);
   if (battlePassData.currentXP === _bpLastXP && claimKey === _bpLastClaims && container.children.length > 0) return;
   _bpLastXP = battlePassData.currentXP;
   _bpLastClaims = claimKey;
 
   container.innerHTML = '';
 
+  // ── XP math ────────────────────────────────────────────────
+  const cumulXP = getCumulativeXP();
+  const curTier = battlePassData.currentTier;
+  const prevXP  = curTier > 0 ? cumulXP[curTier - 1] : 0;
+  const nextXP  = curTier < 50 ? cumulXP[curTier] : cumulXP[49];
+  const pct     = curTier >= 50 ? 100 : Math.max(0, Math.min(100,
+    ((battlePassData.currentXP - prevXP) / (nextXP - prevXP)) * 100));
+
+  // ── HEADER ─────────────────────────────────────────────────
   const header = document.createElement('div');
-  header.className = 'battlepass-header';
-
-  const seasonInfo = document.createElement('div');
-  seasonInfo.className = 'battlepass-season-info';
-  seasonInfo.innerHTML = `
-    <div class="battlepass-season-title">BATTLE PASS - SEASON ${battlePassData.season}</div>
-    <div class="battlepass-season-level">Level ${battlePassData.currentTier} / 50</div>
+  header.className = 'bp-header';
+  header.innerHTML = `
+    <div class="bp-header-glow"></div>
+    <div class="bp-header-inner">
+      <div class="bp-header-info">
+        <div class="bp-season-tag">SEASON ${battlePassData.season}</div>
+        <div class="bp-title-text">BATTLE PASS</div>
+        <div class="bp-level-text">Level <strong>${curTier}</strong> / 50</div>
+      </div>
+      <div class="bp-header-right">
+        ${battlePassData.isPremium
+          ? '<div class="bp-premium-badge">✦ PREMIUM ACTIVE ✦</div>'
+          : '<button class="bp-buy-btn" onclick="purchasePremiumPass()">⭐ BUY PREMIUM — <span style="color:#ffd700">2,500 🪙</span></button>'
+        }
+      </div>
+    </div>
+    <div class="bp-xp-wrap">
+      <div class="bp-xp-labels">
+        <span>${battlePassData.currentXP.toLocaleString()} XP</span>
+        <span>${curTier < 50 ? `${nextXP.toLocaleString()} XP → Tier ${curTier + 1}` : '✦ MAX LEVEL ✦'}</span>
+      </div>
+      <div class="bp-xp-track"><div class="bp-xp-fill" style="width:${pct}%"></div></div>
+    </div>
   `;
+  container.appendChild(header);
 
-  const premiumBtn = document.createElement('button');
-  premiumBtn.className = 'battlepass-premium-btn';
-  if (battlePassData.isPremium) {
-    premiumBtn.textContent = '✓ PREMIUM UNLOCKED';
-    premiumBtn.disabled = true;
-    premiumBtn.style.background = 'rgba(0,255,157,0.2)';
-    premiumBtn.style.border = '2px solid rgba(0,255,157,0.5)';
-    premiumBtn.style.color = '#00ff9d';
-  } else {
-    premiumBtn.innerHTML = '🌟 BUY PREMIUM PASS - 2,500 <span style="color: #ffd700;">🪙</span>';
-    premiumBtn.onclick = purchasePremiumPass;
+  // ── CLAIM ALL ───────────────────────────────────────────────
+  const hasClaimable = BATTLE_PASS_TIERS.some((_, i) =>
+    canClaimReward(i + 1, 'free') || canClaimReward(i + 1, 'premium'));
+  if (hasClaimable) {
+    const btn = document.createElement('button');
+    btn.className = 'bp-claim-all';
+    btn.innerHTML = '🎁 CLAIM ALL AVAILABLE REWARDS';
+    btn.onclick = claimAllAvailableRewards;
+    container.appendChild(btn);
   }
 
-  header.appendChild(seasonInfo);
-  header.appendChild(premiumBtn);
+  // ── TWO-TRACK COLUMN LAYOUT ────────────────────────────────
+  const outer = document.createElement('div');
+  outer.className = 'bp-outer';
 
-  const progressContainer = document.createElement('div');
-  progressContainer.className = 'battlepass-progress-container';
-
-  const cumulativeXP = getCumulativeXP();
-  const currentTierXP = battlePassData.currentTier > 0 ? cumulativeXP[battlePassData.currentTier - 1] : 0;
-  const nextTierXP = battlePassData.currentTier < 50 ? cumulativeXP[battlePassData.currentTier] : cumulativeXP[49];
-  const xpInCurrentTier = battlePassData.currentXP - currentTierXP;
-  const xpNeededForNextTier = nextTierXP - currentTierXP;
-  const progress = battlePassData.currentTier >= 50 ? 100 : (xpInCurrentTier / xpNeededForNextTier) * 100;
-
-  progressContainer.innerHTML = `
-    <div class="battlepass-progress-info">
-      <span>${battlePassData.currentXP.toLocaleString()} XP</span>
-      <span>${battlePassData.currentTier < 50 ? `${nextTierXP.toLocaleString()} XP to Tier ${battlePassData.currentTier + 1}` : 'MAX LEVEL'}</span>
-    </div>
-    <div class="battlepass-progress-bar-outer">
-      <div class="battlepass-progress-bar-inner" style="width: ${progress}%"></div>
-    </div>
+  const sideLabels = document.createElement('div');
+  sideLabels.className = 'bp-side-labels';
+  sideLabels.innerHTML = `
+    <div class="bp-side-label bp-side-free">FREE</div>
+    <div class="bp-side-label bp-side-spine"></div>
+    <div class="bp-side-label bp-side-prem">PREMIUM</div>
   `;
+  outer.appendChild(sideLabels);
 
-  const grid = document.createElement('div');
-  grid.className = 'battlepass-tier-grid';
+  const scroll = document.createElement('div');
+  scroll.className = 'bp-scroll';
 
   for (let i = 0; i < BATTLE_PASS_TIERS.length; i++) {
-    const tierData = BATTLE_PASS_TIERS[i];
-    const tierNum = tierData.tier;
-    const isUnlocked = tierNum <= battlePassData.currentTier;
-    const isCurrent = tierNum === battlePassData.currentTier + 1;
+    const td       = BATTLE_PASS_TIERS[i];
+    const tNum     = td.tier;
+    const unlocked = tNum <= curTier;
+    const isCur    = tNum === curTier + 1;
+    const isSkin   = td.premiumReward.type === 'skin';
 
-    const tierCard = document.createElement('div');
-    tierCard.className = 'battlepass-tier' + (isUnlocked ? ' unlocked' : '') + (isCurrent ? ' current' : '');
+    const col = document.createElement('div');
+    col.className = 'bp-col'
+      + (unlocked ? ' bp-unlocked' : '')
+      + (isCur    ? ' bp-current'  : '')
+      + (isSkin   ? ' bp-skin-col' : '');
 
-    const tierNumber = document.createElement('div');
-    tierNumber.className = 'battlepass-tier-number';
-    tierNumber.textContent = `TIER ${tierNum}`;
+    col.appendChild(_buildBpCell(td.freeReward, 'free', tNum, unlocked));
 
-    const freeReward = createRewardElement(tierData.freeReward, 'free', tierNum, isUnlocked);
+    const dot = document.createElement('div');
+    dot.className = 'bp-dot'
+      + (unlocked ? ' bp-dot-done' : '')
+      + (isCur    ? ' bp-dot-cur'  : '');
+    dot.innerHTML = `<span class="bp-dot-num">${tNum}</span>`;
+    col.appendChild(dot);
 
-    const premiumReward = createRewardElement(tierData.premiumReward, 'premium', tierNum, isUnlocked);
-
-    tierCard.appendChild(tierNumber);
-    tierCard.appendChild(freeReward);
-    tierCard.appendChild(premiumReward);
-
-    grid.appendChild(tierCard);
+    col.appendChild(_buildBpCell(td.premiumReward, 'premium', tNum, unlocked));
+    scroll.appendChild(col);
   }
 
-  container.appendChild(header);
-  container.appendChild(progressContainer);
+  outer.appendChild(scroll);
+  container.appendChild(outer);
 
-  // Check if there are any claimable rewards
-  const hasClaimableRewards = BATTLE_PASS_TIERS.some((_, index) => {
-    const tier = index + 1;
-    return canClaimReward(tier, 'free') || canClaimReward(tier, 'premium');
-  });
+  // Auto-scroll to current tier
+  setTimeout(() => {
+    const curCol = scroll.querySelector('.bp-current');
+    if (curCol) {
+      scroll.scrollLeft = Math.max(0,
+        curCol.offsetLeft - scroll.clientWidth / 2 + curCol.offsetWidth / 2);
+    }
+  }, 60);
+}
 
-  if (hasClaimableRewards) {
-    const claimAllBtn = document.createElement('button');
-    claimAllBtn.className = 'battlepass-claim-all-btn';
-    claimAllBtn.innerHTML = '🎁 CLAIM ALL AVAILABLE REWARDS';
-    claimAllBtn.onclick = claimAllAvailableRewards;
-    claimAllBtn.style.cssText = `
-      margin: 10px auto;
-      display: block;
-      padding: 12px 24px;
-      background: linear-gradient(135deg, #00ff9d 0%, #00b8a9 100%);
-      border: none;
-      border-radius: 8px;
-      color: #0a1628;
-      font-weight: bold;
-      font-size: 14px;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      box-shadow: 0 0 20px rgba(0, 255, 157, 0.4);
-    `;
-    claimAllBtn.onmouseenter = () => {
-      claimAllBtn.style.transform = 'scale(1.05)';
-      claimAllBtn.style.boxShadow = '0 0 30px rgba(0, 255, 157, 0.6)';
-    };
-    claimAllBtn.onmouseleave = () => {
-      claimAllBtn.style.transform = 'scale(1)';
-      claimAllBtn.style.boxShadow = '0 0 20px rgba(0, 255, 157, 0.4)';
-    };
-    container.appendChild(claimAllBtn);
+// ── Build a single reward cell ─────────────────────────────────────────────
+function _buildBpCell(reward, track, tier, isUnlocked) {
+  const cell      = document.createElement('div');
+  const isClaimed = battlePassData.claimedRewards[track].includes(tier);
+  const canClaim  = canClaimReward(tier, track);
+  const premLock  = track === 'premium' && !battlePassData.isPremium;
+
+  cell.className = 'bp-cell bp-cell-' + track
+    + (isClaimed            ? ' bp-cell-claimed'   : '')
+    + (!isUnlocked          ? ' bp-cell-locked'    : '')
+    + (premLock && isUnlocked ? ' bp-cell-premlocked' : '');
+
+  // Icon
+  const iconEl = document.createElement('div');
+  iconEl.className = 'bp-cell-icon';
+
+  if (reward.type === 'skin') {
+    iconEl.style.cssText = 'width:52px;height:52px;border-radius:50%;overflow:hidden;display:flex;align-items:center;justify-content:center;margin:0 auto;flex-shrink:0;';
+    if (typeof applyRichSkinPreview === 'function') {
+      applyRichSkinPreview(iconEl, reward.skinId, null);
+    } else {
+      iconEl.style.background = 'rgba(88,166,255,0.3)';
+    }
+    iconEl.style.boxShadow = _getBpSkinGlow(reward.skinId);
+  } else if (reward.type === 'coins') {
+    iconEl.innerHTML = `<span style="font-size:20px">🪙</span>`;
+  } else {
+    iconEl.textContent = ({ trail:'✨', death:'💥', title:'🏷️', badge:'🏅', crate:'📦' })[reward.type] || '?';
+  }
+  cell.appendChild(iconEl);
+
+  // Name / value label
+  const nameEl = document.createElement('div');
+  nameEl.className = 'bp-cell-name';
+  nameEl.textContent = reward.type === 'coins'
+    ? reward.value.toLocaleString()
+    : getRewardDisplayName(reward);
+  cell.appendChild(nameEl);
+
+  // Status overlay
+  if (isClaimed) {
+    const check = document.createElement('div');
+    check.className = 'bp-cell-check';
+    check.textContent = '✓';
+    cell.appendChild(check);
+  } else if (canClaim) {
+    const btn = document.createElement('button');
+    btn.className = 'bp-cell-claimbt';
+    btn.textContent = 'CLAIM';
+    btn.onclick = () => claimReward(tier, track);
+    cell.appendChild(btn);
+  } else if (premLock && isUnlocked) {
+    const lk = document.createElement('div');
+    lk.className = 'bp-cell-premlock';
+    lk.textContent = '⭐';
+    cell.appendChild(lk);
   }
 
-  container.appendChild(grid);
+  return cell;
+}
+
+function _getBpSkinGlow(skinId) {
+  const g = {
+    bp1_striker:  '0 0 18px #ff6b35, 0 0 32px rgba(255,107,53,0.35)',
+    bp1_guardian: '0 0 18px #4ecdc4, 0 0 32px rgba(78,205,196,0.35)',
+    bp1_phantom:  '0 0 18px #9b59b6, 0 0 32px rgba(155,89,182,0.35)',
+    bp1_tempest:  '0 0 18px #3498db, 0 0 32px rgba(52,152,219,0.35)',
+    bp1_eclipse:  '0 0 18px #5d6d7e, 0 0 32px rgba(44,62,80,0.5)',
+    bp1_sovereign:'0 0 18px #ffd700, 0 0 32px rgba(255,215,0,0.45)',
+    bp1_apex:     '0 0 22px #e74c3c, 0 0 40px rgba(231,76,60,0.5)',
+  };
+  return g[skinId] || 'none';
 }
 
 function createRewardElement(reward, track, tier, isUnlocked) {

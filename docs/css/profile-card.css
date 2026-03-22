@@ -832,32 +832,35 @@
 
 /* ── Animated backgrounds ────────────────────────────────────────────────── */
 @keyframes pc-aurora-shift {
-  0%   { filter: hue-rotate(0deg)   brightness(1); }
-  33%  { filter: hue-rotate(35deg)  brightness(1.08); }
-  66%  { filter: hue-rotate(-20deg) brightness(0.95); }
-  100% { filter: hue-rotate(50deg)  brightness(1.12); }
+  0%   { background-position: 0% 0%;    filter: hue-rotate(0deg)   brightness(1.1); }
+  33%  { background-position: 100% 40%; filter: hue-rotate(45deg)  brightness(1.28); }
+  66%  { background-position: 50% 100%; filter: hue-rotate(-25deg) brightness(1.15); }
+  100% { background-position: 0% 0%;    filter: hue-rotate(65deg)  brightness(1.22); }
 }
 .pc-bg-aurora {
-  background: linear-gradient(135deg,#050d18 0%,#0a2040 30%,#102850 50%,#0a1830 80%,#050d18 100%);
-  animation: pc-aurora-shift 7s ease-in-out infinite alternate;
+  background: linear-gradient(135deg,#071630 0%,#0a3545 18%,#0c4838 34%,#183462 52%,#0e4a45 66%,#152e48 82%,#071630 100%);
+  background-size: 200% 200%;
+  animation: pc-aurora-shift 8s ease-in-out infinite alternate;
 }
 
 @keyframes pc-matrix-pulse {
-  0%, 100% { filter: brightness(1) saturate(1); }
-  50%       { filter: brightness(1.25) saturate(1.4) hue-rotate(5deg); }
+  0%, 100% { background-position: 0% 0%;    filter: brightness(1) saturate(1.3); }
+  50%       { background-position: 100% 100%; filter: brightness(1.65) saturate(2.4) hue-rotate(8deg); }
 }
 .pc-bg-matrix {
-  background: linear-gradient(135deg,#020a02 0%,#051205 50%,#020a02 100%);
-  animation: pc-matrix-pulse 4s ease-in-out infinite;
+  background: linear-gradient(135deg,#001800 0%,#004000 35%,#006800 55%,#004000 75%,#001800 100%);
+  background-size: 200% 200%;
+  animation: pc-matrix-pulse 3s ease-in-out infinite;
 }
 
 @keyframes pc-ember-glow {
-  0%, 100% { filter: brightness(1) saturate(1); }
-  50%       { filter: brightness(1.35) saturate(1.3); }
+  0%, 100% { background-position: 0% 100%;  filter: brightness(1) saturate(1.3); }
+  50%       { background-position: 100% 0%;  filter: brightness(1.65) saturate(2.2) hue-rotate(-12deg); }
 }
 .pc-bg-ember {
-  background: linear-gradient(135deg,#1a0800 0%,#2a1200 40%,#3a1500 60%,#1a0800 100%);
-  animation: pc-ember-glow 3s ease-in-out infinite;
+  background: linear-gradient(135deg,#1c0300 0%,#601200 35%,#a02200 55%,#601200 75%,#1c0300 100%);
+  background-size: 200% 200%;
+  animation: pc-ember-glow 2.5s ease-in-out infinite;
 }
 
 /* ── Name color animations ───────────────────────────────────────────────── */
