@@ -12,7 +12,7 @@ var PC_BACKGROUNDS = {
   'bg_platinum':   'linear-gradient(135deg,#0e1c2a 0%,#1e3a55 35%,#407898 55%,#1e3a55 75%,#0e1c2a 100%)',
   'bg_diamond':    'linear-gradient(135deg,#050d1a 0%,#0a3a6a 30%,#1a6aaa 50%,#0a3a6a 70%,#050d1a 100%)',
   'bg_galaxy':     'radial-gradient(ellipse at 35% 40%,#3a1a6a 0%,#1a083a 45%,#060515 80%)',
-  'bg_sovereign':  'conic-gradient(from 0deg,#0a0820,#1c1060,#402090,#1c1060,#0a0820)',
+  'bg_sovereign':  'ANIMATED:pc-bg-sovereign',
   'bg_inferno':    'linear-gradient(135deg,#1a0300 0%,#601000 35%,#aa2400 55%,#601000 75%,#1a0300 100%)',
   'bg_collector':  'linear-gradient(135deg,#051005 0%,#0e3010 35%,#1e5a22 55%,#0e3010 75%,#051005 100%)',
   'bg_whale':      'linear-gradient(135deg,#060f1e 0%,#0d2848 35%,#1a4888 55%,#0d2848 75%,#060f1e 100%)',
@@ -156,8 +156,8 @@ function renderProfileCard(data, containerEl, opts) {
   var s     = data.stats || {};
   var bgRaw  = PC_BACKGROUNDS[p.cardBackground] || PC_BACKGROUNDS['bg_default'];
   var bgIsAnim = typeof bgRaw === 'string' && bgRaw.startsWith('ANIMATED:');
-  var bgCss    = bgIsAnim ? 'linear-gradient(135deg,#0a1628,#1a2a44)' : bgRaw;
-  var bgClass  = bgIsAnim ? (' ' + bgRaw.replace('ANIMATED:', '')) : '';
+  var bgCss    = bgIsAnim ? '' : bgRaw;
+  var bgClass  = bgIsAnim ? bgRaw.replace('ANIMATED:', '') : '';
 
   var brdCss= PC_BORDERS[p.cardBorder] || PC_BORDERS['border_default'];
   var accent= p.cardAccentColor || '#4a9eff';
@@ -247,9 +247,12 @@ function renderProfileCard(data, containerEl, opts) {
 
   var accentBar = '<div class="pc-accent-bar" style="background:linear-gradient(90deg,transparent 0%,' + accent + '55 20%,' + accent + 'cc 50%,' + accent + '55 80%,transparent 100%)"></div>';
 
+  var bgEl = '<div class="pc-bg ' + bgClass + '" style="' + (bgCss ? 'background:' + bgCss + ';' : '') + '"></div>';
+
   containerEl.innerHTML =
-    '<div class="pc-card' + (compact ? ' pc-compact' : '') + borderClass + bgClass + glowClass + '" ' +
-         'style="background:' + bgCss + ';border:' + brdCss + ';' + glowStyle + '">' +
+    '<div class="pc-card' + (compact ? ' pc-compact' : '') + borderClass + glowClass + '" ' +
+         'style="border:' + brdCss + ';' + glowStyle + '">' +
+      bgEl +
       accentBar +
       '<div class="pc-header">' +
         '<div class="' + skinId + ' pc-skin-showcase" id="' + skinId + '"></div>' +

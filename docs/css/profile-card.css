@@ -26,7 +26,7 @@
   z-index: 0;
 }
 
-.pc-card > * { position: relative; z-index: 1; }
+.pc-card > *:not(.pc-bg) { position: relative; z-index: 1; }
 
 /* ── Accent bar ──────────────────────────────────────────────────────────── */
 .pc-accent-bar {
@@ -42,41 +42,49 @@
   100% { background-position: 0% 50%; }
 }
 .pc-bg-sovereign {
+  background: conic-gradient(from 0deg,#0a0820,#1c1060,#402090,#1c1060,#0a0820);
   background-size: 300% 300%;
   animation: pc-shimmer 6s ease infinite;
 }
 @keyframes pc-prismatic {
-  0%   { filter: hue-rotate(0deg); }
-  100% { filter: hue-rotate(360deg); }
+  0%   { border-color: #ff4a6a; box-shadow: 0 12px 40px rgba(0,0,0,0.7), 0 0 14px rgba(255,74,106,0.45); }
+  16%  { border-color: #ffcc00; box-shadow: 0 12px 40px rgba(0,0,0,0.7), 0 0 14px rgba(255,204,0,0.45); }
+  33%  { border-color: #4aff9e; box-shadow: 0 12px 40px rgba(0,0,0,0.7), 0 0 14px rgba(74,255,158,0.45); }
+  50%  { border-color: #00e5ff; box-shadow: 0 12px 40px rgba(0,0,0,0.7), 0 0 14px rgba(0,229,255,0.45); }
+  66%  { border-color: #cc44ff; box-shadow: 0 12px 40px rgba(0,0,0,0.7), 0 0 14px rgba(204,68,255,0.45); }
+  83%  { border-color: #ff6a00; box-shadow: 0 12px 40px rgba(0,0,0,0.7), 0 0 14px rgba(255,106,0,0.45); }
+  100% { border-color: #ff4a6a; box-shadow: 0 12px 40px rgba(0,0,0,0.7), 0 0 14px rgba(255,74,106,0.45); }
 }
-.pc-border-prismatic {
-  animation: pc-prismatic 4s linear infinite;
+.pc-card.pc-border-prismatic {
+  border-width: 2px !important;
+  border-style: solid !important;
+  animation: pc-prismatic 3s linear infinite;
 }
 @keyframes pc-pulse-border {
-  0%, 100% { box-shadow: 0 0 0 2px rgba(88,166,255,0.4), 0 0 14px rgba(88,166,255,0.2); }
-  50%       { box-shadow: 0 0 0 2px rgba(88,166,255,0.9), 0 0 28px rgba(88,166,255,0.5); }
+  0%, 100% { box-shadow: 0 12px 40px rgba(0,0,0,0.7), 0 0 0 2px rgba(88,166,255,0.4), 0 0 14px rgba(88,166,255,0.2); }
+  50%       { box-shadow: 0 12px 40px rgba(0,0,0,0.7), 0 0 0 2px rgba(88,166,255,0.9), 0 0 28px rgba(88,166,255,0.5); }
 }
 .pc-card.pc-border-animated-pulse {
   animation: pc-pulse-border 2s ease-in-out infinite;
 }
 @keyframes pc-neon-pulse {
-  0%, 100% { box-shadow: 0 0 0 2px rgba(0,229,255,0.5), 0 0 16px rgba(0,229,255,0.2); }
-  50%       { box-shadow: 0 0 0 2px rgba(0,229,255,1),   0 0 32px rgba(0,229,255,0.5); }
+  0%, 100% { box-shadow: 0 12px 40px rgba(0,0,0,0.7), 0 0 0 2px rgba(0,229,255,0.5), 0 0 16px rgba(0,229,255,0.2); }
+  50%       { box-shadow: 0 12px 40px rgba(0,0,0,0.7), 0 0 0 2px rgba(0,229,255,1),   0 0 32px rgba(0,229,255,0.5); }
 }
 .pc-card.pc-border-neon { animation: pc-neon-pulse 1.8s ease-in-out infinite; }
 @keyframes pc-fire-pulse {
-  0%, 100% { box-shadow: 0 0 0 2px rgba(255,100,0,0.5), 0 0 16px rgba(255,60,0,0.2); }
-  50%       { box-shadow: 0 0 0 2px rgba(255,150,0,1),   0 0 32px rgba(255,80,0,0.6); }
+  0%, 100% { box-shadow: 0 12px 40px rgba(0,0,0,0.7), 0 0 0 2px rgba(255,100,0,0.5), 0 0 16px rgba(255,60,0,0.2); }
+  50%       { box-shadow: 0 12px 40px rgba(0,0,0,0.7), 0 0 0 2px rgba(255,150,0,1),   0 0 32px rgba(255,80,0,0.6); }
 }
 .pc-card.pc-border-fire { animation: pc-fire-pulse 2s ease-in-out infinite; }
 @keyframes pc-ice-pulse {
-  0%, 100% { box-shadow: 0 0 0 2px rgba(160,216,234,0.5), 0 0 14px rgba(160,216,234,0.2); }
-  50%       { box-shadow: 0 0 0 2px rgba(210,240,255,0.9), 0 0 28px rgba(160,216,234,0.5); }
+  0%, 100% { box-shadow: 0 12px 40px rgba(0,0,0,0.7), 0 0 0 2px rgba(160,216,234,0.5), 0 0 14px rgba(160,216,234,0.2); }
+  50%       { box-shadow: 0 12px 40px rgba(0,0,0,0.7), 0 0 0 2px rgba(210,240,255,0.9), 0 0 28px rgba(160,216,234,0.5); }
 }
 .pc-card.pc-border-ice { animation: pc-ice-pulse 2.2s ease-in-out infinite; }
 @keyframes pc-void-pulse {
-  0%, 100% { box-shadow: 0 0 0 2px rgba(140,0,255,0.5), 0 0 16px rgba(100,0,200,0.2); }
-  50%       { box-shadow: 0 0 0 2px rgba(180,0,255,1),   0 0 32px rgba(140,0,255,0.6); }
+  0%, 100% { box-shadow: 0 12px 40px rgba(0,0,0,0.7), 0 0 0 2px rgba(140,0,255,0.5), 0 0 16px rgba(100,0,200,0.2); }
+  50%       { box-shadow: 0 12px 40px rgba(0,0,0,0.7), 0 0 0 2px rgba(180,0,255,1),   0 0 32px rgba(140,0,255,0.6); }
 }
 .pc-card.pc-border-void { animation: pc-void-pulse 2s ease-in-out infinite; }
 
