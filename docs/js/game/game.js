@@ -6694,8 +6694,8 @@ function applyRichSkinPreview(el, skinId, fallbackColor) {
 
 function initShopUI() {
   document.getElementById('shopCoinsVal').textContent = playerCoins;
-  // Refresh inventory if it's the active tab
-  if (typeof _renderInventory === 'function') _renderInventory();
+  // Initialize inventory tab (renders content + wires up filter/sort handlers)
+  if (typeof initInventoryTab === 'function') initInventoryTab();
   const grid = document.getElementById('skinGrid');
   if (!grid) return; // Inventory tab replaces skins tab
   grid.innerHTML = '';
@@ -8685,10 +8685,10 @@ document.getElementById('shopBtn').addEventListener('click', () => {
     home.classList.add('hidden');
     home.classList.remove('hs-exiting');
     shop.classList.remove('hidden');
+    initShopUI();
     shop.classList.add('panel-overlay-entering');
     shop.addEventListener('animationend', () => {
       shop.classList.remove('panel-overlay-entering');
-      initShopUI();
     }, { once: true });
   }, { once: true });
 });
