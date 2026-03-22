@@ -8,7 +8,7 @@ var PC_BACKGROUNDS = {
   'bg_default':    'linear-gradient(135deg,#0a1628 0%,#1a2a44 100%)',
   'bg_bronze':     'linear-gradient(135deg,#281008 0%,#6a3010 35%,#9a5020 55%,#6a3010 75%,#281008 100%)',
   'bg_silver':     'linear-gradient(135deg,#141e2a 0%,#2a4055 35%,#527890 55%,#2a4055 75%,#141e2a 100%)',
-  'bg_gold':       'linear-gradient(135deg,#1a1000 0%,#4a2c00 35%,#9a7010 55%,#4a2c00 75%,#1a1000 100%)',
+  'bg_gold':       'ANIMATED:pc-bg-gold',
   'bg_platinum':   'linear-gradient(135deg,#0e1c2a 0%,#1e3a55 35%,#407898 55%,#1e3a55 75%,#0e1c2a 100%)',
   'bg_diamond':    'linear-gradient(135deg,#050d1a 0%,#0a3a6a 30%,#1a6aaa 50%,#0a3a6a 70%,#050d1a 100%)',
   'bg_galaxy':     'ANIMATED:pc-bg-galaxy',

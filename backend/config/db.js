@@ -401,7 +401,7 @@ async function initSchema() {
       -- Migrate: update background preview_css to polished versions
       UPDATE card_unlockables SET preview_css='linear-gradient(135deg,#281008,#6a3010,#9a5020,#6a3010,#281008)'  WHERE id='bg_bronze';
       UPDATE card_unlockables SET preview_css='linear-gradient(135deg,#141e2a,#2a4055,#527890,#2a4055,#141e2a)'  WHERE id='bg_silver';
-      UPDATE card_unlockables SET preview_css='linear-gradient(135deg,#1a1000,#4a2c00,#9a7010,#4a2c00,#1a1000)'  WHERE id='bg_gold';
+      UPDATE card_unlockables SET preview_css='linear-gradient(135deg,#0e0800,#3a2200,#8a6010,#c09030,#8a6010,#3a2200,#0e0800)' WHERE id='bg_gold';
       UPDATE card_unlockables SET preview_css='linear-gradient(135deg,#0e1c2a,#1e3a55,#407898,#1e3a55,#0e1c2a)'  WHERE id='bg_platinum';
       UPDATE card_unlockables SET preview_css='radial-gradient(ellipse at 25% 40%,#8030e0 0%,#3040cc 40%,#050015 80%)' WHERE id='bg_galaxy';
       UPDATE card_unlockables SET preview_css='conic-gradient(from 0deg,#0a0820,#1c1060,#402090,#1c1060,#0a0820)' WHERE id='bg_sovereign';
