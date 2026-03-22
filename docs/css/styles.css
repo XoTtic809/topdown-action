@@ -2059,6 +2059,62 @@ canvas {
 }
 .dev-btn.success:hover { background: rgba(107,255,123,0.24); }
 
+/* Admin panel buttons (used in admin tab sections) */
+.admin-btn {
+  background: rgba(88,166,255,0.1);
+  border: 1px solid rgba(88,166,255,0.28);
+  border-radius: 7px;
+  color: #7ab8ff;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 7px 14px;
+  cursor: pointer;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-family: var(--font-title);
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.admin-btn:hover {
+  background: rgba(88,166,255,0.22);
+  border-color: rgba(88,166,255,0.55);
+  color: #a8d0ff;
+  transform: translateY(-1px);
+}
+.admin-btn.success {
+  background: rgba(107,255,123,0.09);
+  border-color: rgba(107,255,123,0.3);
+  color: #6bff7b;
+}
+.admin-btn.success:hover {
+  background: rgba(107,255,123,0.2);
+  border-color: rgba(107,255,123,0.55);
+}
+.admin-btn.danger {
+  background: rgba(255,71,87,0.1);
+  border-color: rgba(255,71,87,0.3);
+  color: #ff6b78;
+}
+.admin-btn.danger:hover {
+  background: rgba(255,71,87,0.22);
+  border-color: rgba(255,71,87,0.55);
+}
+
+/* Admin panel inputs / selects */
+.admin-input {
+  background: rgba(0,0,0,0.45);
+  border: 1px solid rgba(88,166,255,0.18);
+  border-radius: 7px;
+  color: #c0d4ff;
+  padding: 7px 10px;
+  font-size: 12px;
+  font-family: var(--font-hud);
+  outline: none;
+  transition: border-color 0.15s;
+  cursor: pointer;
+}
+.admin-input:focus { border-color: rgba(88,166,255,0.45); }
+
 .dev-status {
   font-size: 12px;
   font-weight: 700;
