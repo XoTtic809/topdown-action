@@ -200,7 +200,14 @@ function syncCoinsDisplays() {
 async function mpRefresh(reset = false) {
   const grid = document.getElementById('mpListingsGrid');
   if (grid && reset) {
-    grid.innerHTML = '<div class="mp-loading">Loading marketplace...</div>';
+    grid.innerHTML = Array(8).fill(`
+      <div class="mp-listing-card" style="pointer-events:none;border-color:rgba(88,166,255,0.08)">
+        <div class="sk-shimmer sk-circle" style="width:38px;height:38px;margin:0 auto 8px"></div>
+        <div class="sk-shimmer sk-line-sm" style="width:75%;margin:0 auto 4px"></div>
+        <div class="sk-shimmer sk-line-sm" style="width:55%;margin:0 auto 4px"></div>
+        <div class="sk-shimmer sk-line" style="width:60%;margin:0 auto 8px"></div>
+        <div class="sk-shimmer sk-box" style="height:28px;border-radius:6px"></div>
+      </div>`).join('');
   }
 
   const result = await fetchMarketplaceListings(reset);

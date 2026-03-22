@@ -68,7 +68,7 @@
 }
 
 .shop-tab-content {
-  animation: fadeIn 0.4s ease;
+  animation: fadeIn 0.18s ease;
   width: 100%;
   box-sizing: border-box;
   overflow-x: hidden;

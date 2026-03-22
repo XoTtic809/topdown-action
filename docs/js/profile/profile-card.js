@@ -83,6 +83,13 @@ var PC_TITLE_CSS_CLASS = {
   'title_number_one':  'pc-title-number-one',
 };
 
+// ─── Profile cache ────────────────────────────────────────────────────────────
+var _pcProfileCache = { me: null, unlockables: null, ts: 0 };
+var _PC_CACHE_TTL   = 90000;
+function _pcCacheValid()    { return _pcProfileCache.me && _pcProfileCache.unlockables && (Date.now() - _pcProfileCache.ts) < _PC_CACHE_TTL; }
+function _pcCacheStore(me, ul) { _pcProfileCache.me = me; _pcProfileCache.unlockables = ul; _pcProfileCache.ts = Date.now(); }
+function _pcCacheInvalidate()  { _pcProfileCache.ts = 0; }
+
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 function _pcFmt(n) {
@@ -236,6 +243,63 @@ function _escapeHtml(str) {
     .replace(/"/g,'&quot;');
 }
 
+// ── Skeleton helpers ──────────────────────────────────────────────────────────
+function _pcCardSkeleton() {
+  return '<div class="pc-skeleton-card pc-card" style="width:340px;background:#0a1628;border:1px solid rgba(88,166,255,0.15);padding:0">' +
+    '<div class="sk-shimmer" style="height:3px;border-radius:0;margin-bottom:0"></div>' +
+    '<div style="padding:20px">' +
+      '<div style="display:flex;gap:14px;align-items:flex-start;margin-bottom:14px">' +
+        '<div class="sk-shimmer sk-box" style="width:88px;height:88px;flex-shrink:0"></div>' +
+        '<div style="flex:1;padding-top:4px">' +
+          '<div class="sk-shimmer sk-line-lg" style="width:70%;margin-bottom:10px"></div>' +
+          '<div class="sk-shimmer sk-line-sm" style="width:45%;margin-bottom:8px"></div>' +
+          '<div class="sk-shimmer sk-line-sm" style="width:60%"></div>' +
+        '</div>' +
+      '</div>' +
+      '<div class="sk-shimmer sk-line-sm" style="width:90%;margin-bottom:6px"></div>' +
+      '<div class="sk-shimmer sk-line-sm" style="width:70%;margin-bottom:16px"></div>' +
+      '<div style="height:1px;background:rgba(88,166,255,0.1);margin-bottom:14px"></div>' +
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">' +
+        '<div class="sk-shimmer sk-box" style="height:28px"></div>' +
+        '<div class="sk-shimmer sk-box" style="height:28px"></div>' +
+        '<div class="sk-shimmer sk-box" style="height:28px"></div>' +
+        '<div class="sk-shimmer sk-box" style="height:28px"></div>' +
+      '</div>' +
+    '</div>' +
+  '</div>';
+}
+
+function _pcCustomizerSkeleton() {
+  return '<div class="pc-cust-skeleton" style="display:flex;gap:0;height:100%;pointer-events:none">' +
+    '<div style="width:360px;flex-shrink:0;padding:24px;border-right:1px solid rgba(88,166,255,0.1)">' +
+      '<div class="sk-shimmer sk-line" style="width:60px;margin-bottom:14px"></div>' +
+      _pcCardSkeleton() +
+    '</div>' +
+    '<div style="flex:1;padding:24px;display:flex;flex-direction:column;gap:20px">' +
+      '<div>' +
+        '<div class="sk-shimmer sk-line" style="width:80px;margin-bottom:10px"></div>' +
+        '<div class="sk-shimmer sk-box" style="height:120px"></div>' +
+      '</div>' +
+      '<div>' +
+        '<div class="sk-shimmer sk-line" style="width:60px;margin-bottom:10px"></div>' +
+        '<div class="sk-shimmer sk-box" style="height:80px"></div>' +
+      '</div>' +
+      '<div>' +
+        '<div class="sk-shimmer sk-line" style="width:70px;margin-bottom:10px"></div>' +
+        '<div class="sk-shimmer sk-box" style="height:100px"></div>' +
+      '</div>' +
+      '<div>' +
+        '<div class="sk-shimmer sk-line" style="width:50px;margin-bottom:10px"></div>' +
+        '<div class="sk-shimmer sk-box" style="height:160px"></div>' +
+      '</div>' +
+      '<div style="display:flex;gap:10px;margin-top:auto">' +
+        '<div class="sk-shimmer sk-box" style="height:40px;flex:1"></div>' +
+        '<div class="sk-shimmer sk-box" style="height:40px;width:100px"></div>' +
+      '</div>' +
+    '</div>' +
+  '</div>';
+}
+
 // ── openProfilePopup(uid) ────────────────────────────────────────────────────
 // Fetches and displays a profile card in a modal overlay.
 function openProfilePopup(uid) {
@@ -248,7 +312,7 @@ function openProfilePopup(uid) {
   var overlay = document.createElement('div');
   overlay.id  = 'pcPopupOverlay';
   overlay.className = 'pc-overlay';
-  overlay.innerHTML = '<div class="pc-popup-box"><div class="pc-loading">Loading profile...</div>' +
+  overlay.innerHTML = '<div class="pc-popup-box">' + _pcCardSkeleton() +
     '<button class="pc-close-btn" title="Close">✕</button></div>';
   document.body.appendChild(overlay);
 
@@ -260,19 +324,18 @@ function openProfilePopup(uid) {
   overlay.addEventListener('click', function(e) { if (e.target === overlay) close(); });
 
   apiGet('/profile/' + uid).then(function(data) {
+    var sk = box.querySelector('.pc-skeleton-card');
     if (data.hidden) {
-      box.querySelector('.pc-loading').innerHTML =
-        '<div class="pc-hidden-msg">🔒 This profile is private.</div>';
+      if (sk) sk.outerHTML = '<div class="pc-hidden-msg">🔒 This profile is private.</div>';
       return;
     }
     var content = document.createElement('div');
     renderProfileCard(data, content, {});
-    var loading = box.querySelector('.pc-loading');
-    if (loading) loading.replaceWith(content);
+    if (sk) sk.replaceWith(content);
     else box.prepend(content);
   }).catch(function() {
-    var loading = box.querySelector('.pc-loading');
-    if (loading) loading.textContent = 'Failed to load profile.';
+    var sk = box.querySelector('.pc-skeleton-card');
+    if (sk) sk.outerHTML = '<div class="pc-loading">Failed to load profile.</div>';
   });
 }
 
@@ -285,7 +348,7 @@ function openOwnProfileCard() {
   var overlay = document.createElement('div');
   overlay.id  = 'pcPopupOverlay';
   overlay.className = 'pc-overlay';
-  overlay.innerHTML = '<div class="pc-popup-box"><div class="pc-loading">Loading profile...</div>' +
+  overlay.innerHTML = '<div class="pc-popup-box">' + _pcCardSkeleton() +
     '<button class="pc-close-btn" title="Close">✕</button></div>';
   document.body.appendChild(overlay);
 
@@ -296,18 +359,21 @@ function openOwnProfileCard() {
   closeBtn.addEventListener('click', close);
   overlay.addEventListener('click', function(e) { if (e.target === overlay) close(); });
 
-  apiGet('/profile/me').then(function(data) {
+  var fetchMe = _pcProfileCache.me && (Date.now() - _pcProfileCache.ts) < _PC_CACHE_TTL
+    ? Promise.resolve(_pcProfileCache.me)
+    : apiGet('/profile/me');
+
+  fetchMe.then(function(data) {
+    _pcCacheStore(data, _pcProfileCache.unlockables);
     var content = document.createElement('div');
     renderProfileCard(data, content, { editable: true });
-    var loading = box.querySelector('.pc-loading');
-    if (loading) loading.replaceWith(content);
+    var sk = box.querySelector('.pc-skeleton-card');
+    if (sk) sk.replaceWith(content);
     else box.prepend(content);
-
-    // Store data for customizer
     window._pcOwnProfileData = data;
   }).catch(function() {
-    var loading = box.querySelector('.pc-loading');
-    if (loading) loading.textContent = 'Failed to load profile.';
+    var sk = box.querySelector('.pc-skeleton-card');
+    if (sk) sk.outerHTML = '<div class="pc-loading">Failed to load profile.</div>';
   });
 }
 
@@ -324,19 +390,28 @@ function openProfileCustomizer() {
   var overlay = document.createElement('div');
   overlay.id  = 'pcCustomizerOverlay';
   overlay.className = 'pc-customizer-overlay';
-  overlay.innerHTML = '<div class="pc-customizer-box"><div class="pc-loading" style="padding:60px 40px">Loading customizer...</div></div>';
+  overlay.innerHTML = '<div class="pc-customizer-box">' + _pcCustomizerSkeleton() + '</div>';
   document.body.appendChild(overlay);
 
-  Promise.all([
-    apiGet('/profile/me'),
-    apiGet('/profile/unlockables'),
-  ]).then(function(results) {
-    var profileData = results[0];
-    var unlockables = results[1];
-    _renderCustomizer(overlay.querySelector('.pc-customizer-box'), profileData, unlockables);
-  }).catch(function() {
-    overlay.querySelector('.pc-loading').textContent = 'Failed to load customizer.';
-  });
+  var custBox = overlay.querySelector('.pc-customizer-box');
+
+  if (_pcCacheValid()) {
+    _renderCustomizer(custBox, _pcProfileCache.me, _pcProfileCache.unlockables);
+  } else {
+    var fetchMe2 = _pcProfileCache.me && (Date.now() - _pcProfileCache.ts) < _PC_CACHE_TTL
+      ? Promise.resolve(_pcProfileCache.me)
+      : apiGet('/profile/me');
+    var fetchUl = _pcProfileCache.unlockables
+      ? Promise.resolve(_pcProfileCache.unlockables)
+      : apiGet('/profile/unlockables');
+
+    Promise.all([fetchMe2, fetchUl]).then(function(results) {
+      _pcCacheStore(results[0], results[1]);
+      _renderCustomizer(custBox, results[0], results[1]);
+    }).catch(function() {
+      custBox.innerHTML = '<div class="pc-loading" style="padding:60px 40px">Failed to load customizer.</div>';
+    });
+  }
 }
 
 function _renderCustomizer(box, profileData, unlockables) {
@@ -760,7 +835,7 @@ function _renderCustomizer(box, profileData, unlockables) {
         if (res.success) {
           var custOverlay = document.getElementById('pcCustomizerOverlay');
           if (custOverlay) custOverlay.remove();
-          // Re-open own card to show updated version
+          _pcCacheInvalidate();
           openOwnProfileCard();
         } else {
           saveBtn.disabled = false;

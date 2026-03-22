@@ -8678,15 +8678,35 @@ document.getElementById('settingsBtn').addEventListener('click', () => {
 });
 
 document.getElementById('shopBtn').addEventListener('click', () => {
-  document.getElementById('homeScreen').classList.add('hidden');
-  document.getElementById('shopPanel').classList.remove('hidden');
-  initShopUI();
+  const home = document.getElementById('homeScreen');
+  const shop = document.getElementById('shopPanel');
+  home.classList.add('hs-exiting');
+  home.addEventListener('animationend', () => {
+    home.classList.add('hidden');
+    home.classList.remove('hs-exiting');
+    shop.classList.remove('hidden');
+    shop.classList.add('panel-overlay-entering');
+    shop.addEventListener('animationend', () => {
+      shop.classList.remove('panel-overlay-entering');
+      initShopUI();
+    }, { once: true });
+  }, { once: true });
 });
 
 document.getElementById('shopBackBtn').addEventListener('click', () => {
-  document.getElementById('shopPanel').classList.add('hidden');
-  document.getElementById('homeScreen').classList.remove('hidden');
-  document.getElementById('homeCoinsVal').textContent = playerCoins;
+  const home = document.getElementById('homeScreen');
+  const shop = document.getElementById('shopPanel');
+  shop.classList.add('hs-exiting');
+  shop.addEventListener('animationend', () => {
+    shop.classList.add('hidden');
+    shop.classList.remove('hs-exiting');
+    home.classList.remove('hidden');
+    home.classList.add('panel-overlay-entering');
+    home.addEventListener('animationend', () => {
+      home.classList.remove('panel-overlay-entering');
+      document.getElementById('homeCoinsVal').textContent = playerCoins;
+    }, { once: true });
+  }, { once: true });
 });
 
 // Shop tab switching

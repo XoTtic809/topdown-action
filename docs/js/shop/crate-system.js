@@ -1620,6 +1620,16 @@ async function initCratesTab() {
   const grid = document.getElementById('cratesGrid');
   if (!grid) return;
 
+  // Show skeleton crate cards while fetching
+  grid.innerHTML = [1,2,3].map(() => `
+    <div class="crate-card" style="border-color:rgba(88,166,255,0.12)">
+      <div class="sk-shimmer sk-circle" style="width:64px;height:64px;margin:0 auto 14px"></div>
+      <div class="sk-shimmer sk-line-lg" style="width:55%;margin:0 auto 10px"></div>
+      <div class="sk-shimmer sk-line-sm" style="width:80%;margin:0 auto 6px"></div>
+      <div class="sk-shimmer sk-line-sm" style="width:55%;margin:0 auto 14px"></div>
+      <div class="sk-shimmer sk-box" style="height:38px;border-radius:10px;margin-top:8px"></div>
+    </div>`).join('');
+
   // Fetch active shop crates + owned crates in parallel
   const [shopEntries] = await Promise.all([
     fetchShopCrates(),

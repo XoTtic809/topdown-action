@@ -30,7 +30,11 @@ function _switchTradeSubTab(name) {
 async function _loadTradeNotifications() {
   const el = document.getElementById('tradeNotifList');
   if (!el) return;
-  el.innerHTML = '<div class="trade-loading">Loading...</div>';
+  el.innerHTML = [1,2,3].map(() => `<div class="trade-notif-card" style="pointer-events:none;display:flex;gap:10px;align-items:center;padding:12px">
+    <div class="sk-shimmer sk-circle" style="width:32px;height:32px;flex-shrink:0"></div>
+    <div style="flex:1"><div class="sk-shimmer sk-line" style="width:60%;margin-bottom:6px"></div><div class="sk-shimmer sk-line-sm" style="width:40%"></div></div>
+    <div style="display:flex;gap:6px"><div class="sk-shimmer sk-box" style="width:60px;height:28px"></div><div class="sk-shimmer sk-box" style="width:60px;height:28px"></div></div>
+  </div>`).join('');
   try {
     const data = await tradeGetNotifications();
     renderTradeNotifications(data);
@@ -137,7 +141,12 @@ async function declineOffer(offerId, btn) {
 async function loadOnlineUsers() {
   const el = document.getElementById('tradeOnlineList');
   if (!el) return;
-  el.innerHTML = '<div class="trade-loading">Loading online players...</div>';
+  el.innerHTML = [1,2,3,4].map(() => `<div class="trade-player-card" style="pointer-events:none;display:flex;align-items:center;gap:10px;padding:10px">
+    <div class="sk-shimmer sk-line" style="flex:1;height:13px"></div>
+    <div class="sk-shimmer sk-circle" style="width:8px;height:8px;flex-shrink:0"></div>
+    <div class="sk-shimmer sk-box" style="width:60px;height:28px"></div>
+    <div class="sk-shimmer sk-box" style="width:60px;height:28px"></div>
+  </div>`).join('');
   try {
     const rows = await tradeGetOnlineUsers();
     if (!rows.length) {
@@ -680,7 +689,11 @@ async function submitSendOffer() {
 async function loadTradeInbox() {
   const el = document.getElementById('tradeInboxList');
   if (!el) return;
-  el.innerHTML = '<div class="trade-loading">Loading...</div>';
+  el.innerHTML = [1,2,3].map(() => `<div class="trade-notif-card" style="pointer-events:none;display:flex;gap:10px;align-items:center;padding:12px">
+    <div class="sk-shimmer sk-circle" style="width:32px;height:32px;flex-shrink:0"></div>
+    <div style="flex:1"><div class="sk-shimmer sk-line" style="width:65%;margin-bottom:6px"></div><div class="sk-shimmer sk-line-sm" style="width:45%"></div></div>
+    <div style="display:flex;gap:6px"><div class="sk-shimmer sk-box" style="width:60px;height:28px"></div><div class="sk-shimmer sk-box" style="width:60px;height:28px"></div></div>
+  </div>`).join('');
   try {
     const rows = await tradeGetInbox();
     if (!rows.length) { el.innerHTML = '<div class="trade-empty">No offers in your inbox.</div>'; return; }
@@ -693,7 +706,11 @@ async function loadTradeInbox() {
 async function loadTradeSent() {
   const el = document.getElementById('tradeSentList');
   if (!el) return;
-  el.innerHTML = '<div class="trade-loading">Loading...</div>';
+  el.innerHTML = [1,2,3].map(() => `<div class="trade-notif-card" style="pointer-events:none;display:flex;gap:10px;align-items:center;padding:12px">
+    <div class="sk-shimmer sk-circle" style="width:32px;height:32px;flex-shrink:0"></div>
+    <div style="flex:1"><div class="sk-shimmer sk-line" style="width:65%;margin-bottom:6px"></div><div class="sk-shimmer sk-line-sm" style="width:45%"></div></div>
+    <div style="display:flex;gap:6px"><div class="sk-shimmer sk-box" style="width:60px;height:28px"></div><div class="sk-shimmer sk-box" style="width:60px;height:28px"></div></div>
+  </div>`).join('');
   try {
     const rows = await tradeGetSent();
     if (!rows.length) { el.innerHTML = '<div class="trade-empty">No sent offers.</div>'; return; }
@@ -756,7 +773,11 @@ async function cancelSentOffer(offerId, btn) {
 async function loadTradeHistory() {
   const el = document.getElementById('tradeHistoryList');
   if (!el) return;
-  el.innerHTML = '<div class="trade-loading">Loading...</div>';
+  el.innerHTML = [1,2,3].map(() => `<div class="trade-notif-card" style="pointer-events:none;display:flex;gap:10px;align-items:center;padding:12px">
+    <div class="sk-shimmer sk-circle" style="width:32px;height:32px;flex-shrink:0"></div>
+    <div style="flex:1"><div class="sk-shimmer sk-line" style="width:65%;margin-bottom:6px"></div><div class="sk-shimmer sk-line-sm" style="width:45%"></div></div>
+    <div style="display:flex;gap:6px"><div class="sk-shimmer sk-box" style="width:80px;height:28px"></div></div>
+  </div>`).join('');
   try {
     const rows = await tradeGetHistory();
     if (!rows.length) { el.innerHTML = '<div class="trade-empty">No trade history yet.</div>'; return; }
