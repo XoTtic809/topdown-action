@@ -268,6 +268,89 @@ router.post('/schedule/cancel', requireAuth, requireAdmin, async (req, res) => {
 
 // ─── POST /api/admin/profile/custom-title ─────────────────────────────────────
 // Grant a custom title to a specific player.
+// Grant all profile unlockables to self (or a target user)
+router.post('/profile/grant-all-unlocks', requireAuth, requireAdmin, async (req, res) => {
+  const uid = req.body.targetUid || req.user.uid;
+  try {
+    const { rows: unlockables } = await query('SELECT id FROM card_unlockables');
+    await Promise.all(unlockables.map(u =>
+      query('INSERT INTO player_unlocks (uid, unlockable_id) VALUES ($1,$2) ON CONFLICT DO NOTHING', [uid, u.id])
+    ));
+    await query(
+      `INSERT INTO activity_logs (admin_id, admin_name, action, target_uid, details, created_at)
+       VALUES ($1,$2,'grant_all_unlocks',$3,$4,NOW())`,
+      [req.user.uid, req.user.username, uid, `Granted all ${unlockables.length} profile unlockables`]
+    );
+    return res.json({ success: true, granted: unlockables.length });
+  } catch (err) {
+    console.error('[Admin] grant-all-unlocks error:', err.message);
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+// Grant a single specific unlockable to self (or a target user)
+router.post('/profile/grant-unlock', requireAuth, requireAdmin, async (req, res) => {
+  const { unlockableId, targetUid } = req.body;
+  const uid = targetUid || req.user.uid;
+  if (!unlockableId) return res.status(400).json({ error: 'unlockableId required' });
+  try {
+    const { rows } = await query('SELECT id, name FROM card_unlockables WHERE id = $1', [unlockableId]);
+    if (!rows.length) return res.status(404).json({ error: 'Unlockable not found: ' + unlockableId });
+    await query('INSERT INTO player_unlocks (uid, unlockable_id) VALUES ($1,$2) ON CONFLICT DO NOTHING', [uid, unlockableId]);
+    await query(
+      `INSERT INTO activity_logs (admin_id, admin_name, action, target_uid, details, created_at)
+       VALUES ($1,$2,'grant_unlock',$3,$4,NOW())`,
+      [req.user.uid, req.user.username, uid, `Granted unlock: ${rows[0].name} (${unlockableId})`]
+    );
+    return res.json({ success: true, unlockableId, name: rows[0].name });
+  } catch (err) {
+    console.error('[Admin] grant-unlock error:', err.message);
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+// Revoke a single unlockable from self (or target user)
+router.post('/profile/revoke-unlock', requireAuth, requireAdmin, async (req, res) => {
+  const { unlockableId, targetUid } = req.body;
+  const uid = targetUid || req.user.uid;
+  if (!unlockableId) return res.status(400).json({ error: 'unlockableId required' });
+  try {
+    const { rowCount } = await query(
+      'DELETE FROM player_unlocks WHERE uid = $1 AND unlockable_id = $2',
+      [uid, unlockableId]
+    );
+    await query(
+      `INSERT INTO activity_logs (admin_id, admin_name, action, target_uid, details, created_at)
+       VALUES ($1,$2,'revoke_unlock',$3,$4,NOW())`,
+      [req.user.uid, req.user.username, uid, `Revoked unlock: ${unlockableId}`]
+    );
+    return res.json({ success: true, removed: rowCount });
+  } catch (err) {
+    console.error('[Admin] revoke-unlock error:', err.message);
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+// Revoke ALL unlockables from self (or target user)
+router.post('/profile/revoke-all-unlocks', requireAuth, requireAdmin, async (req, res) => {
+  const uid = req.body.targetUid || req.user.uid;
+  try {
+    const { rowCount } = await query(
+      'DELETE FROM player_unlocks WHERE uid = $1',
+      [uid]
+    );
+    await query(
+      `INSERT INTO activity_logs (admin_id, admin_name, action, target_uid, details, created_at)
+       VALUES ($1,$2,'revoke_all_unlocks',$3,$4,NOW())`,
+      [req.user.uid, req.user.username, uid, `Revoked all ${rowCount} profile unlockables`]
+    );
+    return res.json({ success: true, removed: rowCount });
+  } catch (err) {
+    console.error('[Admin] revoke-all-unlocks error:', err.message);
+    return res.status(500).json({ error: err.message });
+  }
+});
+
 router.post('/profile/custom-title', requireAuth, requireAdmin, async (req, res) => {
   const { targetUid, customTitleText } = req.body;
   if (!targetUid) return res.status(400).json({ error: 'targetUid required' });

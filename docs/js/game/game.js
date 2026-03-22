@@ -9170,6 +9170,30 @@ async function devGrantSpecificUnlock() {
   }
 }
 
+async function devRevokeSpecificUnlock() {
+  if (!isAdmin || !currentUser) return;
+  const id = (document.getElementById('devRevokeId')?.value || '').trim();
+  if (!id) { showAdminMessage('Enter an unlockable ID to revoke', true); return; }
+  try {
+    const data = await apiPost('/admin/rotation/profile/revoke-unlock', { unlockableId: id });
+    if (data.error) { showAdminMessage('Error: ' + data.error, true); return; }
+    showAdminMessage(`🗑️ Revoked: ${id} (${data.removed} row removed)`, false);
+  } catch (e) {
+    showAdminMessage('Error: ' + e.message, true);
+  }
+}
+
+async function devRevokeAllUnlocks() {
+  if (!isAdmin || !currentUser) return;
+  try {
+    const data = await apiPost('/admin/rotation/profile/revoke-all-unlocks', {});
+    if (data.error) { showAdminMessage('Error: ' + data.error, true); return; }
+    showAdminMessage(`💥 Revoked all ${data.removed} profile unlockables`, false);
+  } catch (e) {
+    showAdminMessage('Error: ' + e.message, true);
+  }
+}
+
 // the creator skin
 
 // Global flag to force next icon crate to give THE CREATOR
