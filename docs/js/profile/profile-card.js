@@ -11,7 +11,7 @@ var PC_BACKGROUNDS = {
   'bg_gold':       'linear-gradient(135deg,#1a1000 0%,#4a2c00 35%,#9a7010 55%,#4a2c00 75%,#1a1000 100%)',
   'bg_platinum':   'linear-gradient(135deg,#0e1c2a 0%,#1e3a55 35%,#407898 55%,#1e3a55 75%,#0e1c2a 100%)',
   'bg_diamond':    'linear-gradient(135deg,#050d1a 0%,#0a3a6a 30%,#1a6aaa 50%,#0a3a6a 70%,#050d1a 100%)',
-  'bg_galaxy':     'radial-gradient(ellipse at 35% 40%,#3a1a6a 0%,#1a083a 45%,#060515 80%)',
+  'bg_galaxy':     'ANIMATED:pc-bg-galaxy',
   'bg_sovereign':  'ANIMATED:pc-bg-sovereign',
   'bg_inferno':    'linear-gradient(135deg,#1a0300 0%,#601000 35%,#aa2400 55%,#601000 75%,#1a0300 100%)',
   'bg_collector':  'linear-gradient(135deg,#051005 0%,#0e3010 35%,#1e5a22 55%,#0e3010 75%,#051005 100%)',
@@ -96,6 +96,11 @@ var PC_NAME_COLORS = {
   'name_emerald':   '#00e676',
   'name_rainbow':   'ANIMATED:pc-name-rainbow',
   'name_sovereign': 'ANIMATED:pc-name-sovereign',
+  'name_purple':    '#cc44ff',
+  'name_orange':    '#ff8c00',
+  'name_pink':      '#ff2d9e',
+  'name_ice':       '#a8d8ff',
+  'name_fire':      'ANIMATED:pc-name-fire',
 };
 
 // ── Card glow lookup (box-shadow value, or ANIMATED: prefix for CSS class) ──
@@ -106,6 +111,11 @@ var PC_GLOW_STYLES = {
   'glow_red':     '0 0 22px rgba(255,45,85,0.45),  0 0 44px rgba(255,45,85,0.15)',
   'glow_green':   '0 0 22px rgba(0,230,118,0.45),  0 0 44px rgba(0,230,118,0.15)',
   'glow_rainbow': 'ANIMATED:pc-glow-rainbow',
+  'glow_purple':  '0 0 22px rgba(160,0,255,0.45),  0 0 44px rgba(120,0,200,0.15)',
+  'glow_cyan':    '0 0 22px rgba(0,229,255,0.45),   0 0 44px rgba(0,180,220,0.15)',
+  'glow_orange':  '0 0 22px rgba(255,130,0,0.45),  0 0 44px rgba(220,80,0,0.15)',
+  'glow_pink':    '0 0 22px rgba(255,40,200,0.45),  0 0 44px rgba(200,0,160,0.15)',
+  'glow_white':   '0 0 22px rgba(255,255,255,0.3),  0 0 44px rgba(200,220,255,0.12)',
 };
 
 // ── Title CSS class ──────────────────────────────────────────────────────────
@@ -614,7 +624,7 @@ function _renderCustomizer(box, profileData, unlockables) {
       var tooltip = !nc.unlocked ? ' title="' + _escapeHtml(nc.unlock_condition) + '"' : '';
       var ncVal = PC_NAME_COLORS[nc.id];
       var isAnim = typeof ncVal === 'string' && ncVal.startsWith('ANIMATED:');
-      var swatchClass = nc.id === 'name_rainbow' ? ' pc-nc-rainbow' : nc.id === 'name_sovereign' ? ' pc-nc-sovereign' : '';
+      var swatchClass = nc.id === 'name_rainbow' ? ' pc-nc-rainbow' : nc.id === 'name_sovereign' ? ' pc-nc-sovereign' : nc.id === 'name_fire' ? ' pc-nc-fire' : '';
       var swatchStyle = (!isAnim && ncVal) ? 'background:' + ncVal + ';' : '';
       var nameStyle   = (!isAnim && ncVal) ? 'color:' + ncVal + ';font-weight:700' : '';
       return '<div class="pc-selector-row' + sel + lock + '"' + tooltip + ' data-nc-id="' + nc.id + '">' +

@@ -104,6 +104,11 @@ const UNLOCK_CONDITIONS = {
   'name_emerald':      (u,s,r) => (s.total_waves_cleared||0) >= 500,
   'name_rainbow':      (u,s,r) => (u.owned_skins||[]).length >= 30,
   'name_sovereign':    (u,s,r) => r.peak_tier === 'sovereign',
+  'name_purple':       (u,s,r) => (u.owned_skins||[]).some(id => id.startsWith('void_')),
+  'name_orange':       (u,s,r) => (s.total_waves_cleared||0) >= 200,
+  'name_pink':         (u,s,r) => (s.total_coins_spent||0) >= 25000,
+  'name_ice':          (u,s,r) => (u.owned_skins||[]).some(id => id.startsWith('frost_')),
+  'name_fire':         (u,s,r,ctx) => (ctx.wavesCleared||0) >= 25,
 
   // Card glows
   'glow_none':         () => true,
@@ -112,6 +117,11 @@ const UNLOCK_CONDITIONS = {
   'glow_red':          (u,s,r) => (s.total_coins_spent||0) >= 50000,
   'glow_green':        (u,s,r) => (s.total_waves_cleared||0) >= 500,
   'glow_rainbow':      (u,s,r) => r.peak_tier === 'sovereign',
+  'glow_purple':       (u,s,r) => (u.owned_skins||[]).some(id => id.startsWith('void_')),
+  'glow_cyan':         (u,s,r) => (u.owned_skins||[]).some(id => id.startsWith('neon_') || id === 'c_neon'),
+  'glow_orange':       (u,s,r) => (s.total_waves_cleared||0) >= 200,
+  'glow_pink':         (u,s,r) => (s.total_coins_spent||0) >= 25000,
+  'glow_white':        (u,s,r) => (s.total_games||0) >= 100,
 };
 
 /**

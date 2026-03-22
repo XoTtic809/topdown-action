@@ -403,7 +403,7 @@ async function initSchema() {
       UPDATE card_unlockables SET preview_css='linear-gradient(135deg,#141e2a,#2a4055,#527890,#2a4055,#141e2a)'  WHERE id='bg_silver';
       UPDATE card_unlockables SET preview_css='linear-gradient(135deg,#1a1000,#4a2c00,#9a7010,#4a2c00,#1a1000)'  WHERE id='bg_gold';
       UPDATE card_unlockables SET preview_css='linear-gradient(135deg,#0e1c2a,#1e3a55,#407898,#1e3a55,#0e1c2a)'  WHERE id='bg_platinum';
-      UPDATE card_unlockables SET preview_css='radial-gradient(ellipse at 35% 40%,#3a1a6a,#1a083a 45%,#060515 80%)' WHERE id='bg_galaxy';
+      UPDATE card_unlockables SET preview_css='radial-gradient(ellipse at 25% 40%,#8030e0 0%,#3040cc 40%,#050015 80%)' WHERE id='bg_galaxy';
       UPDATE card_unlockables SET preview_css='conic-gradient(from 0deg,#0a0820,#1c1060,#402090,#1c1060,#0a0820)' WHERE id='bg_sovereign';
       UPDATE card_unlockables SET preview_css='linear-gradient(135deg,#1a0300,#601000,#aa2400,#601000,#1a0300)'  WHERE id='bg_inferno';
       UPDATE card_unlockables SET preview_css='linear-gradient(135deg,#051005,#0e3010,#1e5a22,#0e3010,#051005)'  WHERE id='bg_collector';
@@ -482,7 +482,12 @@ async function initSchema() {
         ('name_crimson',   'name_color', 'Crimson',       'spend_50k_coins',       '#ff2d55'),
         ('name_emerald',   'name_color', 'Emerald',       'clear_500_waves',       '#00e676'),
         ('name_rainbow',   'name_color', 'Rainbow',       'own_30_skins',          'conic-gradient(#ff4a6a,#ffcc00,#4aff9e,#00e5ff,#cc44ff,#ff6a00,#ff4a6a)'),
-        ('name_sovereign', 'name_color', 'Sovereign Gold','reach_sovereign',       'linear-gradient(135deg,#c0a000,#ffd700)')
+        ('name_sovereign', 'name_color', 'Sovereign Gold','reach_sovereign',       'linear-gradient(135deg,#c0a000,#ffd700)'),
+        ('name_purple',    'name_color', 'Purple',        'Own a void skin',        '#cc44ff'),
+        ('name_orange',    'name_color', 'Orange',        'Clear 200 waves',        '#ff8c00'),
+        ('name_pink',      'name_color', 'Pink',          'Spend 25k coins',        '#ff2d9e'),
+        ('name_ice',       'name_color', 'Ice',           'Own a frost skin',       '#a8d8ff'),
+        ('name_fire',      'name_color', 'Fire',          'Clear 25 waves in a run','linear-gradient(135deg,#ff2800,#ff6600,#ffaa00)')
       ON CONFLICT (id) DO NOTHING;
 
       -- Seed card_unlockables (glows)
@@ -492,7 +497,12 @@ async function initSchema() {
         ('glow_gold',    'glow', 'Gold Glow',   'reach_gold',       '0 0 22px rgba(255,215,0,0.45)'),
         ('glow_red',     'glow', 'Red Glow',    'spend_50k_coins',  '0 0 22px rgba(255,45,85,0.45)'),
         ('glow_green',   'glow', 'Green Glow',  'clear_500_waves',  '0 0 22px rgba(0,230,118,0.45)'),
-        ('glow_rainbow', 'glow', 'Rainbow Glow','reach_sovereign',  'conic-gradient(#ff4a6a,#ffcc00,#4aff9e,#00e5ff,#cc44ff,#ff6a00,#ff4a6a)')
+        ('glow_rainbow', 'glow', 'Rainbow Glow','reach_sovereign',  'conic-gradient(#ff4a6a,#ffcc00,#4aff9e,#00e5ff,#cc44ff,#ff6a00,#ff4a6a)'),
+        ('glow_purple',  'glow', 'Purple Glow', 'Own a void skin',  '0 0 22px rgba(160,0,255,0.45)'),
+        ('glow_cyan',    'glow', 'Cyan Glow',   'Own a neon skin',  '0 0 22px rgba(0,229,255,0.45)'),
+        ('glow_orange',  'glow', 'Orange Glow', 'Clear 200 waves',  '0 0 22px rgba(255,130,0,0.45)'),
+        ('glow_pink',    'glow', 'Pink Glow',   'Spend 25k coins',  '0 0 22px rgba(255,40,200,0.45)'),
+        ('glow_white',   'glow', 'White Glow',  'Play 100 games',   '0 0 22px rgba(255,255,255,0.3)')
       ON CONFLICT (id) DO NOTHING;
     `);
     console.log('[DB] Schema ready');
