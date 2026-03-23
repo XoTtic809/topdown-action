@@ -1346,6 +1346,7 @@ class Player {
       
       // void tear rifts
  // Reality tears showing the void beyond
+      if (!gameSettings.perfMode) {
       ctx.globalAlpha = 0.35;
       for (let ring = 0; ring < 4; ring++) {
         const ringRadius = this.r + 25 + ring * 15 + Math.sin(time / 95 + ring * 0.8) * 8;
@@ -1353,39 +1354,40 @@ class Player {
         const darkness = 12 - ring * 2; // Very dark
         ctx.strokeStyle = `hsla(${voidHue},95%,${darkness}%,${0.5 - ring * 0.08})`;
         ctx.lineWidth = 3 - ring * 0.6;
-        ctx.shadowBlur = 25;
+        ctx.shadowBlur = 15;
         ctx.shadowColor = '#9900ff';
         ctx.beginPath();
         ctx.arc(this.x, this.y, ringRadius, 0, Math.PI * 2);
         ctx.stroke();
       }
       ctx.globalAlpha = 1;
+      }
       
       // shadow tendrils
  // Writhing darkness tentacles
-      const tendrilCount = 8;
+      const tendrilCount = gameSettings.perfMode ? 0 : 4;
       ctx.globalAlpha = 0.6;
       for (let tendril = 0; tendril < tendrilCount; tendril++) {
         const baseAngle = (time / 45 + tendril * (360 / tendrilCount)) * Math.PI / 180;
         const tendrilLength = this.r + 30;
-        
+
         ctx.beginPath();
-        for (let segment = 0; segment < 8; segment++) {
-          const segmentRatio = segment / 7;
+        for (let segment = 0; segment < 6; segment++) {
+          const segmentRatio = segment / 5;
           const angle = baseAngle + Math.sin(time / 60 + segment + tendril) * 0.4;
           const dist = this.r + 8 + segmentRatio * tendrilLength + Math.sin(time / 55 + segment) * 10;
           const x = this.x + Math.cos(angle) * dist;
           const y = this.y + Math.sin(angle) * dist;
-          
+
           if (segment === 0) ctx.moveTo(x, y);
           else ctx.lineTo(x, y);
         }
-        
+
         const tendrilHue = 270 + (time / 25 + tendril * 45) % 60;
         const alpha = 0.7 - (tendril % 3) * 0.15;
         ctx.strokeStyle = `hsla(${tendrilHue},90%,20%,${alpha})`;
         ctx.lineWidth = 2.8;
-        ctx.shadowBlur = 15;
+        ctx.shadowBlur = 9;
         ctx.shadowColor = `hsl(${tendrilHue},90%,30%)`;
         ctx.stroke();
       }
@@ -1393,7 +1395,7 @@ class Player {
       
       // void particle swarm
  // Dark energy particles orbiting
-      const voidParticleCount = 24;
+      const voidParticleCount = gameSettings.perfMode ? 0 : 12;
       ctx.globalAlpha = 0.65;
       for (let i = 0; i < voidParticleCount; i++) {
         const angle = (time / 35 + i * (360 / voidParticleCount)) * Math.PI / 180;
@@ -1402,18 +1404,18 @@ class Player {
         const particleY = this.y + Math.sin(angle) * dist;
         const particleHue = 270 + (time / 18 + i * 15) % 60;
         const particleSize = 3.5 + Math.sin(time / 45 + i * 2.5) * 1.5;
-        
+
  // Outer dark glow
         ctx.fillStyle = `hsla(${particleHue},100%,15%,0.5)`;
-        ctx.shadowBlur = 18;
+        ctx.shadowBlur = 10;
         ctx.shadowColor = `hsl(${particleHue},100%,30%)`;
         ctx.beginPath();
         ctx.arc(particleX, particleY, particleSize + 2, 0, Math.PI * 2);
         ctx.fill();
-        
+
  // Bright purple core
         ctx.fillStyle = `hsla(${particleHue},100%,55%,0.9)`;
-        ctx.shadowBlur = 15;
+        ctx.shadowBlur = 8;
         ctx.beginPath();
         ctx.arc(particleX, particleY, particleSize, 0, Math.PI * 2);
         ctx.fill();
@@ -1422,15 +1424,16 @@ class Player {
       
       // shadow dimension portal
  // Rotating dark portal geometry
+      if (!gameSettings.perfMode) {
       const portalPoints = 6;
       const portalRadius = this.r + 22 + Math.sin(time / 100) * 5;
-      
+
       ctx.globalAlpha = 0.45;
       ctx.strokeStyle = `hsla(270,100%,25%,0.8)`;
       ctx.lineWidth = 2.5;
-      ctx.shadowBlur = 20;
+      ctx.shadowBlur = 12;
       ctx.shadowColor = '#9900ff';
-      
+
  // Hexagon portal
       ctx.beginPath();
       for (let i = 0; i <= portalPoints; i++) {
@@ -1441,22 +1444,23 @@ class Player {
         else ctx.lineTo(x, y);
       }
       ctx.stroke();
-      
+
  // Portal runes at corners
       for (let i = 0; i < portalPoints; i++) {
         const angle = (time / 55 + i * (360 / portalPoints)) * Math.PI / 180;
         const x = this.x + Math.cos(angle) * portalRadius;
         const y = this.y + Math.sin(angle) * portalRadius;
-        
+
         const runeHue = 270 + i * 15;
         ctx.fillStyle = `hsla(${runeHue},100%,55%,${0.85 + Math.sin(time / 65 + i) * 0.15})`;
-        ctx.shadowBlur = 20;
+        ctx.shadowBlur = 12;
         ctx.shadowColor = `hsl(${runeHue},100%,55%)`;
         ctx.beginPath();
         ctx.arc(x, y, 3.5, 0, Math.PI * 2);
         ctx.fill();
       }
       ctx.globalAlpha = 1;
+      }
       
       // orbiting void orbs
  // Dark energy spheres
@@ -1467,29 +1471,29 @@ class Player {
         const orbX = this.x + Math.cos(orbAngle) * orbDist;
         const orbY = this.y + Math.sin(orbAngle) * orbDist;
         const orbSize = 5.5 + Math.sin(time / 65 + orb) * 2.2;
-        
+
  // Dark outer void
         ctx.globalAlpha = 0.5;
         ctx.fillStyle = `hsla(270,100%,8%,0.8)`;
-        ctx.shadowBlur = 30;
+        ctx.shadowBlur = 18;
         ctx.shadowColor = '#9900ff';
         ctx.beginPath();
         ctx.arc(orbX, orbY, orbSize + 5, 0, Math.PI * 2);
         ctx.fill();
-        
+
  // Purple energy core
         ctx.globalAlpha = 1;
         const orbHue = 270 + (time / 20 + orb * 120) % 60;
         ctx.fillStyle = `hsla(${orbHue},100%,45%,0.95)`;
-        ctx.shadowBlur = 20;
+        ctx.shadowBlur = 12;
         ctx.shadowColor = `hsl(${orbHue},100%,55%)`;
         ctx.beginPath();
         ctx.arc(orbX, orbY, orbSize, 0, Math.PI * 2);
         ctx.fill();
-        
+
  // Bright center
         ctx.fillStyle = `hsla(${orbHue},100%,70%,${0.75 + Math.sin(time / 58 + orb) * 0.25})`;
-        ctx.shadowBlur = 15;
+        ctx.shadowBlur = 8;
         ctx.beginPath();
         ctx.arc(orbX, orbY, orbSize * 0.4, 0, Math.PI * 2);
         ctx.fill();
@@ -1497,7 +1501,7 @@ class Player {
       
       // dark essence storm
  // Dense dark particle field
-      const essenceCount = 36;
+      const essenceCount = gameSettings.perfMode ? 0 : 18;
       for (let i = 0; i < essenceCount; i++) {
         const angle = (time / 30 + i * (360 / essenceCount)) * Math.PI / 180;
         const dist = this.r + 12 + (i % 4) * 6 + Math.sin(time / 48 + i * 2.3) * 5;
@@ -1506,10 +1510,10 @@ class Player {
         const particleHue = 270 + (time / 12 + i * 10) % 60;
         const particleSize = 1.8 + Math.sin(time / 40 + i) * 0.9;
         const particleAlpha = 0.6 + Math.sin(time / 55 + i * 3.5) * 0.3;
-        
+
         ctx.globalAlpha = particleAlpha;
         ctx.fillStyle = `hsla(${particleHue},100%,40%,${particleAlpha})`;
-        ctx.shadowBlur = 8;
+        ctx.shadowBlur = 5;
         ctx.shadowColor = `hsl(${particleHue},100%,50%)`;
         ctx.beginPath();
         ctx.arc(particleX, particleY, particleSize, 0, Math.PI * 2);
@@ -1524,47 +1528,47 @@ class Player {
       ctx.globalAlpha = 0.6;
       const outerVoidRadius = this.r + 9 + Math.sin(time / 85) * 4;
       ctx.fillStyle = `hsla(270,100%,5%,0.8)`;
-      ctx.shadowBlur = 40;
+      ctx.shadowBlur = 25;
       ctx.shadowColor = '#9900ff';
       ctx.beginPath();
       ctx.arc(this.x, this.y, outerVoidRadius, 0, Math.PI * 2);
       ctx.fill();
       ctx.globalAlpha = 1;
-      
+
  // Main void core - very dark
       ctx.fillStyle = skinColor; // Uses the pulsing dark purple from color function
-      ctx.shadowBlur = 35;
+      ctx.shadowBlur = 22;
       ctx.shadowColor = '#9900ff';
       ctx.beginPath();
       ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
       ctx.fill();
-      
+
  // Inner purple energy
       const innerPulse = Math.sin(time / 90) * 0.2 + 0.8;
       ctx.fillStyle = `hsla(270,100%,${25 * innerPulse}%,${0.85 + Math.sin(time / 88) * 0.15})`;
-      ctx.shadowBlur = 28;
+      ctx.shadowBlur = 18;
       ctx.shadowColor = '#b300ff';
       ctx.beginPath();
       ctx.arc(this.x, this.y, this.r * 0.65, 0, Math.PI * 2);
       ctx.fill();
-      
+
  // Bright void center
       ctx.fillStyle = `hsla(270,100%,55%,${0.7 + Math.sin(time / 92) * 0.3})`;
-      ctx.shadowBlur = 22;
+      ctx.shadowBlur = 14;
       ctx.shadowColor = '#dd00ff';
       ctx.beginPath();
       ctx.arc(this.x, this.y, this.r * 0.38, 0, Math.PI * 2);
       ctx.fill();
-      
+
  // Purple outline ring
       ctx.strokeStyle = `hsla(270,100%,50%,${0.8 + Math.sin(time / 95) * 0.2})`;
       ctx.lineWidth = 2.5;
-      ctx.shadowBlur = 20;
+      ctx.shadowBlur = 12;
       ctx.shadowColor = '#9900ff';
       ctx.beginPath();
       ctx.arc(this.x, this.y, this.r + 4, 0, Math.PI * 2);
       ctx.stroke();
-      
+
       ctx.shadowBlur = 0;
     } else if (activeSkin === 'phoenix') {
  // Phoenix: Fire wings effect
@@ -1601,14 +1605,14 @@ class Player {
       
       // prismatic light beams
  // Massive refracted light beams emanating outward
+      const beamCount = gameSettings.perfMode ? 0 : 8;
       ctx.globalAlpha = 0.35;
-      const beamCount = 12;
       for (let beam = 0; beam < beamCount; beam++) {
         const beamAngle = (time / 40 + beam * (360 / beamCount)) * Math.PI / 180;
         const beamLength = this.r + 35 + Math.sin(time / 70 + beam) * 12;
         const beamHue = (time / 8 + beam * (360 / beamCount)) % 360;
         const beamAlpha = 0.6 + Math.sin(time / 55 + beam) * 0.3;
-        
+
  // Create gradient beam
         const gradient = ctx.createLinearGradient(
           this.x, this.y,
@@ -1618,11 +1622,11 @@ class Player {
         gradient.addColorStop(0, `hsla(${beamHue},100%,95%,${beamAlpha})`);
         gradient.addColorStop(0.5, `hsla(${beamHue},100%,85%,${beamAlpha * 0.6})`);
         gradient.addColorStop(1, `hsla(${beamHue},100%,75%,0)`);
-        
+
         ctx.fillStyle = gradient;
-        ctx.shadowBlur = 20;
+        ctx.shadowBlur = 12;
         ctx.shadowColor = `hsl(${beamHue},100%,90%)`;
-        
+
         ctx.beginPath();
         ctx.moveTo(this.x, this.y);
         ctx.arc(this.x, this.y, beamLength, beamAngle - 0.15, beamAngle + 0.15);
@@ -1634,18 +1638,18 @@ class Player {
       // crystalline structure rings
  // Faceted crystal rings
       ctx.globalAlpha = 0.4;
-      for (let ring = 0; ring < 5; ring++) {
+      for (let ring = 0; ring < (gameSettings.perfMode ? 0 : 3); ring++) {
         const ringRadius = this.r + 28 + ring * 16 + Math.sin(time / 90 + ring * 0.9) * 7;
-        const facetCount = 8;
-        
+        const facetCount = 6;
+
         for (let facet = 0; facet < facetCount; facet++) {
           const startAngle = (time / 50 + facet * (360 / facetCount) + ring * 45) * Math.PI / 180;
           const endAngle = startAngle + (Math.PI * 2 / facetCount) * 0.7;
           const facetHue = (time / 12 + facet * (360 / facetCount) + ring * 72) % 360;
-          
-          ctx.strokeStyle = `hsla(${facetHue},100%,90%,${0.5 - ring * 0.07})`;
+
+          ctx.strokeStyle = `hsla(${facetHue},100%,90%,${0.5 - ring * 0.1})`;
           ctx.lineWidth = 2.5 - ring * 0.4;
-          ctx.shadowBlur = 18;
+          ctx.shadowBlur = 10;
           ctx.shadowColor = `hsl(${facetHue},100%,95%)`;
           ctx.beginPath();
           ctx.arc(this.x, this.y, ringRadius, startAngle, endAngle);
@@ -1656,7 +1660,7 @@ class Player {
       
       // rainbow sparkle cloud
  // Dense field of prismatic sparkles
-      const sparkleCount = 32;
+      const sparkleCount = gameSettings.perfMode ? 0 : 16;
       for (let i = 0; i < sparkleCount; i++) {
         const angle = (time / 30 + i * (360 / sparkleCount)) * Math.PI / 180;
         const dist = this.r + 18 + Math.sin(time / 45 + i * 2.2) * 9;
@@ -1665,20 +1669,20 @@ class Player {
         const sparkleHue = (time / 10 + i * (360 / sparkleCount)) % 360;
         const sparkleSize = 3.5 + Math.sin(time / 40 + i * 3) * 1.8;
         const sparkleAlpha = 0.75 + Math.sin(time / 50 + i * 2.5) * 0.25;
-        
+
  // Outer glow
         ctx.globalAlpha = sparkleAlpha * 0.5;
         ctx.fillStyle = `hsla(${sparkleHue},100%,90%,0.6)`;
-        ctx.shadowBlur = 20;
+        ctx.shadowBlur = 12;
         ctx.shadowColor = `hsl(${sparkleHue},100%,90%)`;
         ctx.beginPath();
         ctx.arc(sparkleX, sparkleY, sparkleSize + 3, 0, Math.PI * 2);
         ctx.fill();
-        
+
  // Bright core
         ctx.globalAlpha = sparkleAlpha;
         ctx.fillStyle = `hsla(${sparkleHue},100%,95%,0.95)`;
-        ctx.shadowBlur = 15;
+        ctx.shadowBlur = 8;
         ctx.beginPath();
         ctx.arc(sparkleX, sparkleY, sparkleSize, 0, Math.PI * 2);
         ctx.fill();
@@ -1687,38 +1691,37 @@ class Player {
       
       // refractive star burst
  // 8-point star with light refraction
-      const starPoints = 8;
+      const starPoints = gameSettings.perfMode ? 0 : 8;
       const starRadius = this.r + 24 + Math.sin(time / 95) * 5;
-      
+
       ctx.globalAlpha = 0.5;
       for (let point = 0; point < starPoints; point++) {
         const angle1 = (time / 48 + point * (360 / starPoints)) * Math.PI / 180;
-        const angle2 = (time / 48 + point * (360 / starPoints) + (360 / starPoints) / 2) * Math.PI / 180;
-        
+
         const x1 = this.x + Math.cos(angle1) * starRadius;
         const y1 = this.y + Math.sin(angle1) * starRadius;
         const x2 = this.x + Math.cos(angle1) * (starRadius + 12);
         const y2 = this.y + Math.sin(angle1) * (starRadius + 12);
-        
+
         const starHue = (time / 15 + point * (360 / starPoints)) % 360;
-        
+
  // Create star point gradient
         const gradient = ctx.createLinearGradient(x1, y1, x2, y2);
         gradient.addColorStop(0, `hsla(${starHue},100%,95%,0.8)`);
         gradient.addColorStop(1, `hsla(${starHue},100%,90%,0)`);
-        
+
         ctx.strokeStyle = gradient;
         ctx.lineWidth = 3;
-        ctx.shadowBlur = 18;
+        ctx.shadowBlur = 10;
         ctx.shadowColor = `hsl(${starHue},100%,95%)`;
         ctx.beginPath();
         ctx.moveTo(x1, y1);
         ctx.lineTo(x2, y2);
         ctx.stroke();
-        
+
  // Star tip jewel
         ctx.fillStyle = `hsla(${starHue},100%,98%,0.9)`;
-        ctx.shadowBlur = 22;
+        ctx.shadowBlur = 14;
         ctx.beginPath();
         ctx.arc(x2, y2, 3.5, 0, Math.PI * 2);
         ctx.fill();
@@ -1734,17 +1737,17 @@ class Player {
         const gemX = this.x + Math.cos(gemAngle) * gemDist;
         const gemY = this.y + Math.sin(gemAngle) * gemDist;
         const gemSize = 6.5 + Math.sin(time / 60 + gem) * 2.5;
-        
+
  // Gem outer refraction
         ctx.globalAlpha = 0.45;
         const gemHue = (time / 10 + gem * 90) % 360;
         ctx.fillStyle = `hsla(${gemHue},100%,85%,0.7)`;
-        ctx.shadowBlur = 35;
+        ctx.shadowBlur = 20;
         ctx.shadowColor = `hsl(${gemHue},100%,90%)`;
         ctx.beginPath();
         ctx.arc(gemX, gemY, gemSize + 6, 0, Math.PI * 2);
         ctx.fill();
-        
+
  // Gem prismatic core
         ctx.globalAlpha = 1;
         const gemGradient = ctx.createRadialGradient(
@@ -1754,17 +1757,17 @@ class Player {
         gemGradient.addColorStop(0, `hsla(${gemHue},100%,98%,1)`);
         gemGradient.addColorStop(0.6, `hsla(${gemHue + 30},100%,90%,0.95)`);
         gemGradient.addColorStop(1, `hsla(${gemHue + 60},100%,85%,0.9)`);
-        
+
         ctx.fillStyle = gemGradient;
-        ctx.shadowBlur = 22;
+        ctx.shadowBlur = 14;
         ctx.shadowColor = `hsl(${gemHue},100%,95%)`;
         ctx.beginPath();
         ctx.arc(gemX, gemY, gemSize, 0, Math.PI * 2);
         ctx.fill();
-        
+
  // Bright highlight
         ctx.fillStyle = 'rgba(255,255,255,0.9)';
-        ctx.shadowBlur = 15;
+        ctx.shadowBlur = 8;
         ctx.shadowColor = '#ffffff';
         ctx.beginPath();
         ctx.arc(gemX - gemSize * 0.25, gemY - gemSize * 0.25, gemSize * 0.35, 0, Math.PI * 2);
@@ -1773,7 +1776,7 @@ class Player {
       
       // luxury particle shimmer
  // Super dense particle field
-      const luxuryCount = 24;
+      const luxuryCount = gameSettings.perfMode ? 0 : 12;
       for (let i = 0; i < luxuryCount; i++) {
         const angle = (time / 28 + i * (360 / luxuryCount)) * Math.PI / 180;
         const dist = this.r + 13 + (i % 3) * 5 + Math.sin(time / 42 + i * 2.8) * 4.5;
@@ -1782,10 +1785,10 @@ class Player {
         const particleHue = (time / 11 + i * 15) % 360;
         const particleSize = 2 + Math.sin(time / 38 + i) * 1;
         const particleAlpha = 0.7 + Math.sin(time / 52 + i * 3.8) * 0.3;
-        
+
         ctx.globalAlpha = particleAlpha;
         ctx.fillStyle = `hsla(${particleHue},100%,95%,${particleAlpha})`;
-        ctx.shadowBlur = 10;
+        ctx.shadowBlur = 6;
         ctx.shadowColor = `hsl(${particleHue},100%,95%)`;
         ctx.beginPath();
         ctx.arc(particleX, particleY, particleSize, 0, Math.PI * 2);
@@ -1799,10 +1802,10 @@ class Player {
         const ringRad = this.r + 11 + ring * 5 + Math.sin(time / 85 + ring) * 2.8;
         const ringRotation = (time / (38 + ring * 6)) * (ring % 2 === 0 ? 1 : -1);
         const ringHue = (time / 20 + ring * 120) % 360;
-        
+
         ctx.strokeStyle = `hsla(${ringHue},100%,95%,${0.75 - ring * 0.15})`;
         ctx.lineWidth = 3;
-        ctx.shadowBlur = 20;
+        ctx.shadowBlur = 12;
         ctx.shadowColor = `hsl(${ringHue},100%,95%)`;
         
  // Segmented crystalline rings
@@ -1831,13 +1834,13 @@ class Player {
       outerRadianceGradient.addColorStop(1, `hsla(${(time / 20 + 180) % 360},100%,90%,0)`);
       
       ctx.fillStyle = outerRadianceGradient;
-      ctx.shadowBlur = 40;
+      ctx.shadowBlur = 25;
       ctx.shadowColor = '#ffffff';
       ctx.beginPath();
       ctx.arc(this.x, this.y, outerRadianceRadius, 0, Math.PI * 2);
       ctx.fill();
       ctx.globalAlpha = 1;
-      
+
  // Main diamond core with prismatic gradient
       const coreGradient = ctx.createRadialGradient(
         this.x - this.r * 0.3, this.y - this.r * 0.3, 0,
@@ -1848,33 +1851,33 @@ class Player {
       coreGradient.addColorStop(0.3, `hsla(${coreHue},50%,98%,1)`);
       coreGradient.addColorStop(0.6, `hsla(${coreHue + 120},60%,95%,1)`);
       coreGradient.addColorStop(1, `hsla(${coreHue + 240},70%,92%,1)`);
-      
+
       ctx.fillStyle = coreGradient;
-      ctx.shadowBlur = 38;
+      ctx.shadowBlur = 24;
       ctx.shadowColor = '#ffffff';
       ctx.beginPath();
       ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
       ctx.fill();
-      
+
  // Inner brilliant light
       ctx.fillStyle = `hsla(${(time / 18) % 360},30%,98%,${0.9 + Math.sin(time / 85) * 0.1})`;
-      ctx.shadowBlur = 30;
+      ctx.shadowBlur = 18;
       ctx.shadowColor = '#ffffff';
       ctx.beginPath();
       ctx.arc(this.x, this.y, this.r * 0.65, 0, Math.PI * 2);
       ctx.fill();
-      
+
  // Ultra bright center
       ctx.fillStyle = `rgba(255,255,255,${0.95 + Math.sin(time / 90) * 0.05})`;
-      ctx.shadowBlur = 25;
+      ctx.shadowBlur = 15;
       ctx.shadowColor = '#ffffff';
       ctx.beginPath();
       ctx.arc(this.x, this.y, this.r * 0.38, 0, Math.PI * 2);
       ctx.fill();
-      
+
  // Brilliant highlight spot
       ctx.fillStyle = 'rgba(255,255,255,1)';
-      ctx.shadowBlur = 20;
+      ctx.shadowBlur = 12;
       ctx.shadowColor = '#ffffff';
       ctx.beginPath();
       ctx.arc(this.x - this.r * 0.2, this.y - this.r * 0.2, this.r * 0.25, 0, Math.PI * 2);
@@ -5761,7 +5764,7 @@ class Particle {
 
 // Particle pool — reuse objects instead of constant allocation
 const particlePool = [];
-const PARTICLE_POOL_MAX = 400;
+const PARTICLE_POOL_MAX = 200;
 
 function acquireParticle(x, y, angle, speed, color, life) {
   let p;
@@ -8418,7 +8421,12 @@ if (gameSettings.screenShake) screenShakeAmt = 1;
   ctx.fill();
   resetShadow();
 
-  for (let i = 0; i < enemies.length; i++) enemies[i].draw();
+  const _cW = canvas.width, _cH = canvas.height;
+  for (let i = 0; i < enemies.length; i++) {
+    const _e = enemies[i];
+    if (_e.x + _e.r < -80 || _e.x - _e.r > _cW + 80 || _e.y + _e.r < -80 || _e.y - _e.r > _cH + 80) continue;
+    _e.draw();
+  }
   if (boss) boss.draw();
   for (let i = 0; i < particles.length; i++) { if (!particles[i].isTrail) particles[i].draw(); }
   for (let i = 0; i < powerups.length; i++) powerups[i].draw();
