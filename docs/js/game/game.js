@@ -6756,19 +6756,30 @@ function applyRichSkinPreview(el, skinId, fallbackColor) {
 
 function initShopUI() {
   document.getElementById('shopCoinsVal').textContent = playerCoins;
-  // Initialize inventory tab (renders content + wires up filter/sort handlers)
-  if (typeof initInventoryTab === 'function') initInventoryTab();
+  // Only render inventory DOM when the inventory tab is actually visible.
+  // Building 700+ animated skin cards while the tab is hidden bloats the DOM
+  // and causes style-recalculation lag on every CSS hover/transition even on
+  // the home screen.  The tab-click handler calls initInventoryTab() lazily.
+  const invTab  = document.getElementById('shopTab-inventory');
+  const invGrid = document.getElementById('invGrid');
+  if (invTab && !invTab.classList.contains('hidden')) {
+    if (typeof initInventoryTab === 'function') initInventoryTab();
+  } else if (invGrid) {
+    invGrid.innerHTML = ''; // Wipe stale nodes so next open sees fresh data
+  }
   const grid = document.getElementById('skinGrid');
   if (!grid) return; // Inventory tab replaces skins tab
   grid.innerHTML = '';
 
- // Also initialize crates tab
-  if (typeof initCratesTab === 'function') {
+ // Lazy-init crates tab (only when visible)
+  const cratesTab = document.getElementById('shopTab-crates');
+  if (cratesTab && !cratesTab.classList.contains('hidden') && typeof initCratesTab === 'function') {
     initCratesTab();
   }
 
- // Also initialize battle pass tab
-  if (typeof initBattlePassTab === 'function') {
+  // Lazy-init battle pass tab (only when visible)
+  const bpTab = document.getElementById('shopTab-battlepass');
+  if (bpTab && !bpTab.classList.contains('hidden') && typeof initBattlePassTab === 'function') {
     initBattlePassTab();
   }
 
