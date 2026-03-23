@@ -45,6 +45,7 @@ const dashCooldownEl = dashAbility?.querySelector('.ability-cooldown');
 const dashTimerEl = dashAbility?.querySelector('.ability-timer');
 const buffsDisplayEl = document.getElementById('buffsDisplay');
 const killsValEl_cached = document.getElementById('killsVal');
+const coinsHUDEl = document.getElementById('coinsHUD');
 
 // --- resize ---
 
@@ -4365,6 +4366,7 @@ class Enemy {
   }
 
   update(dt) {
+    if (!player) return;
     const angle = Math.atan2(player.y - this.y, player.x - this.x);
     
  // Enforcer dash behavior
@@ -4519,7 +4521,9 @@ class Enemy {
     ctx.fill();
     resetShadow();
     if (player && player.freezeTimer > 0) {
-      ctx.save(); ctx.globalAlpha = 0.35; ctx.fillStyle = '#88ccff';
+      ctx.save();
+      ctx.globalAlpha = 0.35 * (this.type === 'phantom' ? this.phantomAlpha : 1);
+      ctx.fillStyle = '#88ccff';
       ctx.beginPath(); ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2); ctx.fill();
       ctx.restore();
     }
@@ -5850,6 +5854,9 @@ class Particle {
 // Particle pool — reuse objects instead of constant allocation
 const particlePool = [];
 const PARTICLE_POOL_MAX = 200;
+for (let _i = 0; _i < PARTICLE_POOL_MAX; _i++) {
+  particlePool.push(new Particle(0, 0, 0, 0, '#fff', 1));
+}
 
 function acquireParticle(x, y, angle, speed, color, life) {
   let p;
@@ -5872,7 +5879,7 @@ function acquireParticle(x, y, angle, speed, color, life) {
 
 function createExplosion(x, y, color, count) {
   if (!gameSettings.particles) return;
-  if (gameSettings.perfMode && particles.length >= 150) return;
+  if (particles.length >= 300) return;
   for (let i = 0; i < count; i++) {
     particles.push(acquireParticle(
       x,
@@ -6178,7 +6185,7 @@ class Turret {
           x: this.x, y: this.y,
           vx: Math.cos(this.angle) * 340,
           vy: Math.sin(this.angle) * 340,
-          r: 5, fromTurret: true
+          r: 5
         });
         this.shootCooldown = 0.65;
       }
@@ -6510,11 +6517,14 @@ function updateBuffsDisplay() {
           <div class="buff-time"></div>
         </div>
       `;
+      elem._bar    = elem.querySelector('.buff-bar');
+      elem._timeEl = elem.querySelector('.buff-time');
+      elem._nameEl = elem.querySelector('.buff-name');
       elem.style.opacity = '0';
       elem.style.transform = 'scale(0.8)';
       container.appendChild(elem);
       activeBuffElements[b.key] = elem;
-      
+
  // Trigger animation
       setTimeout(() => {
         elem.style.opacity = '1';
@@ -6527,10 +6537,10 @@ function updateBuffsDisplay() {
     const opacity = b.time > 0 ? Math.max(0.3, Math.min(1, b.time / 2)) : 1;
     const timeStr = b.time > 0 ? `${b.time.toFixed(1)}s` : '∞';
     
-    const bar = elem.querySelector('.buff-bar');
-    const timeEl = elem.querySelector('.buff-time');
-    const nameEl = elem.querySelector('.buff-name');
-    
+    const bar = elem._bar;
+    const timeEl = elem._timeEl;
+    const nameEl = elem._nameEl;
+
     if (bar) {
       bar.style.width = pct + '%';
       bar.style.background = b.color;
@@ -7740,12 +7750,13 @@ function loop(time) {
         } else if (pu.type === 'nuke') {
  // Nuke: instantly kill all on-screen enemies and the boss loses 30 HP
           const nukeKillCount = enemies.length;
+          let _nukeTotal = 0;
           for (let n = enemies.length - 1; n >= 0; n--) {
             const ne = enemies[n];
             const pts = Math.floor(ne.score || 0);
             score += pts;
+            _nukeTotal += pts;
             playerCoins += (ne.coinValue || 0);
-            createScorePopup(ne.x, ne.y, pts);
             createExplosion(ne.x, ne.y, ne.color, 20);
             if (activeSkin === 'icon_the_creator') createCreatorKillEffect(ne.x, ne.y);
             enemiesKilledThisWave++;
@@ -7760,6 +7771,7 @@ function loop(time) {
             }
           }
           enemies.length = 0;
+          if (_nukeTotal > 0) createScorePopup(player.x, player.y - 30, _nukeTotal);
           addComboBulk(nukeKillCount); // single UI update + achievement check
           saveCoins();
           if (boss) {
@@ -8351,7 +8363,6 @@ if (gameSettings.screenShake) screenShakeAmt = 1;
     hpEl.textContent = Math.max(0, Math.floor(player.hp));
 
  // Update coins HUD
-    const coinsHUDEl = document.getElementById('coinsHUD');
     if (coinsHUDEl) coinsHUDEl.textContent = `🪙 ${playerCoins}`;
 
  // Update active buffs panel
