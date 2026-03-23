@@ -6,7 +6,7 @@ const express = require('express');
 const router  = express.Router();
 const { requireAuth } = require('../middleware/auth');
 const { withTransaction, query } = require('../config/db');
-const { addSkin } = require('../models/inventory');
+const { addSkin, removeSkin } = require('../models/inventory');
 const { addCrate, removeCrate, getOwnedCrates } = require('../models/crate-inventory');
 const { checkUnlocks } = require('../utils/unlock-checker');
 
@@ -304,6 +304,76 @@ router.post('/open', requireAuth, async (req, res) => {
     return res.json({ success: true, ...result, newUnlocks });
   } catch (err) {
     console.error('[Crates] /open error:', err.message);
+    return res.status(400).json({ error: err.message });
+  }
+});
+
+// ── POST /api/crates/reroll ───────────────────────────────────────────────────
+// Body: { crateId, originalSkinId }
+// Re-roll: removes the skin just received and opens the crate again at 50% cost.
+router.post('/reroll', requireAuth, async (req, res) => {
+  const { crateId, originalSkinId } = req.body;
+  const crate = CRATES.find(c => c.id === crateId);
+  if (!crate)                           return res.status(400).json({ error: 'Invalid crate ID' });
+  if (!originalSkinId || !isValidSkinId(originalSkinId))
+                                        return res.status(400).json({ error: 'Invalid skin ID' });
+
+  const rotation = await getRotationState(crateId);
+  if (!rotation || rotation.retired)    return res.status(403).json({ error: 'This crate is no longer available.' });
+  if (!rotation.active)                 return res.status(403).json({ error: 'This crate is not currently in the shop.' });
+
+  const basePrice  = rotation.price_override ?? crate.price;
+  const finalPrice = Math.floor(basePrice * (1 - (rotation.discount_percent || 0) / 100));
+  const rerollCost = Math.floor(finalPrice * 0.5);
+
+  try {
+    const result = await withTransaction(async (client) => {
+      const { rows } = await client.query('SELECT * FROM users WHERE uid = $1 FOR UPDATE', [req.user.uid]);
+      const user = rows[0];
+      if (!user) throw new Error('User not found');
+      if (user.total_coins < rerollCost) throw new Error('Not enough coins');
+      if (!user.owned_skins.includes(originalSkinId)) throw new Error('Original skin not found in inventory');
+
+      // Return the original skin and charge reroll cost
+      await removeSkin(req.user.uid, originalSkinId, client);
+      await client.query(
+        'UPDATE users SET total_coins = total_coins - $2, updated_at = NOW() WHERE uid = $1',
+        [req.user.uid, rerollCost]
+      );
+
+      // Roll new skin
+      const rarity      = rollRarity(crate);
+      const skinId      = getRandomSkin(rarity, crateId);
+      const mutation    = rollMutation(skinId);
+      const finalSkinId = mutation ? `${skinId}__${mutation}` : skinId;
+
+      // Dupe check against post-remove inventory
+      const { rows: [refreshed] } = await client.query('SELECT owned_skins, total_coins FROM users WHERE uid = $1', [req.user.uid]);
+      const isDuplicate = refreshed.owned_skins.includes(finalSkinId);
+      let coinRefund = 0;
+      if (isDuplicate) {
+        const DUPE_RATES = { common: 0.25, uncommon: 0.25, rare: 0.35, epic: 0.50, ob_epic: 0.50, legendary: 0.60, ob_legendary: 0.60, mythic: 0.60, ob_mythic: 0.60, ob_ultra: 0.60 };
+        coinRefund = Math.floor(finalPrice * (DUPE_RATES[rarity] || 0.25));
+        if (coinRefund > 0) {
+          await client.query('UPDATE users SET total_coins = total_coins + $2 WHERE uid = $1', [req.user.uid, coinRefund]);
+        }
+      }
+
+      await addSkin(req.user.uid, finalSkinId, client);
+      await client.query(`
+        INSERT INTO player_stats (uid, total_coins_spent)
+        VALUES ($1, $2)
+        ON CONFLICT (uid) DO UPDATE SET total_coins_spent = player_stats.total_coins_spent + $2
+      `, [req.user.uid, rerollCost]);
+
+      const { rows: [updated] } = await client.query('SELECT total_coins FROM users WHERE uid = $1', [req.user.uid]);
+      return { skinId: finalSkinId, baseSkinId: skinId, rarity, mutation, isDuplicate, coinRefund, newBalance: updated.total_coins };
+    });
+
+    const newUnlocks = await checkUnlocks(req.user.uid, { rolledRarity: result.rarity }).catch(() => []);
+    return res.json({ success: true, ...result, newUnlocks });
+  } catch (err) {
+    console.error('[Crates] /reroll error:', err.message);
     return res.status(400).json({ error: err.message });
   }
 });

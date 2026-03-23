@@ -1035,16 +1035,70 @@ function displayCrateResults(result) {
       rerollBtn.style.opacity = '0.5';
       rerollBtn.title = 'Not enough coins';
     }
-    rerollBtn.onclick = () => {
+    rerollBtn.onclick = async () => {
       if (typeof playerCoins === 'undefined' || playerCoins < rerollCost) return;
-      // Remove the skin we just got
-      const idx = ownedSkins.lastIndexOf(reward.skinId || (reward.mutation ? `${reward.skin.id}__${reward.mutation}` : reward.skin.id));
-      if (idx !== -1) ownedSkins.splice(idx, 1);
-      // Deduct re-roll cost
-      playerCoins -= rerollCost;
-      if (typeof saveCoins === 'function') saveCoins();
-      // Re-roll: open the crate again but mark as rerolled
-      const newResult = openCrate(result.crate.id);
+      rerollBtn.disabled = true;
+      rerollBtn.style.opacity = '0.5';
+
+      const originalSkinId = reward.skinId || (reward.mutation
+        ? `${reward.skin.id}__${reward.mutation}` : reward.skin.id);
+
+      const isLoggedIn = typeof currentUser !== 'undefined' && currentUser
+        && !(typeof isGuest !== 'undefined' && isGuest);
+
+      let newResult = null;
+
+      if (isLoggedIn) {
+        // Server-authoritative reroll — charges 50% server-side
+        try {
+          const token = typeof getToken === 'function' ? getToken() : localStorage.getItem('topdown_token');
+          const resp = await fetch(`${API_BASE}/crates/reroll`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify({ crateId: result.crate.id, originalSkinId }),
+          });
+          if (!resp.ok) {
+            const err = await resp.json().catch(() => ({}));
+            showCrateMessage(err.error || 'Re-roll failed', true);
+            rerollBtn.disabled = false;
+            rerollBtn.style.opacity = '1';
+            return;
+          }
+          const data = await resp.json();
+          playerCoins = data.newBalance;
+          // Sync local skin list: remove old, add new
+          const idx = ownedSkins.lastIndexOf(originalSkinId);
+          if (idx !== -1) ownedSkins.splice(idx, 1);
+          if (!ownedSkins.includes(data.skinId)) ownedSkins.push(data.skinId);
+          if (typeof saveCoins === 'function') saveCoins();
+
+          const skin = typeof SKINS !== 'undefined' && SKINS.find(s => s.id === data.baseSkinId);
+          newResult = {
+            crate: result.crate,
+            rewards: [{
+              skin: skin || { id: data.baseSkinId, name: data.baseSkinId, color: '#888' },
+              skinId: data.skinId,
+              rarity: data.rarity,
+              isDuplicate: data.isDuplicate || false,
+              coinValue: data.coinRefund || 0,
+              mutation: data.mutation || null,
+            }],
+          };
+        } catch (e) {
+          showCrateMessage('Network error during re-roll', true);
+          rerollBtn.disabled = false;
+          rerollBtn.style.opacity = '1';
+          return;
+        }
+      } else {
+        // Guest/offline path: remove skin locally, deduct cost, open client-side
+        const idx = ownedSkins.lastIndexOf(originalSkinId);
+        if (idx !== -1) ownedSkins.splice(idx, 1);
+        playerCoins -= rerollCost;
+        if (typeof saveCoins === 'function') saveCoins();
+        newResult = await openCrate(result.crate.id);
+      }
+
       if (newResult) {
         newResult._rerolled = true;
         displayCrateResults(newResult);
