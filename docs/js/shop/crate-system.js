@@ -1549,11 +1549,13 @@ async function openOwnedCrateWithAnimation(crateId) {
 
   // Reuse the crate opening animation display
   isOpeningCrate = true;
-  const modal = document.getElementById('crateOpenModal');
-  if (modal) modal.classList.remove('hidden');
+  const modal     = document.getElementById('crateOpenModal');
+  const animation = document.getElementById('crateOpenAnimation');
+  const results   = document.getElementById('crateResults');
+  if (modal)      modal.classList.remove('hidden');
+  if (animation)  animation.classList.add('hidden');
+  if (results)    results.classList.remove('hidden');
 
-  // Build reel and run animation (same as showCrateOpeningAnimation internals)
-  // Use displayCrateResults directly
   displayCrateResults(result);
   renderCrateInventorySection();
   isOpeningCrate = false;

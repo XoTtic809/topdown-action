@@ -929,6 +929,43 @@ function getActiveSkinColor() {
     const l = 60 + Math.sin(t * 1.5) * 15;
     return `hsl(${h}, 100%, ${l}%)`;
   }
+  // new oblivion skins
+  if (activeSkin === 'ob_hellforge') {
+    const t = Date.now() / 1000;
+    return `hsl(${Math.sin(t * 3) * 12},100%,${30 + Math.sin(t * 2.5) * 12}%)`;
+  }
+  if (activeSkin === 'ob_voidwalker') {
+    const t = Date.now() / 1000;
+    return `hsl(${265 + Math.sin(t * 0.8) * 25},85%,${14 + Math.sin(t * 1.6) * 6}%)`;
+  }
+  if (activeSkin === 'ob_deathbloom') {
+    const t = Date.now() / 1000;
+    return `hsl(${300 + Math.sin(t * 0.9) * 20},75%,${18 + Math.sin(t * 2) * 7}%)`;
+  }
+  if (activeSkin === 'ob_apocalypse') {
+    const t = Date.now() / 1000;
+    return `hsl(${Math.sin(t * 1.8) * 10},90%,${8 + Math.sin(t * 2.2) * 5}%)`;
+  }
+  // neon crate skins
+  if (activeSkin && activeSkin.startsWith('neon_')) {
+    const t = Date.now() / 18;
+    return `hsl(${(t * 3) % 360},100%,60%)`;
+  }
+  // frost crate skins
+  if (activeSkin && activeSkin.startsWith('frost_')) {
+    const t = Date.now() / 1000;
+    return `hsl(${200 + Math.sin(t * 0.8) * 20},80%,${62 + Math.sin(t * 1.5) * 12}%)`;
+  }
+  // infernal crate skins
+  if (activeSkin && activeSkin.startsWith('infernal_')) {
+    const t = Date.now() / 1000;
+    return `hsl(${Math.sin(t * 2) * 14},100%,${48 + Math.sin(t * 1.8) * 14}%)`;
+  }
+  // void crate skins
+  if (activeSkin && activeSkin.startsWith('void_')) {
+    const t = Date.now() / 1000;
+    return `hsl(${270 + Math.sin(t * 0.6) * 30},85%,${10 + Math.sin(t * 1.2) * 4}%)`;
+  }
 
  // icon skins
   if (activeSkin === 'icon_noah_brown') return '#6b4423';
@@ -952,7 +989,7 @@ function getActiveSkinColor() {
 
  // fallback
   const skin = SKINS.find(s => s.id === activeSkin);
-  return skin ? skin.color : '#9be7ff';
+  return (skin && skin.color) ? skin.color : '#9be7ff';
 
 }
 

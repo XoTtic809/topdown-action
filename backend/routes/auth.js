@@ -235,7 +235,13 @@ router.post('/progress', requireAuth, async (req, res) => {
       if (rejected > 0) {
         console.warn(`[Auth] Skin whitelist rejected ${rejected} invalid skin IDs for uid=${req.user.uid}`);
       }
-      if (valid.length > 0) await syncSkins(req.user.uid, valid);
+      if (valid.length > 0) {
+        try {
+          await syncSkins(req.user.uid, valid);
+        } catch (syncErr) {
+          console.error('[Auth] syncSkins error (non-fatal):', syncErr.message, '\n', syncErr.stack);
+        }
+      }
     }
 
     // ── Stats tracking ────────────────────────────────────────────
@@ -281,7 +287,7 @@ router.post('/progress', requireAuth, async (req, res) => {
 
     return res.json({ ...updated, newUnlocks });
   } catch (err) {
-    console.error('[Auth] /progress error:', err.message);
+    console.error('[Auth] /progress error:', err.message, '\n', err.stack);
     return res.status(500).json({ error: 'Failed to save progress' });
   }
 });

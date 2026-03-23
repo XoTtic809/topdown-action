@@ -408,7 +408,7 @@ async function submitScheduleAction() {
   }
 
   try {
-    await apiPost('/admin/schedule/add', { crateId, action, scheduledAt, payload });
+    await apiPost('/admin/rotation/schedule/add', { crateId, action, scheduledAt, payload });
     showAdminMessage('Schedule added');
     document.getElementById('scheduleFormPanel').style.display = 'none';
     loadRotationData();
@@ -439,7 +439,7 @@ function buildScheduleRow(s) {
 async function cancelSchedule(scheduleId) {
   if (!confirm('Cancel this scheduled action?')) return;
   try {
-    await apiPost('/admin/schedule/cancel', { scheduleId });
+    await apiPost('/admin/rotation/schedule/cancel', { scheduleId });
     showAdminMessage('Schedule cancelled');
     loadRotationData();
   } catch (err) {
@@ -494,13 +494,13 @@ async function presetWeekendFlashSale() {
   const monday = new Date(Date.UTC(friday.getUTCFullYear(), friday.getUTCMonth(), friday.getUTCDate() + 3, 6, 0, 0));
 
   try {
-    await apiPost('/admin/schedule/add', {
+    await apiPost('/admin/rotation/schedule/add', {
       crateId,
       action: 'price_change',
       scheduledAt: friday.toISOString(),
       payload: { price: null, discount_percent: 25 },
     });
-    await apiPost('/admin/schedule/add', {
+    await apiPost('/admin/rotation/schedule/add', {
       crateId,
       action: 'price_change',
       scheduledAt: monday.toISOString(),
