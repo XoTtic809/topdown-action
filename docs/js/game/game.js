@@ -6788,8 +6788,15 @@ function initShopUI() {
     .filter(s => !s.crateOnly && !s.achievementOnly && s.battlePassTier === undefined && s.price !== -1)
     .sort((a, b) => a.price - b.price);
 
+  // Precompute owned count per skin ID — O(n) instead of O(n × skins)
+  const _ownedCountMap = {};
+  for (let _i = 0; _i < ownedSkins.length; _i++) {
+    const _id = ownedSkins[_i];
+    _ownedCountMap[_id] = (_ownedCountMap[_id] || 0) + 1;
+  }
+
   for (const skin of regularSkinsOrdered) {
-    const copyCount = ownedSkins.filter(s => s === skin.id).length;
+    const copyCount = _ownedCountMap[skin.id] || 0;
     const owned = copyCount > 0;
     const active = activeSkin === skin.id;
     const isChampion = false; // Champions filtered out above (price === -1)
@@ -8446,7 +8453,13 @@ if (gameSettings.screenShake) screenShakeAmt = 1;
     ctx.restore();
   }
 
-  requestAnimationFrame(loop);
+  // When idle on home screen (not running, no death particles), drop to ~10fps
+  // to avoid burning 60fps for a fully covered canvas that's drawing nothing.
+  if (!running && !paused && particles.length === 0) {
+    setTimeout(() => requestAnimationFrame(loop), 100);
+  } else {
+    requestAnimationFrame(loop);
+  }
 }
 
 /* =======================

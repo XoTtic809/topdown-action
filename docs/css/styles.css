@@ -2830,7 +2830,7 @@ canvas {
   position: absolute;
   border-radius: 50%;
   pointer-events: none; z-index: 0;
-  filter: blur(90px);
+  filter: blur(70px);
 }
 .hs-orb-a {
   width: 560px; height: 560px;
