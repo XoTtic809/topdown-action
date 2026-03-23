@@ -56,6 +56,7 @@ async function apiPost(path, body) {
     headers: authHeaders(),
     body:    JSON.stringify(body),
   });
+  if (!res.ok) throw new Error(`POST ${path} → ${res.status}`);
   return res.json();
 }
 
@@ -63,6 +64,7 @@ async function apiGet(path) {
   const res = await fetch(`${API_BASE}${path}`, {
     headers: authHeaders(),
   });
+  if (!res.ok) throw new Error(`GET ${path} → ${res.status}`);
   return res.json();
 }
 
@@ -71,6 +73,7 @@ async function apiDelete(path) {
     method:  'DELETE',
     headers: authHeaders(),
   });
+  if (!res.ok) throw new Error(`DELETE ${path} → ${res.status}`);
   return res.json();
 }
 

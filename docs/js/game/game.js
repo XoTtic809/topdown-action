@@ -1660,7 +1660,7 @@ class Player {
       
       // rainbow sparkle cloud
  // Dense field of prismatic sparkles
-      const sparkleCount = gameSettings.perfMode ? 0 : 16;
+      const sparkleCount = gameSettings.perfMode ? 0 : 10;
       for (let i = 0; i < sparkleCount; i++) {
         const angle = (time / 30 + i * (360 / sparkleCount)) * Math.PI / 180;
         const dist = this.r + 18 + Math.sin(time / 45 + i * 2.2) * 9;

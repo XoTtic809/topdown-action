@@ -129,7 +129,6 @@ canvas {
   font-size: 14px;
   font-family: var(--font-title);
   letter-spacing: 1px;
-  backdrop-filter: blur(12px);
   border: 1px solid rgba(88,166,255,0.15);
   box-shadow: 0 2px 10px rgba(0,0,0,0.5);
   display: flex;
@@ -211,7 +210,6 @@ canvas {
   background: rgba(13,21,37,0.9);
   border: 2px solid rgba(88,166,255,0.35);
   border-radius: 14px;
-  backdrop-filter: blur(12px);
   display: flex;
   align-items: center;
   justify-content: center;
