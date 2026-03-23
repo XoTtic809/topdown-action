@@ -1001,6 +1001,7 @@ let enemies = [];
 let enemyBullets = [];
 let particles = [];
 let powerups = [];
+let turrets = [];
 let spatialGrid; // Initialized after SpatialGrid class is defined
 let running = false;
 let paused = false;
@@ -1128,6 +1129,7 @@ class Player {
     this.dashCooldown = 0;
     this.dashDuration = 0;
     this.dashDir = { x: 0, y: 0 };
+    this.freezeTimer = 0;
   }
 
   update(dt) {
@@ -1177,6 +1179,7 @@ class Player {
     this.shield = Math.max(0, this.shield - dt);
     this.pierce = Math.max(0, this.pierce - dt);
     this.explosive = Math.max(0, this.explosive - dt);
+    this.freezeTimer = Math.max(0, this.freezeTimer - dt);
     this.dashCooldown = Math.max(0, this.dashCooldown - dt);
     
  // Update dash ability UI
@@ -4313,6 +4316,40 @@ class Enemy {
       this.dashChargeTime = 0;
       this.normalSpeed = 95;
       this.dashSpeed = 280;
+    } else if (this.type === 'splitter') {
+      this.r = 18;
+      this.speed = 70;
+      this.color = '#ff8c42';
+      this.hp = 2;
+      this.maxHp = 2;
+      this.score = 40;
+      this.coinValue = 8;
+    } else if (this.type === 'splitter_fragment') {
+      this.r = 7;
+      this.speed = 210;
+      this.color = '#ffaa66';
+      this.hp = 1;
+      this.maxHp = 1;
+      this.score = 10;
+      this.coinValue = 2;
+    } else if (this.type === 'phantom') {
+      this.r = 13;
+      this.speed = 140;
+      this.color = '#cc44ff';
+      this.hp = 2;
+      this.maxHp = 2;
+      this.score = 35;
+      this.coinValue = 7;
+      this.phantomTimer = 0;
+      this.phantomAlpha = 1;
+    } else if (this.type === 'bomber') {
+      this.r = 17;
+      this.speed = 58;
+      this.color = '#ff4400';
+      this.hp = 2;
+      this.maxHp = 2;
+      this.score = 45;
+      this.coinValue = 9;
     } else {
       this.r = 14;
       this.speed = 126; // Increased from 105
@@ -4379,8 +4416,31 @@ class Enemy {
       }
     }
     
-    this.x += Math.cos(angle) * this.speed * dt;
-    this.y += Math.sin(angle) * this.speed * dt;
+    // Phantom: pulse opacity so it fades in and out
+    if (this.type === 'phantom') {
+      this.phantomTimer += dt * 2.2;
+      this.phantomAlpha = 0.15 + 0.85 * (0.5 + 0.5 * Math.sin(this.phantomTimer));
+    }
+
+    // Bomber: self-destruct when close enough to the player
+    if (this.type === 'bomber' && this.hasEnteredScreen) {
+      const _bombDist = Math.hypot(player.x - this.x, player.y - this.y);
+      if (_bombDist < 65) {
+        this._dead = true;
+        createExplosion(this.x, this.y, '#ff6600', 30);
+        player.takeDamage(15);
+        screenShakeAmt = Math.max(screenShakeAmt, 1.0);
+        enemiesKilledThisWave++;
+        totalKills++;
+        addCombo();
+        return;
+      }
+    }
+
+    // Freeze power-up: slow all enemies to 30% speed
+    const _freezeMult = (player && player.freezeTimer > 0) ? 0.3 : 1;
+    this.x += Math.cos(angle) * this.speed * _freezeMult * dt;
+    this.y += Math.sin(angle) * this.speed * _freezeMult * dt;
 
  // Check if enemy has entered visible screen bounds
     if (!this.hasEnteredScreen) {
@@ -4428,6 +4488,11 @@ class Enemy {
   }
 
   draw() {
+    if (this.type === 'phantom') { ctx.save(); ctx.globalAlpha = this.phantomAlpha; }
+    if (this.type === 'bomber' && player) {
+      const _bd = Math.hypot(player.x - this.x, player.y - this.y);
+      if (_bd < 130) setShadow(8 + 6 * Math.sin(Date.now() / 80), '#ff4400');
+    }
  // Glow for miniboss
     if (this.type === 'miniboss') {
       setShadow(15, this.color);
@@ -4453,9 +4518,18 @@ class Enemy {
     ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
     ctx.fill();
     resetShadow();
+    if (player && player.freezeTimer > 0) {
+      ctx.save(); ctx.globalAlpha = 0.35; ctx.fillStyle = '#88ccff';
+      ctx.beginPath(); ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2); ctx.fill();
+      ctx.restore();
+    }
+    if (this.type === 'splitter') {
+      ctx.strokeStyle = '#cc5500'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(this.x - this.r, this.y); ctx.lineTo(this.x + this.r, this.y); ctx.stroke();
+    }
     
  // HP bar for tanks, enforcers, and minibosses
-    if (this.type === 'tank' || this.type === 'miniboss' || this.type === 'enforcer') {
+    if (this.type === 'tank' || this.type === 'miniboss' || this.type === 'enforcer' || this.type === 'splitter' || this.type === 'bomber') {
       const barWidth = this.r * 2;
       const barHeight = 4;
       const barX = this.x - barWidth / 2;
@@ -4491,6 +4565,14 @@ class Enemy {
         ctx.fillText('⬥', this.x, this.y);
       }
     }
+    if (this.type === 'bomber') {
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+      ctx.font = 'bold 13px Arial';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('⚠', this.x, this.y - this.r - 14);
+    }
+    if (this.type === 'phantom') ctx.restore();
   }
 }
 
@@ -4522,6 +4604,9 @@ function spawnEnemy() {
     else if (wave >= 3 && rand < 0.23) type = 'shooter';
     else if (wave >= 2 && rand < 0.43) type = 'tank';
     else if (rand < 0.63) type = 'fast';
+    else if (wave >= 5 && rand < 0.68) type = 'splitter';
+    else if (wave >= 6 && rand < 0.72) type = 'bomber';
+    else if (wave >= 8 && rand < 0.77) type = 'phantom';
   }
 
   const e = new Enemy(x, y, type);
@@ -6060,6 +6145,62 @@ function getCreatorMilestoneScale() {
 }
 
 /* =======================
+   TURRET
+======================= */
+
+class Turret {
+  constructor(x, y) {
+    this.x = x;
+    this.y = y;
+    this.life = 10;
+    this.shootCooldown = 0;
+    this.angle = 0;
+  }
+
+  update(dt) {
+    this.life -= dt;
+    this.shootCooldown -= dt;
+
+    // Find nearest enemy
+    let nearest = null;
+    let nearestDist = Infinity;
+    for (let i = 0; i < enemies.length; i++) {
+      const e = enemies[i];
+      if (e._dead) continue;
+      const d = Math.hypot(e.x - this.x, e.y - this.y);
+      if (d < nearestDist) { nearestDist = d; nearest = e; }
+    }
+
+    if (nearest) {
+      this.angle = Math.atan2(nearest.y - this.y, nearest.x - this.x);
+      if (this.shootCooldown <= 0) {
+        bullets.push({
+          x: this.x, y: this.y,
+          vx: Math.cos(this.angle) * 340,
+          vy: Math.sin(this.angle) * 340,
+          r: 5, fromTurret: true
+        });
+        this.shootCooldown = 0.65;
+      }
+    }
+  }
+
+  draw() {
+    setShadow(10, '#00ffff');
+    ctx.strokeStyle = '#00ffff';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, 10, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(this.x, this.y);
+    ctx.lineTo(this.x + Math.cos(this.angle) * 14, this.y + Math.sin(this.angle) * 14);
+    ctx.stroke();
+    resetShadow();
+  }
+}
+
+/* =======================
    POWERUPS
 ======================= */
 
@@ -6081,7 +6222,10 @@ class PowerUp {
       speedup: { color: '#00ffff', symbol: '⟫' },
       nuke: { color: '#ff6b35', symbol: '💣' },
       explosive: { color: '#ff4500', symbol: '💥' },
-      pierce: { color: '#ff8c42', symbol: '⚔' }
+      pierce: { color: '#ff8c42', symbol: '⚔' },
+      freeze: { color: '#aaddff', symbol: '❄' },
+      magnet: { color: '#88aaff', symbol: '🧲' },
+      turret: { color: '#00ffff', symbol: '⊕' }
     };
     
     const config = types[type];
@@ -6150,7 +6294,22 @@ function spawnPowerUp(x, y) {
   if (Math.random() < 0.10) {
     types.push('pierce');
   }
-  
+
+ // Freeze (8% chance, wave 3+)
+  if (Math.random() < 0.08 && wave >= 3) {
+    types.push('freeze');
+  }
+
+ // Magnet (6% chance, always)
+  if (Math.random() < 0.06) {
+    types.push('magnet');
+  }
+
+ // Turret (7% chance, wave 2+)
+  if (Math.random() < 0.07 && wave >= 2) {
+    types.push('turret');
+  }
+
  // Clamp powerup position within visible screen bounds with padding
  // This prevents powerups from spawning off-screen when enemies die off-screen
   const padding = 30; // Minimum distance from screen edge
@@ -6296,13 +6455,23 @@ function updateBuffsDisplay() {
     });
   }
   if (player.explosive > 0) {
-    buffs.push({ 
+    buffs.push({
       key: 'explosive',
-      icon: '💥', 
-      name: 'Explosive Bullets', 
-      time: player.explosive, 
-      maxTime: 12, 
-      color: '#ff4500' 
+      icon: '💥',
+      name: 'Explosive Bullets',
+      time: player.explosive,
+      maxTime: 12,
+      color: '#ff4500'
+    });
+  }
+  if (player.freezeTimer > 0) {
+    buffs.push({
+      key: 'freeze',
+      icon: '❄',
+      name: 'Freeze',
+      time: player.freezeTimer,
+      maxTime: 5,
+      color: '#aaddff'
     });
   }
 
@@ -7527,6 +7696,12 @@ function loop(time) {
  // Cull off-screen enemies to prevent memory leak
     cullOffScreenEnemies();
 
+ // Update turrets
+    for (let i = turrets.length - 1; i >= 0; i--) {
+      turrets[i].update(dt);
+      if (turrets[i].life <= 0) turrets.splice(i, 1);
+    }
+
  // Update powerups
     for (let i = powerups.length - 1; i >= 0; i--) {
       powerups[i].update(dt);
@@ -7622,8 +7797,19 @@ function loop(time) {
 if (gameSettings.screenShake) screenShakeAmt = 1.2;
           playSound(120, 0.6, 'sawtooth');
           setTimeout(() => playSound(80, 0.6, 'sawtooth'), 150);
+        } else if (pu.type === 'freeze') {
+          player.freezeTimer = 5;
+        } else if (pu.type === 'magnet') {
+          for (let _mi = powerups.length - 1; _mi >= 0; _mi--) {
+            if (_mi === i) continue;
+            createExplosion(powerups[_mi].x, powerups[_mi].y, powerups[_mi].color, 20);
+            powerups.splice(_mi, 1);
+            if (_mi < i) i--;
+          }
+        } else if (pu.type === 'turret') {
+          turrets.push(new Turret(player.x, player.y));
         }
-        
+
         sounds.powerUp();
         createExplosion(pu.x, pu.y, pu.color, 25);
         if (typeof achOnPowerupCollect === 'function') achOnPowerupCollect();
@@ -7798,6 +7984,11 @@ if (gameSettings.screenShake) screenShakeAmt = 1.2;
             const dropChance = e.type === 'miniboss' ? 0.4 : (e.type === 'enforcer' ? 0.3 : 0.2);
             if (Math.random() < dropChance) {
               spawnPowerUp(e.x, e.y);
+            }
+            if (e.type === 'splitter') {
+              for (let _f = 0; _f < 2; _f++) {
+                enemies.push(new Enemy(e.x + (Math.random()-0.5)*20, e.y + (Math.random()-0.5)*20, 'splitter_fragment'));
+              }
             }
           } else {
             createExplosion(b.x, b.y, '#ffffff', 12);
@@ -8448,6 +8639,7 @@ if (gameSettings.screenShake) screenShakeAmt = 1;
   if (boss) boss.draw();
   for (let i = 0; i < particles.length; i++) { if (!particles[i].isTrail) particles[i].draw(); }
   for (let i = 0; i < powerups.length; i++) powerups[i].draw();
+  for (let i = 0; i < turrets.length; i++) turrets[i].draw();
 
   if (shaking) {
     ctx.restore();
@@ -8686,6 +8878,7 @@ function startGame() {
   enemyBullets = [];
   particles = [];
   powerups = [];
+  turrets = [];
   boss = null;
   score = 0;
   _sessionStartCoins = playerCoins;
