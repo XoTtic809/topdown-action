@@ -152,6 +152,11 @@
   height: 28px;
 }
 
+.pc-rank-badge .rank-badge-sovereign svg {
+  width: 56px;
+  height: 60px;
+}
+
 .pc-rank-label {
   font-size: 11px;
   color: rgba(255,255,255,0.55);
