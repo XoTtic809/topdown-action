@@ -708,7 +708,7 @@ async function buyListing(listingId) {
     if (boughtListing && boughtListing.listingType === 'crate') {
       // Crate purchase — add to crate inventory cache
       if (typeof ownedCratesCache !== 'undefined' && boughtListing.crateId) {
-        ownedCratesCache.push(boughtListing.crateId);
+        if (!ownedCratesCache.includes(boughtListing.crateId)) ownedCratesCache.push(boughtListing.crateId);
         if (typeof renderCrateInventorySection === 'function') renderCrateInventorySection();
       }
     } else {

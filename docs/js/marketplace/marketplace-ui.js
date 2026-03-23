@@ -700,8 +700,11 @@ async function _executeBuy(listingId, skinName) {
     result = await buyListing(listingId);
   } finally {
     _buyInFlight = false;
+    // Always re-render to re-enable buttons, even on network error
+    renderMarketplaceListings();
   }
 
+  if (!result) return; // network error threw before we got a response
   if (result.success) {
     syncCoinsDisplays();
     showMpMessage(`Purchased "${_esc(result.skinName)}" for ${result.price.toLocaleString()} coins! 🎉`);
@@ -711,9 +714,6 @@ async function _executeBuy(listingId, skinName) {
   } else {
     showMpMessage(result.error || 'Purchase failed.', true);
   }
-
-  // Re-enable buy buttons (renderMarketplaceListings will rebuild them with correct state)
-  renderMarketplaceListings();
 }
 
 // ════════════════════════════════════════════════════════════
