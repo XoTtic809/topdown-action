@@ -401,9 +401,9 @@ async function _commitLiveTrade(sessionId, session, res) {
       const initiatorUser = userRows.find(u => u.uid === session.initiator_id);
       const targetUser    = userRows.find(u => u.uid === session.target_id);
 
-      // Re-read session (may have been cancelled)
+      // Re-read session with lock to prevent concurrent cancel/modify between read and commit
       const { rows: sessionRows } = await client.query(
-        `SELECT * FROM trade_sessions WHERE id = $1`, [sessionId]
+        `SELECT * FROM trade_sessions WHERE id = $1 FOR UPDATE`, [sessionId]
       );
       const s = sessionRows[0];
       if (!s || s.status !== 'active' || !s.initiator_ready || !s.target_ready) {

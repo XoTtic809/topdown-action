@@ -459,6 +459,7 @@ router.post('/buy', requireAuth, async (req, res) => {
           RETURNING total_coins
         `, [req.user.uid, price]);
         buyerAfter = result.rows;
+        if (!buyerAfter[0]) throw new Error('Could not fetch updated buyer balance.');
       } else {
         // Skin purchase — add to owned_skins (original path)
         const result = await client.query(`
