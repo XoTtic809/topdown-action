@@ -1226,7 +1226,11 @@ canvas {
   justify-content: center;
   background: rgba(0,0,0,0.85);
   backdrop-filter: blur(6px);
+  cursor: default !important;
 }
+.rank-index-overlay * { cursor: default !important; }
+.rank-index-overlay button,
+.rank-index-overlay a { cursor: pointer !important; }
 .rank-index-overlay.hidden { display: none; }
 
 .rank-index-box {
