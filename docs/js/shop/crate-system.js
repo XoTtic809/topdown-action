@@ -1759,6 +1759,9 @@ async function initCratesTab() {
     const stockRemaining = entry.stockRemaining;
     const isSoldOut      = typeof stockRemaining === 'number' && stockRemaining === 0;
 
+    // Collect extra elements to insert between price and browseBtn
+    const extraEls = [];
+
     if (isSoldOut) {
       btn.disabled = true;
       buyInvBtn.disabled = true;
@@ -1771,7 +1774,7 @@ async function initCratesTab() {
         border-radius:4px; padding:3px 8px; font-size:10px; font-weight:700;
         letter-spacing:1px; margin-top:4px;
       `;
-      card.insertBefore(soldBadge, browseBtn);
+      extraEls.push(soldBadge);
     } else if (entry.weekendOnly) {
       const weBadge = document.createElement('div');
       weBadge.textContent = '⏳ WEEKEND ONLY';
@@ -1780,7 +1783,7 @@ async function initCratesTab() {
         border-radius:4px; padding:3px 8px; font-size:10px; font-weight:700;
         letter-spacing:1px; margin-top:4px;
       `;
-      card.insertBefore(weBadge, browseBtn);
+      extraEls.push(weBadge);
     } else if (typeof stockRemaining === 'number') {
       const stockBadge = document.createElement('div');
       const lowStock = stockRemaining <= 20;
@@ -1791,13 +1794,12 @@ async function initCratesTab() {
         border-radius:4px; padding:3px 8px; font-size:10px; font-weight:700;
         letter-spacing:1px; margin-top:4px;
       `;
-      card.insertBefore(stockBadge, browseBtn);
+      extraEls.push(stockBadge);
     }
 
     // Countdown timer
     if (entry.timerVisible && entry.endsAt) {
-      const timer = createCountdownTimer(entry.endsAt);
-      card.insertBefore(timer, browseBtn);
+      extraEls.push(createCountdownTimer(entry.endsAt));
     }
 
     card.appendChild(icon);
@@ -1805,6 +1807,7 @@ async function initCratesTab() {
     card.appendChild(desc);
     card.appendChild(preview);
     card.appendChild(price);
+    extraEls.forEach(el => card.appendChild(el));
     card.appendChild(browseBtn);
     card.appendChild(btn);
     card.appendChild(buyInvBtn);

@@ -278,9 +278,20 @@ function renderSchedulePanel() {
 
   el.innerHTML = `
     <div class="admin-section" style="margin-top:16px;">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
         <h3 style="margin:0;font-size:13px;color:var(--gold);letter-spacing:1px;">SCHEDULE MANAGER</h3>
         <button class="admin-action-btn" id="scheduleFormToggle" onclick="toggleScheduleForm()" style="font-size:10px;padding:4px 10px;">+ Schedule Action</button>
+      </div>
+
+      <div style="background:#0d1117;border:1px solid #2a2a3e;border-radius:6px;padding:10px;margin-bottom:12px;font-size:11px;color:#aaa;line-height:1.6;">
+        <strong style="color:#fff;">How this works:</strong> Scheduled actions run automatically at the time you set.
+        The server checks every 60 seconds and executes anything due.<br>
+        <strong style="color:#88f;">Activate</strong> = turn crate on in the shop &nbsp;|&nbsp;
+        <strong style="color:#f88;">Deactivate</strong> = hide it from the shop &nbsp;|&nbsp;
+        <strong style="color:#8f8;">Restock</strong> = add stock to a limited crate &nbsp;|&nbsp;
+        <strong style="color:#fa8;">Price Change</strong> = set a new price or discount at that time &nbsp;|&nbsp;
+        <strong style="color:#f44;">Retire</strong> = permanently remove from shop (can't undo)<br>
+        <span style="color:#888;">Tip: "Weekend Flash Sale" auto-schedules a 25% discount starting next Friday 18:00 UTC, ending Monday 06:00 UTC.</span>
       </div>
 
       <div id="scheduleFormPanel" style="display:none;background:#1a1a2e;border-radius:6px;padding:12px;margin-bottom:12px;">
@@ -290,15 +301,15 @@ function renderSchedulePanel() {
       <div id="schedulePresets" style="margin-bottom:12px;">
         <div style="font-size:11px;color:var(--muted);margin-bottom:6px;">QUICK PRESETS</div>
         <div style="display:flex;gap:6px;flex-wrap:wrap;">
-          <button class="admin-action-btn reset" onclick="presetWeekendFlashSale()" style="font-size:10px;padding:4px 10px;">⚡ Weekend Flash Sale</button>
-          <button class="admin-action-btn" onclick="presetLimitedDrop()" style="font-size:10px;padding:4px 10px;">📦 Limited Drop</button>
+          <button class="admin-action-btn reset" onclick="presetWeekendFlashSale()" style="font-size:10px;padding:4px 10px;" title="Schedule a 25% discount starting next Friday 18:00 UTC, auto-removed Monday 06:00 UTC">⚡ Weekend Flash Sale</button>
+          <button class="admin-action-btn" onclick="presetLimitedDrop()" style="font-size:10px;padding:4px 10px;" title="Immediately activate a crate with a limited stock count">📦 Limited Drop</button>
         </div>
       </div>
 
-      <div style="font-size:11px;color:var(--muted);margin-bottom:6px;">UPCOMING (${allPending.length})</div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:6px;">UPCOMING ACTIONS (${allPending.length})</div>
       <div id="pendingSchedulesList">
         ${allPending.length === 0
-          ? '<div style="font-size:11px;color:var(--muted);">No pending schedules.</div>'
+          ? '<div style="font-size:11px;color:var(--muted);">No scheduled actions yet.</div>'
           : allPending.map(s => buildScheduleRow(s)).join('')
         }
       </div>
@@ -438,13 +449,40 @@ async function cancelSchedule(scheduleId) {
 
 // ── Quick Presets ─────────────────────────────────────────────────────────────
 
+// Shows a small inline crate-picker dialog. Returns a promise resolving to
+// the selected crateId, or null if cancelled.
+function _pickCrateDialog(title) {
+  return new Promise(resolve => {
+    const overlay = document.createElement('div');
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:9999;display:flex;align-items:center;justify-content:center;';
+    const box = document.createElement('div');
+    box.style.cssText = 'background:#1a1a2e;border:1px solid #3a3a5e;border-radius:10px;padding:20px;min-width:280px;max-width:360px;';
+    box.innerHTML = `
+      <div style="font-size:13px;font-weight:bold;color:#fff;margin-bottom:12px;">${title}</div>
+      <select id="_pickCrateSelect" class="auth-input" style="width:100%;padding:6px 8px;font-size:12px;margin-bottom:12px;">
+        ${Object.entries(ROTATION_CRATE_META).map(([id, m]) =>
+          `<option value="${id}">${m.icon} ${m.name} — 🪙 ${m.price.toLocaleString()}</option>`
+        ).join('')}
+      </select>
+      <div style="display:flex;gap:8px;justify-content:flex-end;">
+        <button class="admin-action-btn" id="_pickCrateCancel" style="font-size:11px;">Cancel</button>
+        <button class="admin-action-btn reset" id="_pickCrateOk" style="font-size:11px;">Select</button>
+      </div>
+    `;
+    overlay.appendChild(box);
+    document.body.appendChild(overlay);
+    overlay.querySelector('#_pickCrateCancel').onclick = () => { overlay.remove(); resolve(null); };
+    overlay.querySelector('#_pickCrateOk').onclick = () => {
+      const val = overlay.querySelector('#_pickCrateSelect').value;
+      overlay.remove();
+      resolve(val || null);
+    };
+  });
+}
+
 async function presetWeekendFlashSale() {
-  const options = Object.entries(ROTATION_CRATE_META)
-    .map(([id, m]) => `${m.icon} ${m.name} (${id})`).join('\n');
-  const input = prompt(`Weekend Flash Sale\nEnter crate ID:\n\n${options}`);
-  if (!input) return;
-  const crateId = input.trim();
-  if (!ROTATION_CRATE_META[crateId]) { showAdminMessage('Invalid crate ID', true); return; }
+  const crateId = await _pickCrateDialog('Weekend Flash Sale — pick a crate to discount 25% this weekend:');
+  if (!crateId) return;
 
   // Next Friday 18:00 UTC
   const now   = new Date();
@@ -476,12 +514,10 @@ async function presetWeekendFlashSale() {
 }
 
 async function presetLimitedDrop() {
-  const options = Object.entries(ROTATION_CRATE_META)
-    .map(([id, m]) => `${m.icon} ${m.name} (${id})`).join('\n');
-  const crateId = (prompt(`Limited Drop\nEnter crate ID:\n\n${options}`) || '').trim();
-  if (!crateId || !ROTATION_CRATE_META[crateId]) { showAdminMessage('Invalid crate ID', true); return; }
+  const crateId = await _pickCrateDialog('Limited Drop — pick a crate to activate with limited stock:');
+  if (!crateId) return;
 
-  const stockStr = prompt(`How many to drop? (will activate crate now with this stock)`);
+  const stockStr = prompt(`How many units to drop?\n(The crate will be activated immediately with this many in stock)`);
   if (!stockStr) return;
   const stock = parseInt(stockStr, 10);
   if (!stock || stock <= 0) { showAdminMessage('Invalid stock amount', true); return; }

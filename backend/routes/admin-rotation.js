@@ -28,7 +28,6 @@ router.get('/', requireAuth, requireAdmin, async (req, res) => {
   try {
     const { rows } = await query(`
       SELECT cr.*,
-             COALESCE(cr.price_override, $1::jsonb->>cr.crate_id) AS effective_price_str,
              (SELECT json_agg(cs ORDER BY cs.scheduled_at)
                 FROM crate_schedule cs
                WHERE cs.crate_id = cr.crate_id AND cs.executed = false) AS pending_schedules,
@@ -38,9 +37,7 @@ router.get('/', requireAuth, requireAdmin, async (req, res) => {
                        ORDER BY cs2.scheduled_at DESC LIMIT 5) sub) AS recent_history
         FROM crate_rotation cr
        ORDER BY cr.crate_id
-    `, [JSON.stringify(Object.fromEntries(
-      Object.entries(CRATE_TEMPLATE_PRICES).map(([k, v]) => [k, String(v)])
-    ))]);
+    `);
 
     // Attach numeric effective_price
     const enriched = rows.map(row => ({
