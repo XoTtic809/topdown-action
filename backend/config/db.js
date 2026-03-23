@@ -317,7 +317,11 @@ async function initSchema() {
         ('epic-crate',      true,  false),
         ('legendary-crate', true,  false),
         ('icon-crate',      true,  false),
-        ('oblivion-crate',  false, true )
+        ('oblivion-crate',  false, true ),
+        ('neon-crate',      true,  false),
+        ('frost-crate',     true,  false),
+        ('infernal-crate',  true,  false),
+        ('void-crate',      false, false)
       ON CONFLICT (crate_id) DO NOTHING;
 
       -- ── Player Profile Cards ───────────────────────────────────────────────

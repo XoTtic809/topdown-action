@@ -12,6 +12,10 @@ var ROTATION_CRATE_META = {
   'legendary-crate': { name: 'Legendary Crate',   icon: '👑', price: 4000 },
   'icon-crate':      { name: 'Icon Crate',         icon: '⭐', price: 750 },
   'oblivion-crate':  { name: 'Oblivion Crate',    icon: '🌑', price: 10000 },
+  'neon-crate':      { name: 'Neon Crate',         icon: '💡', price: 2000 },
+  'frost-crate':     { name: 'Frost Crate',        icon: '❄️', price: 2500 },
+  'infernal-crate':  { name: 'Infernal Crate',     icon: '🔥', price: 2500 },
+  'void-crate':      { name: 'Void Crate',         icon: '🕳️', price: 6000 },
 };
 
 // ── Public entry point ────────────────────────────────────────────────────────
@@ -91,42 +95,46 @@ function buildCrateCard(row) {
 
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px;">
       <div>
-        <label style="font-size:10px;color:var(--muted);">Price Override</label>
+        <label style="font-size:10px;color:var(--muted);" title="Override the default price players pay. Leave blank to use the default price.">Custom Price</label>
         <input id="rc-price-${row.crate_id}" type="number" min="1" value="${row.price_override || ''}"
-          placeholder="${meta.price} (template)" class="auth-input" style="margin:2px 0 0;padding:4px 6px;font-size:11px;">
+          placeholder="${meta.price} (default)" class="auth-input" style="margin:2px 0 0;padding:4px 6px;font-size:11px;">
       </div>
       <div>
-        <label style="font-size:10px;color:var(--muted);">Discount %</label>
+        <label style="font-size:10px;color:var(--muted);" title="Percentage discount applied on top of the price. 25 = 25% off.">Discount %</label>
         <input id="rc-disc-${row.crate_id}" type="number" min="0" max="100" value="${row.discount_percent || 0}"
           class="auth-input" style="margin:2px 0 0;padding:4px 6px;font-size:11px;">
       </div>
       <div>
-        <label style="font-size:10px;color:var(--muted);">MP Floor Override</label>
+        <label style="font-size:10px;color:var(--muted);" title="Stock cap — maximum units available. Leave blank for unlimited.">Stock Limit</label>
+        <input id="rc-stocklimit-${row.crate_id}" type="number" min="1" value="${row.stock_limit || ''}"
+          placeholder="unlimited" class="auth-input" style="margin:2px 0 0;padding:4px 6px;font-size:11px;">
+      </div>
+      <div>
+        <label style="font-size:10px;color:var(--muted);" title="Auto-deactivate this crate at this date/time.">Auto-Expire (local time)</label>
+        <input id="rc-endsat-${row.crate_id}" type="datetime-local" value="${row.ends_at ? toLocalDatetimeInput(row.ends_at) : ''}"
+          class="auth-input" style="margin:2px 0 0;padding:4px 6px;font-size:11px;">
+      </div>
+      <div>
+        <label style="font-size:10px;color:var(--muted);" title="Lowest price players can list this crate for on the marketplace.">Min Marketplace Price</label>
         <input id="rc-floor-${row.crate_id}" type="number" min="1" value="${row.marketplace_floor_override || ''}"
           placeholder="—" class="auth-input" style="margin:2px 0 0;padding:4px 6px;font-size:11px;">
       </div>
       <div>
-        <label style="font-size:10px;color:var(--muted);">MP Ceiling Override</label>
+        <label style="font-size:10px;color:var(--muted);" title="Highest price players can list this crate for on the marketplace.">Max Marketplace Price</label>
         <input id="rc-ceil-${row.crate_id}" type="number" min="1" value="${row.marketplace_ceiling_override || ''}"
           placeholder="—" class="auth-input" style="margin:2px 0 0;padding:4px 6px;font-size:11px;">
       </div>
     </div>
 
     <div style="margin-bottom:8px;">
-      <label style="font-size:10px;color:var(--muted);">Ends At (UTC)</label>
-      <input id="rc-endsat-${row.crate_id}" type="datetime-local" value="${row.ends_at ? toLocalDatetimeInput(row.ends_at) : ''}"
-        class="auth-input" style="margin:2px 0 0;padding:4px 6px;font-size:11px;">
-    </div>
-
-    <div style="margin-bottom:8px;">
-      <label style="display:flex;align-items:center;gap:6px;font-size:11px;cursor:pointer;">
+      <label style="display:flex;align-items:center;gap:6px;font-size:11px;cursor:pointer;" title="Show a countdown timer on the crate card in the shop.">
         <input type="checkbox" id="rc-timer-${row.crate_id}" ${row.timer_visible ? 'checked' : ''}>
-        Show countdown timer
+        Show countdown timer in shop
       </label>
     </div>
 
     <div style="margin-bottom:8px;">
-      <label style="font-size:10px;color:var(--muted);">Rotation Label</label>
+      <label style="font-size:10px;color:var(--muted);" title="Text shown on the crate card in the shop, e.g. LIMITED TIME or FLASH SALE.">Shop Banner Text</label>
       <input id="rc-label-${row.crate_id}" type="text" value="${row.rotation_label || ''}"
         placeholder="e.g. LIMITED TIME · FLASH SALE" class="auth-input" style="margin:2px 0 0;padding:4px 6px;font-size:11px;">
     </div>
@@ -189,22 +197,24 @@ async function rcToggleActive(crateId, newActive) {
 }
 
 async function rcSave(crateId) {
-  const priceEl  = document.getElementById(`rc-price-${crateId}`);
-  const discEl   = document.getElementById(`rc-disc-${crateId}`);
-  const floorEl  = document.getElementById(`rc-floor-${crateId}`);
-  const ceilEl   = document.getElementById(`rc-ceil-${crateId}`);
-  const endsEl   = document.getElementById(`rc-endsat-${crateId}`);
-  const timerEl  = document.getElementById(`rc-timer-${crateId}`);
-  const labelEl  = document.getElementById(`rc-label-${crateId}`);
+  const priceEl      = document.getElementById(`rc-price-${crateId}`);
+  const discEl       = document.getElementById(`rc-disc-${crateId}`);
+  const stockLimEl   = document.getElementById(`rc-stocklimit-${crateId}`);
+  const floorEl      = document.getElementById(`rc-floor-${crateId}`);
+  const ceilEl       = document.getElementById(`rc-ceil-${crateId}`);
+  const endsEl       = document.getElementById(`rc-endsat-${crateId}`);
+  const timerEl      = document.getElementById(`rc-timer-${crateId}`);
+  const labelEl      = document.getElementById(`rc-label-${crateId}`);
 
   const body = { crateId };
-  if (priceEl?.value)  body.priceOverride = parseInt(priceEl.value, 10);
-  if (discEl)          body.discountPercent = parseInt(discEl.value || '0', 10);
-  if (floorEl?.value)  body.marketplaceFloorOverride = parseInt(floorEl.value, 10);
-  if (ceilEl?.value)   body.marketplaceCeilingOverride = parseInt(ceilEl.value, 10);
-  if (endsEl?.value)   body.endsAt = new Date(endsEl.value).toISOString();
-  if (timerEl)         body.timerVisible = timerEl.checked;
-  if (labelEl)         body.rotationLabel = labelEl.value.trim() || null;
+  if (priceEl?.value)    body.priceOverride = parseInt(priceEl.value, 10);
+  if (discEl)            body.discountPercent = parseInt(discEl.value || '0', 10);
+  if (stockLimEl?.value) body.stockLimit = parseInt(stockLimEl.value, 10);
+  if (floorEl?.value)    body.marketplaceFloorOverride = parseInt(floorEl.value, 10);
+  if (ceilEl?.value)     body.marketplaceCeilingOverride = parseInt(ceilEl.value, 10);
+  if (endsEl?.value)     body.endsAt = new Date(endsEl.value).toISOString();
+  if (timerEl)           body.timerVisible = timerEl.checked;
+  if (labelEl)           body.rotationLabel = labelEl.value.trim() || null;
 
   try {
     await apiPost('/admin/rotation/update', body);
