@@ -149,18 +149,6 @@
             <button id="viewRanksBtn" class="hs-view-ranks-btn" onclick="document.getElementById('rankIndexOverlay').classList.remove('hidden')">VIEW RANKS</button>
           </div>
 
-          <!-- ─── RANK INDEX OVERLAY ─── -->
-          <div id="rankIndexOverlay" class="rank-index-overlay hidden">
-            <div class="rank-index-box">
-              <div class="rank-index-header">
-                <h2 class="rank-index-title">RANK INSIGNIA</h2>
-                <p class="rank-index-sub">Season 01 — Combat Classification</p>
-              </div>
-              <div id="rankIndexGrid" class="rank-index-grid"></div>
-              <button class="home-btn rank-index-close" onclick="document.getElementById('rankIndexOverlay').classList.add('hidden')">CLOSE</button>
-            </div>
-          </div>
-
           <button id="adminBtn" class="hs-admin-btn hidden">⚠️ ADMIN PANEL</button>
           <button id="myProfileBtn" class="hs-btn hs-profile-btn">👤 My Profile</button>
         </div>
@@ -175,6 +163,18 @@
         </div>
 
       </div>
+    </div>
+  </div>
+
+  <!-- ─── RANK INDEX OVERLAY ─── -->
+  <div id="rankIndexOverlay" class="rank-index-overlay hidden">
+    <div class="rank-index-box">
+      <div class="rank-index-header">
+        <h2 class="rank-index-title">RANK INSIGNIA</h2>
+        <p class="rank-index-sub">Season 01 — Combat Classification</p>
+      </div>
+      <div id="rankIndexGrid" class="rank-index-grid"></div>
+      <button class="home-btn rank-index-close" onclick="document.getElementById('rankIndexOverlay').classList.add('hidden')">CLOSE</button>
     </div>
   </div>
 
