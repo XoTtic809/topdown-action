@@ -1108,26 +1108,13 @@ canvas {
 .rank-apex-ring  { animation: rank-apex-spin 8s linear infinite; transform-origin: 40px 46px; }
 .rank-apex-pulse { animation: rank-apex-pulse 2s ease-in-out infinite; }
 
-@keyframes rank-sov-spin {
-  from { transform: rotate(0deg); }
-  to   { transform: rotate(360deg); }
-}
-@keyframes rank-sov-spin-rev {
-  from { transform: rotate(0deg); }
-  to   { transform: rotate(-360deg); }
-}
-@keyframes rank-sov-pulse {
-  0%, 100% { opacity: 0.15; }
-  50%      { opacity: 0.55; }
-}
-@keyframes rank-sov-shimmer {
-  0%, 100% { opacity: 0.6; }
-  50%      { opacity: 1; }
-}
-.rank-sov-ring-outer { animation: rank-sov-spin     12s linear infinite; transform-origin: 40px 44px; }
-.rank-sov-ring-inner { animation: rank-sov-spin-rev  8s linear infinite; transform-origin: 40px 44px; }
-.rank-sov-shimmer    { animation: rank-sov-shimmer   3s ease-in-out infinite; }
-.rank-sov-pulse      { animation: rank-sov-pulse     2.5s ease-in-out infinite; }
+@keyframes rank-sov-pulse { 0%,100%{opacity:.1}  50%{opacity:.52} }
+@keyframes rank-sov-glow  { 0%,100%{opacity:.55} 50%{opacity:1}   }
+@keyframes rank-sov-glow2 { 0%,100%{opacity:.35} 50%{opacity:.8}  }
+.rank-sov-p  { animation: rank-sov-pulse 2.5s ease-in-out infinite; }
+.rank-sov-g  { animation: rank-sov-glow  2.2s ease-in-out infinite; }
+.rank-sov-g2 { animation: rank-sov-glow2 3.5s ease-in-out infinite 0.9s; }
+.rank-sov-g3 { animation: rank-sov-glow  1.8s ease-in-out infinite 0.4s; }
 
 /* ── Sovereign name shimmer (black ↔ white fade) ──────────── */
 @keyframes sov-name-fade {
