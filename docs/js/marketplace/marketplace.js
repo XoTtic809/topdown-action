@@ -662,7 +662,7 @@ async function cancelListing(listingId) {
       // Crate was returned — refresh crate inventory cache
       const crateId = result.crateId || localListing?.crateId;
       if (crateId && typeof ownedCratesCache !== 'undefined') {
-        ownedCratesCache.push(crateId);
+        if (!ownedCratesCache.includes(crateId)) ownedCratesCache.push(crateId);
         if (typeof renderCrateInventorySection === 'function') renderCrateInventorySection();
       }
     } else {

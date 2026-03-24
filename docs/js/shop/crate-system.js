@@ -1320,7 +1320,7 @@ async function _triggerPostGameDrop(mode, tier) {
   try {
     const data = await apiPost('/crates/drop', { mode, tier: tier || 'bronze' });
     if (data && data.dropped) {
-      ownedCratesCache.push(data.crateId);
+      if (!ownedCratesCache.includes(data.crateId)) ownedCratesCache.push(data.crateId);
       _showCrateDropNotification(data.crateId, data.weeklyDrops);
     }
   } catch (_) { /* silent — drops are best-effort */ }
@@ -1482,7 +1482,7 @@ async function buyCrateToInventory(crate) {
         if (typeof saveCoins === 'function') saveCoins();
 
         // Refresh crate inventory cache + UI
-        ownedCratesCache.push(crate.id);
+        if (!ownedCratesCache.includes(crate.id)) ownedCratesCache.push(crate.id);
         renderCrateInventorySection();
         initCratesTab(); // refresh button disabled states
 

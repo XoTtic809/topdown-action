@@ -44,8 +44,8 @@ router.post('/signup', async (req, res) => {
   if (!username || !email || !password) {
     return res.status(400).json({ error: 'username, email, and password are required' });
   }
-  if (username.trim().length < 2 || username.trim().length > 32) {
-    return res.status(400).json({ error: 'Username must be 2–32 characters' });
+  if (username.trim().length < 3 || username.trim().length > 20) {
+    return res.status(400).json({ error: 'Username must be 3–20 characters' });
   }
   if (password.length < 6) {
     return res.status(400).json({ error: 'Password must be at least 6 characters' });
