@@ -46,6 +46,8 @@ const dashTimerEl = dashAbility?.querySelector('.ability-timer');
 const buffsDisplayEl = document.getElementById('buffsDisplay');
 const killsValEl_cached = document.getElementById('killsVal');
 const coinsHUDEl = document.getElementById('coinsHUD');
+let _prevScore = -1, _prevHp = -1, _prevCoins = -1;
+let _frameNow = Date.now();
 
 // --- resize ---
 
@@ -590,52 +592,52 @@ function saveSkins() {
 function getActiveSkinColor() {
   if (activeSkin === 'transcendence') {
     // Full-spectrum ultra-fast cycling
-    const hue = (Date.now() / 3) % 360;
+    const hue = (_frameNow / 3) % 360;
     return `hsl(${hue},100%,72%)`;
   }
   if (activeSkin === 'rainbow') {
-    const hue = (Date.now() / 20) % 360;
+    const hue = (_frameNow / 20) % 360;
     return `hsl(${hue},100%,70%)`;
   }
   if (activeSkin === 'galaxy') {
-    const time = Date.now() / 50;
+    const time = _frameNow / 50;
     const hue = (time % 120) + 240; // Range from 240 (blue) to 360 (magenta)
     return `hsl(${hue},90%,65%)`;
   }
   if (activeSkin === 'void') {
-    const time = Date.now() / 300;
+    const time = _frameNow / 300;
     const pulse = Math.sin(time) * 0.4 + 0.6;
     const hueShift = Math.sin(time / 2) * 20;
     const brightness = 10 + pulse * 30;
     return `hsl(${270 + hueShift},100%,${brightness}%)`;
   }
   if (activeSkin === 'sunset') {
-    const time = Date.now() / 40;
+    const time = _frameNow / 40;
     const hue = ((time % 60) + 0);
     return `hsl(${hue},100%,65%)`;
   }
   if (activeSkin === 'phoenix') {
-    const time = Date.now() / 30;
+    const time = _frameNow / 30;
     const hue = ((time % 40) + 0);
     const brightness = 60 + Math.sin(time / 5) * 10;
     return `hsl(${hue},100%,${brightness}%)`;
   }
   if (activeSkin === 'diamond') {
-    const time = Date.now() / 15;
+    const time = _frameNow / 15;
     const hue = (time * 3) % 360;
     const saturation = 25 + Math.sin(time / 3) * 25;
     const brightness = 93 + Math.sin(time / 4) * 5;
     return `hsl(${hue},${saturation}%,${brightness}%)`;
   }
   if (activeSkin === 'quantum') {
-    const time = Date.now() / 8;
+    const time = _frameNow / 8;
     const hue = (time * 5) % 360;
     const saturation = 90 + Math.sin(time / 2) * 10;
     const brightness = 60 + Math.sin(time / 3) * 15;
     return `hsl(${hue},${saturation}%,${brightness}%)`;
   }
   if (activeSkin === 'celestial') {
-    const time = Date.now() / 10;
+    const time = _frameNow / 10;
     const phase = Math.sin(time / 80);
 
     let hue, saturation, brightness;
@@ -660,7 +662,7 @@ function getActiveSkinColor() {
   }
  // champion skins
   if (activeSkin === 'gold-champion') {
-    const time = Date.now() / 5;
+    const time = _frameNow / 5;
     const mainGold = 45 + Math.sin(time / 3) * 5;
     const brightness = 85 + Math.sin(time / 2) * 12;
     const chromatic = (time * 8) % 360;
@@ -668,7 +670,7 @@ function getActiveSkinColor() {
     return `hsl(${mainGold + glitch},100%,${brightness}%)`;
   }
   if (activeSkin === 'silver-champion') {
-    const time = Date.now() / 6;
+    const time = _frameNow / 6;
     const metalBase = 200 + Math.sin(time / 4) * 20;
     const plasma = Math.sin(time / 2) * 30 + 70;
     const holographic = (time * 6) % 60;
@@ -676,7 +678,7 @@ function getActiveSkinColor() {
     return `hsl(${metalBase + holographic + shimmer},25%,${plasma}%)`;
   }
   if (activeSkin === 'bronze-champion') {
-    const time = Date.now() / 7;
+    const time = _frameNow / 7;
     const bronzeBase = 25 + Math.sin(time / 3) * 8;
     const lavaGlow = 50 + Math.sin(time / 2) * 20;
     const goldShift = Math.sin(time / 4) * 10;
@@ -686,60 +688,60 @@ function getActiveSkinColor() {
  // crate skin animations
  // common
   if (activeSkin === 'c_static') {
-    const t = Date.now() / 150;
+    const t = _frameNow / 150;
     const b = 60 + Math.sin(t) * 15;
     return `hsl(240,8%,${b}%)`;
   }
   if (activeSkin === 'c_rust') {
-    const t = Date.now() / 180;
+    const t = _frameNow / 180;
     const h = 18 + Math.sin(t) * 5;
     const b = 38 + Math.sin(t * 1.3) * 10;
     return `hsl(${h},70%,${b}%)`;
   }
   if (activeSkin === 'c_slate') {
-    const t = Date.now() / 200;
+    const t = _frameNow / 200;
     const b = 42 + Math.sin(t) * 12;
     return `hsl(210,18%,${b}%)`;
   }
   if (activeSkin === 'c_olive') {
-    const t = Date.now() / 170;
+    const t = _frameNow / 170;
     const h = 78 + Math.sin(t) * 8;
     const b = 35 + Math.sin(t * 1.2) * 10;
     return `hsl(${h},55%,${b}%)`;
   }
   if (activeSkin === 'c_maroon') {
-    const t = Date.now() / 190;
+    const t = _frameNow / 190;
     const h = 348 + Math.sin(t) * 8;
     const b = 35 + Math.sin(t * 1.1) * 12;
     return `hsl(${h},65%,${b}%)`;
   }
  // uncommon
   if (activeSkin === 'c_cobalt') {
-    const t = Date.now() / 120;
+    const t = _frameNow / 120;
     const h = 215 + Math.sin(t) * 15;
     const b = 45 + Math.sin(t * 1.4) * 18;
     return `hsl(${h},85%,${b}%)`;
   }
   if (activeSkin === 'c_teal') {
-    const t = Date.now() / 110;
+    const t = _frameNow / 110;
     const h = 170 + Math.sin(t / 1.3) * 20;
     const b = 42 + Math.sin(t) * 16;
     return `hsl(${h},80%,${b}%)`;
   }
   if (activeSkin === 'c_coral') {
-    const t = Date.now() / 130;
+    const t = _frameNow / 130;
     const h = 14 + Math.sin(t / 1.5) * 12;
     const b = 55 + Math.sin(t) * 18;
     return `hsl(${h},90%,${b}%)`;
   }
   if (activeSkin === 'c_sand') {
-    const t = Date.now() / 140;
+    const t = _frameNow / 140;
     const h = 38 + Math.sin(t / 1.2) * 10;
     const b = 52 + Math.sin(t) * 16;
     return `hsl(${h},65%,${b}%)`;
   }
   if (activeSkin === 'c_chrome') {
-    const t = Date.now() / 80;
+    const t = _frameNow / 80;
     const h = 220 + Math.sin(t / 3) * 20;
     const s = 10 + Math.sin(t / 2) * 10;
     const b = 55 + Math.sin(t) * 35;  // 20–90%: metallic flash
@@ -747,67 +749,67 @@ function getActiveSkinColor() {
   }
  // rare
   if (activeSkin === 'c_prism') {
-    const t = Date.now() / 18;
+    const t = _frameNow / 18;
     return `hsl(${(t * 5) % 360},100%,68%)`;
   }
   if (activeSkin === 'c_aurora') {
-    const t = Date.now() / 40;
+    const t = _frameNow / 40;
     const h = 130 + Math.sin(t / 6) * 90; // green↔violet
     const b = 55 + Math.sin(t / 4) * 18;
     return `hsl(${h},85%,${b}%)`;
   }
   if (activeSkin === 'c_lava') {
-    const t = Date.now() / 20;
+    const t = _frameNow / 20;
     const h = 8 + Math.sin(t / 5) * 12;  // red–orange
     const b = 52 + Math.sin(t / 3) * 20;
     return `hsl(${h},100%,${b}%)`;
   }
   if (activeSkin === 'c_storm') {
-    const t = Date.now() / 35;
+    const t = _frameNow / 35;
     const h = 215 + Math.sin(t / 5) * 25;
     const b = 25 + Math.sin(t / 3) * 25; // dark to bright blue-white
     return `hsl(${h},75%,${b}%)`;
   }
   if (activeSkin === 'c_neon') {
-    const t = Date.now() / 15;
+    const t = _frameNow / 15;
     const h = 170 + Math.sin(t / 4) * 150; // cyan↔magenta
     return `hsl(${h},100%,62%)`;
   }
  // epic
   if (activeSkin === 'c_glitch') {
-    const t = Date.now();
+    const t = _frameNow;
     const h = (t / 6 + Math.sin(t / 23) * 120) % 360;
     const b = 45 + Math.sin(t / 11) * 30;
     return `hsl(${h},100%,${b}%)`;
   }
   if (activeSkin === 'c_nebula') {
-    const t = Date.now() / 30;
+    const t = _frameNow / 30;
     const h = 265 + Math.sin(t / 7) * 55; // deep purple↔pink
     const s = 85 + Math.sin(t / 4) * 12;
     const b = 42 + Math.sin(t / 5) * 22;
     return `hsl(${h},${s}%,${b}%)`;
   }
   if (activeSkin === 'c_biohazard') {
-    const t = Date.now() / 22;
+    const t = _frameNow / 22;
     const h = 95 + Math.sin(t / 6) * 25;
     const b = 42 + Math.sin(t / 3) * 25;
     return `hsl(${h},100%,${b}%)`;
   }
   if (activeSkin === 'c_arctic') {
-    const t = Date.now() / 35;
+    const t = _frameNow / 35;
     const h = 190 + Math.sin(t / 5) * 20;
     const s = 70 + Math.sin(t / 4) * 25;
     const b = 70 + Math.sin(t / 6) * 20;  // bright ice
     return `hsl(${h},${s}%,${b}%)`;
   }
   if (activeSkin === 'c_wildfire') {
-    const t = Date.now() / 12;
+    const t = _frameNow / 12;
     const h = Math.sin(t / 5) * 22 + 22; // red→yellow
     const b = 52 + Math.sin(t / 4) * 25;
     return `hsl(${h},100%,${b}%)`;
   }
   if (activeSkin === 'c_spectre') {
-    const t = Date.now() / 55;
+    const t = _frameNow / 55;
     const h = 235 + Math.sin(t / 6) * 45;
     const s = 15 + Math.sin(t / 4) * 35; // nearly white↔saturated
     const b = 72 + Math.sin(t / 5) * 22;
@@ -815,56 +817,56 @@ function getActiveSkinColor() {
   }
  // legendary
   if (activeSkin === 'c_supernova') {
-    const t = Date.now() / 8;
+    const t = _frameNow / 8;
     const h = (t * 7) % 360;
     const b = 78 + Math.sin(t / 3) * 18; // very bright
     return `hsl(${h},100%,${b}%)`;
   }
   if (activeSkin === 'c_wraith') {
-    const t = Date.now() / 60;
+    const t = _frameNow / 60;
     const h = 265 + Math.sin(t / 5) * 35;
     const b = 12 + Math.sin(t / 3) * 14; // dark void pulse
     return `hsl(${h},90%,${b}%)`;
   }
   if (activeSkin === 'c_titan') {
-    const t = Date.now() / 45;
+    const t = _frameNow / 45;
     const h = 32 + Math.sin(t / 5) * 18;  // bronze↔gold
     const s = 82 + Math.sin(t / 4) * 15;
     const b = 38 + Math.sin(t / 3) * 22;
     return `hsl(${h},${s}%,${b}%)`;
   }
   if (activeSkin === 'c_astral') {
-    const t = Date.now() / 28;
+    const t = _frameNow / 28;
     const h = 195 + Math.sin(t / 7) * 70;  // cyan↔violet
     const b = 62 + Math.sin(t / 4) * 25;
     return `hsl(${h},90%,${b}%)`;
   }
  // mythic
   if (activeSkin === 'c_omnichrome') {
-    const t = Date.now() / 4;
+    const t = _frameNow / 4;
     return `hsl(${(t * 11) % 360},100%,68%)`;
   }
   if (activeSkin === 'c_singularity') {
-    const t = Date.now() / 18;
+    const t = _frameNow / 18;
     const h = (t * 4) % 360;
     const b = 8 + Math.sin(t / 3) * 10; // near-black with color
     return `hsl(${h},95%,${b}%)`;
   }
   if (activeSkin === 'c_ultraviolet') {
-    const t = Date.now() / 22;
+    const t = _frameNow / 22;
     const h = 272 + Math.sin(t / 4) * 22;
     const b = 55 + Math.sin(t / 3) * 28;
     return `hsl(${h},100%,${b}%)`;
   }
   if (activeSkin === 'c_godmode') {
-    const t = Date.now() / 14;
+    const t = _frameNow / 14;
     const h = 48 + Math.sin(t / 4) * 8;
     const s = 20 + Math.sin(t / 3) * 22;
     const b = 88 + Math.sin(t / 5) * 10; // 78–98%: blinding white-gold
     return `hsl(${h},${s}%,${b}%)`;
   }
   if (activeSkin === 'c_rift') {
-    const t = Date.now() / 14;
+    const t = _frameNow / 14;
     const phase = Math.sin(t / 5);
     if (phase > 0.3) {
  // Chromatic tear: full-spectrum flash
@@ -877,94 +879,94 @@ function getActiveSkinColor() {
 
  // oblivion crate skins
   if (activeSkin === 'ob_duskblade') {
-    const t = Date.now() / 1000;
+    const t = _frameNow / 1000;
     const h = 270 + Math.sin(t * 0.8) * 20;
     return `hsl(${h}, 60%, ${35 + Math.sin(t * 1.5) * 8}%)`;
   }
   if (activeSkin === 'ob_voidborn') {
-    const t = Date.now() / 1000;
+    const t = _frameNow / 1000;
     const h = 220 + Math.sin(t * 0.6) * 30;
     return `hsl(${h}, 70%, ${18 + Math.sin(t * 1.2) * 6}%)`;
   }
   if (activeSkin === 'ob_ashwalker') {
-    const t = Date.now() / 1000;
+    const t = _frameNow / 1000;
     const l = 28 + Math.sin(t * 2) * 8;
     return `hsl(15, 30%, ${l}%)`;
   }
   if (activeSkin === 'ob_soulreaper') {
-    const t = Date.now() / 1000;
+    const t = _frameNow / 1000;
     const h = 340 + Math.sin(t * 0.7) * 15;
     return `hsl(${h}, 80%, ${30 + Math.sin(t * 1.8) * 10}%)`;
   }
   if (activeSkin === 'ob_eclipsar') {
-    const t = Date.now() / 1000;
+    const t = _frameNow / 1000;
     const phase = Math.sin(t * 0.5);
     const h = phase > 0 ? 45 + phase * 15 : 220 - phase * 30;
     return `hsl(${h}, 70%, ${22 + Math.abs(phase) * 18}%)`;
   }
   if (activeSkin === 'ob_phantomking') {
-    const t = Date.now() / 1000;
+    const t = _frameNow / 1000;
     const h = 265 + Math.sin(t * 0.9) * 25;
     return `hsl(${h}, 55%, ${40 + Math.sin(t * 1.4) * 12}%)`;
   }
   if (activeSkin === 'ob_abyssal') {
-    const t = Date.now() / 1000;
+    const t = _frameNow / 1000;
     const h = 200 + Math.sin(t * 0.4) * 40;
     return `hsl(${h}, 90%, ${12 + Math.sin(t * 1.6) * 5}%)`;
   }
   if (activeSkin === 'ob_eventide') {
-    const t = Date.now() / 1000;
+    const t = _frameNow / 1000;
     const h = (t * 15) % 360;
     return `hsl(${h}, 50%, ${20 + Math.sin(t * 0.8) * 8}%)`;
   }
   if (activeSkin === 'ob_worldeater') {
-    const t = Date.now() / 1000;
+    const t = _frameNow / 1000;
     const pulse = Math.sin(t * 2.5);
     if (pulse > 0.7) return `hsl(0, 100%, ${55 + pulse * 15}%)`;
     const h = 0 + Math.sin(t * 0.5) * 10;
     return `hsl(${h}, 80%, ${10 + Math.sin(t * 1.2) * 5}%)`;
   }
   if (activeSkin === 'ob_eternium') {
-    const t = Date.now() / 1000;
+    const t = _frameNow / 1000;
     const h = (t * 25) % 360;
     const l = 60 + Math.sin(t * 1.5) * 15;
     return `hsl(${h}, 100%, ${l}%)`;
   }
   // new oblivion skins
   if (activeSkin === 'ob_hellforge') {
-    const t = Date.now() / 1000;
+    const t = _frameNow / 1000;
     return `hsl(${Math.sin(t * 3) * 12},100%,${30 + Math.sin(t * 2.5) * 12}%)`;
   }
   if (activeSkin === 'ob_voidwalker') {
-    const t = Date.now() / 1000;
+    const t = _frameNow / 1000;
     return `hsl(${265 + Math.sin(t * 0.8) * 25},85%,${14 + Math.sin(t * 1.6) * 6}%)`;
   }
   if (activeSkin === 'ob_deathbloom') {
-    const t = Date.now() / 1000;
+    const t = _frameNow / 1000;
     return `hsl(${300 + Math.sin(t * 0.9) * 20},75%,${18 + Math.sin(t * 2) * 7}%)`;
   }
   if (activeSkin === 'ob_apocalypse') {
-    const t = Date.now() / 1000;
+    const t = _frameNow / 1000;
     return `hsl(${Math.sin(t * 1.8) * 10},90%,${8 + Math.sin(t * 2.2) * 5}%)`;
   }
   // neon crate skins
   if (activeSkin && activeSkin.startsWith('neon_')) {
-    const t = Date.now() / 18;
+    const t = _frameNow / 18;
     return `hsl(${(t * 3) % 360},100%,60%)`;
   }
   // frost crate skins
   if (activeSkin && activeSkin.startsWith('frost_')) {
-    const t = Date.now() / 1000;
+    const t = _frameNow / 1000;
     return `hsl(${200 + Math.sin(t * 0.8) * 20},80%,${62 + Math.sin(t * 1.5) * 12}%)`;
   }
   // infernal crate skins
   if (activeSkin && activeSkin.startsWith('infernal_')) {
-    const t = Date.now() / 1000;
+    const t = _frameNow / 1000;
     return `hsl(${Math.sin(t * 2) * 14},100%,${48 + Math.sin(t * 1.8) * 14}%)`;
   }
   // void crate skins
   if (activeSkin && activeSkin.startsWith('void_')) {
-    const t = Date.now() / 1000;
+    const t = _frameNow / 1000;
     return `hsl(${270 + Math.sin(t * 0.6) * 30},85%,${10 + Math.sin(t * 1.2) * 4}%)`;
   }
 
@@ -982,7 +984,7 @@ function getActiveSkinColor() {
   if (activeSkin === 'icon_kayden_duck')  return '#1a6b1a';
   if (activeSkin === 'icon_troy_puck')    return '#1a1a1a';
   if (activeSkin === 'icon_the_creator') {
-    const t = Date.now() / 1000;
+    const t = _frameNow / 1000;
     const pulse = 0.5 + Math.sin(t * 1.2) * 0.15;
     const hue = 42 + Math.sin(t * 0.8) * 8;
     return `hsl(${hue}, 100%, ${78 + pulse * 12}%)`;
@@ -1290,7 +1292,7 @@ class Player {
     
  // Shield effect
     if (this.shield > 0) {
-      ctx.strokeStyle = `rgba(107, 255, 123, ${0.3 + Math.sin(Date.now() / 100) * 0.2})`;
+      ctx.strokeStyle = `rgba(107, 255, 123, ${0.3 + Math.sin(_frameNow / 100) * 0.2})`;
       ctx.lineWidth = 3;
       ctx.beginPath();
       ctx.arc(this.x, this.y, this.r + 10, 0, Math.PI * 2);
@@ -1331,7 +1333,7 @@ class Player {
       ctx.fill();
       
  // Add sparkles
-      const time = Date.now() / 100;
+      const time = _frameNow / 100;
       for (let i = 0; i < 5; i++) {
         const angle = (time + i * 73) % (Math.PI * 2);
         const dist = this.r * 0.6;
@@ -1346,7 +1348,7 @@ class Player {
       ctx.shadowBlur = 0;
     } else if (activeSkin === 'void') {
       // void walker skin
-      const time = Date.now();
+      const time = _frameNow;
       
       // void tear rifts
  // Reality tears showing the void beyond
@@ -1579,7 +1581,7 @@ class Player {
       ctx.shadowBlur = 25;
       ctx.shadowColor = '#ff4500';
       
-      const time = Date.now() / 50;
+      const time = _frameNow / 50;
       
  // Fire wings on sides
       for (let side = -1; side <= 1; side += 2) {
@@ -1605,7 +1607,7 @@ class Player {
       ctx.shadowBlur = 0;
     } else if (activeSkin === 'diamond') {
       // diamond skin
-      const time = Date.now();
+      const time = _frameNow;
       
       // prismatic light beams
  // Massive refracted light beams emanating outward
@@ -1890,7 +1892,7 @@ class Player {
       ctx.shadowBlur = 0;
     } else if (activeSkin === 'quantum') {
  // Quantum Flux: Reality-bending chromatic aberration with glitch particles
-      const time = Date.now();
+      const time = _frameNow;
       
  // Chromatic aberration effect - 3 offset circles in RGB
       ctx.globalAlpha = 0.6;
@@ -1978,7 +1980,7 @@ class Player {
       ctx.shadowBlur = 0;
     } else if (activeSkin === 'gold-champion') {
       // gold champion skin
-      const time = Date.now();
+      const time = _frameNow;
 
       // floating crown
  // Drawn in screen-space above the player, bobbing gently
@@ -2171,7 +2173,7 @@ class Player {
       ctx.shadowBlur = 0;
     } else if (activeSkin === 'silver-champion') {
       // silver champion skin
-      const time = Date.now();
+      const time = _frameNow;
 
       // 3 silver rings
       ctx.globalAlpha = 0.35;
@@ -2308,7 +2310,7 @@ class Player {
       ctx.shadowBlur = 0;
     } else if (activeSkin === 'bronze-champion') {
       // bronze champion skin
-      const time = Date.now();
+      const time = _frameNow;
 
       // 3 forge rings
       ctx.globalAlpha = 0.35;
@@ -2453,7 +2455,7 @@ class Player {
       ctx.shadowBlur = 0;
     } else if (activeSkin === 'celestial') {
  // CELESTIAL NEXUS: Universal convergence - the ultimate visual spectacle
-      const time = Date.now();
+      const time = _frameNow;
       const phase = Math.sin(time / 800); // Slow phase transition
       
       // dimensional rift background
@@ -2683,7 +2685,7 @@ class Player {
       ctx.shadowBlur = 0;
     } else if (activeSkin && activeSkin.startsWith('c_')) {
       // crate exclusive skin rendering
-      const time = Date.now();
+      const time = _frameNow;
       const skinColor = getActiveSkinColor();
       const t = time;
 
@@ -2949,7 +2951,7 @@ class Player {
       ctx.shadowBlur = 0;
     } else if (activeSkin && activeSkin.startsWith('ob_')) {
       // oblivion crate skins — dark premium rendering
-      const time = Date.now();
+      const time = _frameNow;
       const skinColor = getActiveSkinColor();
       const t = time;
       const isUltra = activeSkin === 'ob_worldeater' || activeSkin === 'ob_eternium';
@@ -3077,7 +3079,7 @@ class Player {
 
     } else if (activeSkin && activeSkin.startsWith('icon_')) {
       // icon skins - friend collection
-      const time = Date.now();
+      const time = _frameNow;
       const skinColor = getActiveSkinColor();
       
  // Baseball - Classic 2D baseball
@@ -3958,7 +3960,7 @@ class Player {
 
     } else if (activeSkin && activeSkin.startsWith('bp1_')) {
       // battle pass season 1 skins – properly animated in-game
-      const time = Date.now();
+      const time = _frameNow;
 
       if (activeSkin === 'bp1_striker') {
         const pulse = 0.85+Math.sin(time/220)*0.15, rot = time/380;
@@ -4059,7 +4061,7 @@ class Player {
 
     } else if (activeSkin === 'transcendence') {
       // Achievement master skin — every color, maximum visual impact
-      const time = Date.now();
+      const time = _frameNow;
       const t = time;
 
       // 1. Radiating full-spectrum light beams
@@ -4493,7 +4495,7 @@ class Enemy {
     if (this.type === 'phantom') { ctx.save(); ctx.globalAlpha = this.phantomAlpha; }
     if (this.type === 'bomber' && player) {
       const _bd = Math.hypot(player.x - this.x, player.y - this.y);
-      if (_bd < 130) setShadow(8 + 6 * Math.sin(Date.now() / 80), '#ff4400');
+      if (_bd < 130) setShadow(8 + 6 * Math.sin(_frameNow / 80), '#ff4400');
     }
  // Glow for miniboss
     if (this.type === 'miniboss') {
@@ -4504,7 +4506,7 @@ class Enemy {
     if (this.type === 'enforcer') {
       if (this.dashChargeTime > 0) {
  // Charging - red pulsing glow (warning)
-        const pulseIntensity = 10 + Math.sin(Date.now() * 0.015) * 8;
+        const pulseIntensity = 10 + Math.sin(_frameNow * 0.015) * 8;
         setShadow(pulseIntensity, '#ff4444');
       } else if (this.isDashing) {
  // Dashing - bright cyan trail
@@ -4700,7 +4702,7 @@ class Boss {
   shootBurst() {
     const numShots = 8;
     for (let i = 0; i < numShots; i++) {
-      const angle = (Math.PI * 2 / numShots) * i + Date.now() / 1000; // Rotating pattern
+      const angle = (Math.PI * 2 / numShots) * i + _frameNow / 1000; // Rotating pattern
       const speed = 270;
       enemyBullets.push({
         x: this.x,
@@ -4718,7 +4720,7 @@ class Boss {
     ctx.shadowColor = this.color;
     
  // Rotating outer rings
-    const time = Date.now() / 1000;
+    const time = _frameNow / 1000;
     ctx.strokeStyle = this.color;
     ctx.lineWidth = 5;
     
@@ -4848,7 +4850,7 @@ class MegaBoss {
  // Rotating spiral pattern
     const numShots = 12;
     for (let i = 0; i < numShots; i++) {
-      const angle = (Math.PI * 2 / numShots) * i + Date.now() / 800;
+      const angle = (Math.PI * 2 / numShots) * i + _frameNow / 800;
       const speed = 280;
       enemyBullets.push({
         x: this.x,
@@ -4926,7 +4928,7 @@ class MegaBoss {
   }
 
   draw() {
-    const time = Date.now() / 1000;
+    const time = _frameNow / 1000;
     
  // Pulsing glow based on phase
     const glowIntensity = this.phase === 3 ? 40 : this.phase === 2 ? 30 : 25;
@@ -5256,7 +5258,7 @@ class UltraBoss {
   // drawing
 
   draw() {
-    const time = Date.now() / 1000;
+    const time = _frameNow / 1000;
     const hpPct = this.hpPct;
 
  // Phase colour palette
@@ -6139,11 +6141,11 @@ function createCreatorKillEffect(x, y) {
 // Creator Skin — Milestone solar flare burst
 let creatorMilestoneTimer = 0;
 function triggerCreatorMilestone() {
-  creatorMilestoneTimer = Date.now();
+  creatorMilestoneTimer = _frameNow;
 }
 function getCreatorMilestoneScale() {
   if (creatorMilestoneTimer === 0) return 1;
-  const elapsed = Date.now() - creatorMilestoneTimer;
+  const elapsed = _frameNow - creatorMilestoneTimer;
   if (elapsed > 700) { creatorMilestoneTimer = 0; return 1; }
   // quick expand then ease back: peaks around 100ms
   const progress = elapsed / 700;
@@ -6242,7 +6244,7 @@ class PowerUp {
 
   update(dt) {
     this.life -= dt;
-    this.y += Math.sin(Date.now() / 150) * 0.6;
+    this.y += Math.sin(_frameNow / 150) * 0.6;
   }
 
   draw() {
@@ -6253,7 +6255,7 @@ class PowerUp {
     
     ctx.fillStyle = this.color;
     ctx.beginPath();
-    ctx.arc(this.x, this.y, this.r + Math.sin(Date.now() / 80) * 2, 0, Math.PI * 2);
+    ctx.arc(this.x, this.y, this.r + Math.sin(_frameNow / 80) * 2, 0, Math.PI * 2);
     ctx.fill();
     
     ctx.shadowBlur = 0;
@@ -6379,7 +6381,7 @@ let activeBuffElements = {}; // Track existing buff elements by key
 
 function updateBuffsDisplay() {
   if (!player) return;
-  const now = Date.now();
+  const now = _frameNow;
   if (now - lastBuffUpdate < 50) return; // throttle DOM updates
   lastBuffUpdate = now;
 
@@ -6574,7 +6576,7 @@ function togglePause() {
     if (el('pauseWave'))  el('pauseWave').textContent  = wave;
     if (el('pauseKills')) el('pauseKills').textContent = totalKills;
     if (el('pauseScore')) el('pauseScore').textContent = score;
-    if (el('pauseTime'))  el('pauseTime').textContent  = formatRunTime(Date.now() - runStartTime);
+    if (el('pauseTime'))  el('pauseTime').textContent  = formatRunTime(_frameNow - runStartTime);
     // Hide sub-confirms if they were open
     el('restartConfirm')?.classList.add('hidden');
     el('rankedQuitConfirm')?.classList.add('hidden');
@@ -7622,6 +7624,7 @@ function loop(time) {
     return;
   }
 
+  _frameNow = Date.now();
   const dt = Math.min((time - lastTime) / 1000, 0.1);
   lastTime = time;
 
@@ -7675,7 +7678,7 @@ function loop(time) {
       b.y += b.vy * dt;
       
       if (b.x < -50 || b.x > canvas.width + 50 || b.y < -50 || b.y > canvas.height + 50) {
-        bullets.splice(i, 1);
+        bullets[i] = bullets[bullets.length - 1]; bullets.pop();
       }
     }
 
@@ -7684,17 +7687,18 @@ function loop(time) {
       const eb = enemyBullets[i];
       eb.x += eb.vx * dt;
       eb.y += eb.vy * dt;
-      
-      const dist = Math.hypot(eb.x - player.x, eb.y - player.y);
-      if (dist < eb.r + player.r) {
+
+      const dx = eb.x - player.x, dy = eb.y - player.y;
+      const rSum = eb.r + player.r;
+      if (dx * dx + dy * dy < rSum * rSum) {
         player.takeDamage(5);
-        enemyBullets.splice(i, 1);
+        enemyBullets[i] = enemyBullets[enemyBullets.length - 1]; enemyBullets.pop();
         resetCombo();
         continue;
       }
-      
+
       if (eb.x < -50 || eb.x > canvas.width + 50 || eb.y < -50 || eb.y > canvas.height + 50) {
-        enemyBullets.splice(i, 1);
+        enemyBullets[i] = enemyBullets[enemyBullets.length - 1]; enemyBullets.pop();
       }
     }
 
@@ -7709,15 +7713,16 @@ function loop(time) {
  // Update turrets
     for (let i = turrets.length - 1; i >= 0; i--) {
       turrets[i].update(dt);
-      if (turrets[i].life <= 0) turrets.splice(i, 1);
+      if (turrets[i].life <= 0) { turrets[i] = turrets[turrets.length - 1]; turrets.pop(); }
     }
 
  // Update powerups
     for (let i = powerups.length - 1; i >= 0; i--) {
       powerups[i].update(dt);
       
-      const dist = Math.hypot(powerups[i].x - player.x, powerups[i].y - player.y);
-      if (dist < powerups[i].r + player.r) {
+      const dx = powerups[i].x - player.x, dy = powerups[i].y - player.y;
+      const rSum = powerups[i].r + player.r;
+      if (dx * dx + dy * dy < rSum * rSum) {
         const pu = powerups[i];
         
         if (pu.type === 'health') {
@@ -7826,12 +7831,12 @@ if (gameSettings.screenShake) screenShakeAmt = 1.2;
         createExplosion(pu.x, pu.y, pu.color, 25);
         if (typeof achOnPowerupCollect === 'function') achOnPowerupCollect();
         if (typeof achOnCoinsChanged === 'function') achOnCoinsChanged();
-        powerups.splice(i, 1);
+        powerups[i] = powerups[powerups.length - 1]; powerups.pop();
         continue;
       }
-      
+
       if (powerups[i].life <= 0) {
-        powerups.splice(i, 1);
+        powerups[i] = powerups[powerups.length - 1]; powerups.pop();
       }
     }
 
@@ -7847,8 +7852,9 @@ if (gameSettings.screenShake) screenShakeAmt = 1.2;
       
  // Boss collision
       if (boss && !b._hitBoss) {
-        const dist = Math.hypot(b.x - boss.x, b.y - boss.y);
-        if (dist < b.r + boss.r) {
+        const dx = b.x - boss.x, dy = b.y - boss.y;
+        const rSum = b.r + boss.r;
+        if (dx * dx + dy * dy < rSum * rSum) {
           b._hitBoss = true; // prevent same bullet hitting boss multiple times (pierce bug)
           boss.hp--;
           
@@ -7913,8 +7919,8 @@ if (gameSettings.screenShake) screenShakeAmt = 1.2;
             for (let k = 0; k < nearbyForExplosion.length; k++) {
               const ne = nearbyForExplosion[k];
               if (ne._dead) continue; // guard: skip enemies already killed this frame
-              const explosionDist = Math.hypot(ne.x - b.x, ne.y - b.y);
-              if (explosionDist < explosionRadius) {
+              const edx = ne.x - b.x, edy = ne.y - b.y;
+              if (edx * edx + edy * edy < explosionRadius * explosionRadius) {
                 ne.hp -= explosionDamage;
 
                 if (ne.hp <= 0) {
@@ -7948,7 +7954,7 @@ if (gameSettings.screenShake) screenShakeAmt = 1.2;
           hit = true;
  // Only remove bullet if not piercing
           if (player.pierce <= 0) {
-            bullets.splice(i, 1);
+            bullets[i] = bullets[bullets.length - 1]; bullets.pop();
           }
         }
       }
@@ -7964,9 +7970,9 @@ if (gameSettings.screenShake) screenShakeAmt = 1.2;
  // Skip collision if enemy hasn't entered screen yet (prevents off-screen kills)
         if (!e.hasEnteredScreen) continue;
 
-        const dist = Math.hypot(b.x - e.x, b.y - e.y);
-
-        if (dist < b.r + e.r) {
+        const dx = b.x - e.x, dy = b.y - e.y;
+        const rSum = b.r + e.r;
+        if (dx * dx + dy * dy < rSum * rSum) {
           e.hp--;
 
           if (e.hp <= 0) {
@@ -8022,8 +8028,8 @@ if (gameSettings.screenShake) screenShakeAmt = 1.2;
               if (ne === e) continue; // Skip the enemy we already hit
               if (ne._dead) continue; // guard: skip enemies already killed this frame
 
-              const explosionDist = Math.hypot(ne.x - b.x, ne.y - b.y);
-              if (explosionDist < explosionRadius) {
+              const edx = ne.x - b.x, edy = ne.y - b.y;
+              if (edx * edx + edy * edy < explosionRadius * explosionRadius) {
                 ne.hp -= explosionDamage;
 
                 if (ne.hp <= 0) {
@@ -8057,7 +8063,7 @@ if (gameSettings.screenShake) screenShakeAmt = 1.2;
           hit = true;
  // Only remove bullet if not piercing
           if (player.pierce <= 0) {
-            bullets.splice(i, 1);
+            bullets[i] = bullets[bullets.length - 1]; bullets.pop();
           }
           break;
         }
@@ -8066,14 +8072,15 @@ if (gameSettings.screenShake) screenShakeAmt = 1.2;
 
  // Remove enemies killed by bullets this frame (batch, avoids per-kill indexOf)
     for (let i = enemies.length - 1; i >= 0; i--) {
-      if (enemies[i]._dead) enemies.splice(i, 1);
+      if (enemies[i]._dead) { enemies[i] = enemies[enemies.length - 1]; enemies.pop(); }
     }
 
  // Enemy-player collision
     for (let i = enemies.length - 1; i >= 0; i--) {
       const e = enemies[i];
-      const d = Math.hypot(e.x - player.x, e.y - player.y);
-      if (d < e.r + player.r) {
+      const dx = e.x - player.x, dy = e.y - player.y;
+      const rSum = e.r + player.r;
+      if (dx * dx + dy * dy < rSum * rSum) {
  // Damage based on enemy type and state
         let damage = 10;
         if (e.type === 'miniboss') damage = 15;
@@ -8104,14 +8111,15 @@ if (gameSettings.screenShake) screenShakeAmt = 1.2;
           battlePassAddXP(xpAmount);
         }
 
-        enemies.splice(i, 1);
+        enemies[i] = enemies[enemies.length - 1]; enemies.pop();
       }
     }
-    
+
  // Boss-player collision
     if (boss) {
-      const d = Math.hypot(boss.x - player.x, boss.y - player.y);
-      if (d < boss.r + player.r) {
+      const dx = boss.x - player.x, dy = boss.y - player.y;
+      const rSum = boss.r + player.r;
+      if (dx * dx + dy * dy < rSum * rSum) {
         player.takeDamage(25);
         resetCombo();
 if (gameSettings.screenShake) screenShakeAmt = 1;
@@ -8359,11 +8367,12 @@ if (gameSettings.screenShake) screenShakeAmt = 1;
       }, deathDelay);
     }
 
-    scoreEl.textContent = score;
-    hpEl.textContent = Math.max(0, Math.floor(player.hp));
+    if (score !== _prevScore) { scoreEl.textContent = score; _prevScore = score; }
+    const _hp = Math.max(0, Math.floor(player.hp));
+    if (_hp !== _prevHp) { hpEl.textContent = _hp; _prevHp = _hp; }
 
  // Update coins HUD
-    if (coinsHUDEl) coinsHUDEl.textContent = `🪙 ${playerCoins}`;
+    if (coinsHUDEl && playerCoins !== _prevCoins) { coinsHUDEl.textContent = `🪙 ${playerCoins}`; _prevCoins = playerCoins; }
 
  // Update active buffs panel
     updateBuffsDisplay();
@@ -8389,7 +8398,7 @@ if (gameSettings.screenShake) screenShakeAmt = 1;
       const centerY = canvas.height / 2;
       
  // Pulsing circle background
-      const pulse = Math.sin(Date.now() / 200) * 0.1 + 0.9;
+      const pulse = Math.sin(_frameNow / 200) * 0.1 + 0.9;
       const circleRadius = 80 * pulse;
       
  // Outer glow circle
@@ -8453,7 +8462,7 @@ if (gameSettings.screenShake) screenShakeAmt = 1;
       const centerY = canvas.height / 2;
       
  // Pulsing circle background (faster pulse for urgency)
-      const pulse = Math.sin(Date.now() / 150) * 0.15 + 0.85;
+      const pulse = Math.sin(_frameNow / 150) * 0.15 + 0.85;
       const circleRadius = 90 * pulse;
       
  // Outer glow circle (red/orange warning)
@@ -8812,7 +8821,7 @@ async function endModeRun(reason) {
   hideModeHUDs();
   comboEl.classList.add('hidden');
 
-  const elapsed = Date.now() - runStartTime;
+  const elapsed = _frameNow - runStartTime;
   const token = typeof localStorage !== 'undefined' ? localStorage.getItem('topdown_token') : null;
   const BASE = API_BASE.replace(/\/api$/, '');
 
@@ -8897,7 +8906,7 @@ function startGame() {
   enemiesThisWave = 0;
   enemiesKilledThisWave = 0;
   totalKills = 0;
-  runStartTime = Date.now();
+  runStartTime = _frameNow;
   spawnTimer = 0;
   combo = 0;
   comboTimer = 0;
