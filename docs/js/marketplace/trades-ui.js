@@ -158,8 +158,8 @@ async function loadOnlineUsers() {
         <div class="trade-player-name">${escapeHtmlUI(u.username)}</div>
         <div class="trade-player-dot online"></div>
         <div class="trade-player-actions">
-          <button class="trade-btn trade-btn-sm" onclick="viewPlayerInventory('${u.uid}', '${escapeHtmlUI(u.username)}')">View</button>
-          <button class="trade-btn trade-btn-sm trade-btn-primary" onclick="initiateLiveTrade('${u.uid}', '${escapeHtmlUI(u.username)}')">Trade</button>
+          <button class="trade-btn trade-btn-sm" onclick="viewPlayerInventory('${escapeHtmlUI(u.uid)}', '${escapeHtmlUI(u.username)}')">View</button>
+          <button class="trade-btn trade-btn-sm trade-btn-primary" onclick="initiateLiveTrade('${escapeHtmlUI(u.uid)}', '${escapeHtmlUI(u.username)}')">Trade</button>
         </div>
       </div>`).join('');
   } catch (_) {
@@ -192,10 +192,10 @@ function _renderSearchResult(el, user) {
       <div class="trade-player-name">${escapeHtmlUI(user.username)}</div>
       <div class="trade-player-dot ${user.online ? 'online' : 'offline'}"></div>
       <div class="trade-player-actions">
-        <button class="trade-btn trade-btn-sm" onclick="viewPlayerInventory('${user.uid}', '${escapeHtmlUI(user.username)}')">View Inv</button>
+        <button class="trade-btn trade-btn-sm" onclick="viewPlayerInventory('${escapeHtmlUI(user.uid)}', '${escapeHtmlUI(user.username)}')">View Inv</button>
         ${user.online
-          ? `<button class="trade-btn trade-btn-sm trade-btn-primary" onclick="initiateLiveTrade('${user.uid}', '${escapeHtmlUI(user.username)}')">Live Trade</button>`
-          : `<button class="trade-btn trade-btn-sm trade-btn-primary" onclick="openSendOffer('${user.uid}', '${escapeHtmlUI(user.username)}')">Send Offer</button>`
+          ? `<button class="trade-btn trade-btn-sm trade-btn-primary" onclick="initiateLiveTrade('${escapeHtmlUI(user.uid)}', '${escapeHtmlUI(user.username)}')">Live Trade</button>`
+          : `<button class="trade-btn trade-btn-sm trade-btn-primary" onclick="openSendOffer('${escapeHtmlUI(user.uid)}', '${escapeHtmlUI(user.username)}')">Send Offer</button>`
         }
       </div>
     </div>`;
@@ -740,10 +740,10 @@ function _renderOfferCard(o, mode) {
     expired:  'trade-status-cancelled' }[o.status] || '';
 
   const actionBtns = mode === 'inbox' && o.status === 'pending'
-    ? `<button class="trade-btn trade-btn-accept" onclick="acceptOffer('${o.id}', this)">Accept</button>
-       <button class="trade-btn trade-btn-decline" onclick="declineOffer('${o.id}', this)">Decline</button>`
+    ? `<button class="trade-btn trade-btn-accept" onclick="acceptOffer('${escapeHtmlUI(o.id)}', this)">Accept</button>
+       <button class="trade-btn trade-btn-decline" onclick="declineOffer('${escapeHtmlUI(o.id)}', this)">Decline</button>`
     : mode === 'sent' && o.status === 'pending'
-      ? `<button class="trade-btn trade-btn-danger" onclick="cancelSentOffer('${o.id}', this)">Cancel</button>`
+      ? `<button class="trade-btn trade-btn-danger" onclick="cancelSentOffer('${escapeHtmlUI(o.id)}', this)">Cancel</button>`
       : '';
 
   return `
