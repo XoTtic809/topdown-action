@@ -32,16 +32,19 @@ async function getPublicProfile(uid) {
 }
 
 // ── Update score / coins / XP — called from the game after each round
-async function updateProgress(uid, { highScore, totalCoins, currentXp }) {
+// coinDelta is a validated positive delta (never negative) — additive to prevent
+// stale clients from overwriting server-side marketplace/crate deductions.
+// XP uses GREATEST so stale saves never reduce it.
+async function updateProgress(uid, { highScore, coinDelta, currentXp }) {
   const { rows } = await query(`
     UPDATE users SET
       high_score  = GREATEST(high_score, $2),
-      total_coins = $3,
-      current_xp  = $4,
+      total_coins = total_coins + $3,
+      current_xp  = GREATEST(current_xp, $4),
       updated_at  = NOW()
     WHERE uid = $1
     RETURNING high_score, total_coins, current_xp
-  `, [uid, highScore, totalCoins, currentXp]);
+  `, [uid, highScore, coinDelta, currentXp]);
   return rows[0] || null;
 }
 

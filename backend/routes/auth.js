@@ -208,6 +208,8 @@ router.post('/progress', requireAuth, async (req, res) => {
     const { rows: currentRows } = await query(
       'SELECT total_coins, current_xp FROM users WHERE uid = $1', [req.user.uid]
     );
+    // Compute deltas against authoritative server values
+    let safeCoinDelta = 0;
     if (currentRows[0]) {
       const coinDelta = Math.floor(totalCoins) - currentRows[0].total_coins;
       if (coinDelta > MAX_COIN_DELTA_HARD_REJECT) {
@@ -217,6 +219,9 @@ router.post('/progress', requireAuth, async (req, res) => {
       if (coinDelta > MAX_COIN_DELTA_PER_SAVE) {
         console.warn(`[Auth] COIN DELTA FLAG: uid=${req.user.uid} delta=${coinDelta}`);
       }
+      // Only allow positive deltas — marketplace/crate endpoints handle decreases.
+      // This prevents a stale client from overwriting server-side deductions.
+      safeCoinDelta = Math.max(0, coinDelta);
 
       const xpDelta = Math.floor(currentXp) - (currentRows[0].current_xp || 0);
       if (xpDelta > MAX_XP_DELTA_PER_SAVE) {
@@ -227,7 +232,7 @@ router.post('/progress', requireAuth, async (req, res) => {
 
     const updated = await updateProgress(req.user.uid, {
       highScore:  Math.floor(highScore),
-      totalCoins: Math.floor(totalCoins),
+      coinDelta:  safeCoinDelta,
       currentXp:  Math.floor(currentXp),
     });
 

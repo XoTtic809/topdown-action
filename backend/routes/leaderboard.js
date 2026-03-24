@@ -108,7 +108,7 @@ router.get('/bossrush', async (req, res) => {
 // POST /api/leaderboard/submit/horde  { kills }
 router.post('/submit/horde', requireAuth, async (req, res) => {
   const { kills } = req.body;
-  if (typeof kills !== 'number' || kills < 0 || kills > 50000) return res.status(400).json({ error: 'Invalid kills' });
+  if (typeof kills !== 'number' || kills < 0 || kills > 5000) return res.status(400).json({ error: 'Invalid kills' });
   const uid = req.user.uid;
   try {
     await query(`
@@ -132,7 +132,7 @@ router.post('/submit/horde', requireAuth, async (req, res) => {
 // POST /api/leaderboard/submit/timeattack  { kills }
 router.post('/submit/timeattack', requireAuth, async (req, res) => {
   const { kills } = req.body;
-  if (typeof kills !== 'number' || kills < 0 || kills > 10000) return res.status(400).json({ error: 'Invalid kills' });
+  if (typeof kills !== 'number' || kills < 0 || kills > 2000) return res.status(400).json({ error: 'Invalid kills' });
   const uid = req.user.uid;
   try {
     await query(`
@@ -156,7 +156,7 @@ router.post('/submit/timeattack', requireAuth, async (req, res) => {
 // POST /api/leaderboard/submit/bossrush  { bosses }
 router.post('/submit/bossrush', requireAuth, async (req, res) => {
   const { bosses } = req.body;
-  if (typeof bosses !== 'number' || bosses < 0 || bosses > 500) return res.status(400).json({ error: 'Invalid bosses' });
+  if (typeof bosses !== 'number' || bosses < 0 || bosses > 100) return res.status(400).json({ error: 'Invalid bosses' });
   const uid = req.user.uid;
   try {
     await query(`
