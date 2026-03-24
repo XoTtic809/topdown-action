@@ -25,10 +25,18 @@ var PC_BACKGROUNDS = {
   'bg_midnight':   'linear-gradient(135deg,#060618 0%,#0f0f40 38%,#1c1c62 55%,#0f0f40 72%,#060618 100%)',
   'bg_crimson':    'linear-gradient(135deg,#180008 0%,#480015 35%,#7a0025 55%,#480015 75%,#180008 100%)',
   'bg_ocean':      'linear-gradient(135deg,#010e1a 0%,#023c58 35%,#056578 55%,#023c58 75%,#010e1a 100%)',
+  // Gradient backgrounds
+  'bg_toxic':      'linear-gradient(135deg,#001a00 0%,#003a00 30%,#00ff40 50%,#003a00 70%,#001a00 100%)',
+  'bg_sunset':     'linear-gradient(135deg,#1a0520 0%,#6a1040 30%,#ff6030 55%,#6a1040 75%,#1a0520 100%)',
+  'bg_arctic':     'linear-gradient(135deg,#0a1828 0%,#1a4060 30%,#80c0e8 50%,#1a4060 70%,#0a1828 100%)',
+  'bg_blood_moon': 'radial-gradient(ellipse at 30% 30%,#4a0000 0%,#200000 50%,#0a0000 100%)',
+  'bg_deep_space': 'radial-gradient(ellipse at 60% 40%,#0a0020 0%,#020010 40%,#000005 100%)',
   // Animated backgrounds (ANIMATED: prefix → apply CSS class instead of inline bg)
   'bg_aurora':     'ANIMATED:pc-bg-aurora',
   'bg_matrix':     'ANIMATED:pc-bg-matrix',
   'bg_ember':      'ANIMATED:pc-bg-ember',
+  'bg_lightning':  'ANIMATED:pc-bg-lightning',
+  'bg_sakura':     'ANIMATED:pc-bg-sakura',
 };
 
 // ── Border CSS lookup ────────────────────────────────────────────────────────
@@ -46,6 +54,9 @@ var PC_BORDERS = {
   'border_fire':           '2px solid rgba(255,100,0,0.8)',
   'border_ice':            '2px solid rgba(160,216,234,0.8)',
   'border_void':           '2px solid rgba(140,0,255,0.8)',
+  'border_toxic':          '2px solid rgba(57,255,20,0.8)',
+  'border_sakura':         '2px solid rgba(255,105,180,0.8)',
+  'border_blood':          '2px solid rgba(180,0,0,0.8)',
 };
 
 // ── Title display text ───────────────────────────────────────────────────────
@@ -65,6 +76,15 @@ var PC_TITLE_DISPLAY = {
   'title_sigma':        'Sigma',
   'title_sweat':        'Tryhard',
   'title_rich':         'Made of Money',
+  // Achievement-based titles
+  'title_exterminator': 'Bug Spray',
+  'title_untouchable':  'Untouchable',
+  'title_speedrunner':  'Speed Demon',
+  'title_pacifist':     'Pacifist',
+  'title_clutch':       'Last Stand',
+  'title_perfectionist':'Flawless',
+  'title_nightowl':     'Night Owl',
+  'title_veteran_100':  'Centurion',
 };
 
 // ── Badge display data ───────────────────────────────────────────────────────
@@ -85,6 +105,15 @@ var PC_BADGE_DISPLAY = {
   'badge_veteran':        { icon: '⚔️',  name: 'Veteran',         bg: 'linear-gradient(135deg,#1a1a1a,#3a3020)' },
   'badge_high_roller':    { icon: '💰', name: 'High Roller',     bg: 'linear-gradient(135deg,#1a1000,#5a3a00)' },
   'badge_streak_pro':     { icon: '⚡', name: 'Streak Lord',     bg: 'linear-gradient(135deg,#0a0a20,#2a1a60)' },
+  // Achievement badges
+  'badge_1k_kills':       { icon: '💀', name: '1K Kills',        bg: 'linear-gradient(135deg,#1a0010,#550022)' },
+  'badge_10k_kills':      { icon: '☠️',  name: '10K Slayer',     bg: 'linear-gradient(135deg,#200008,#800020)' },
+  'badge_wave_50':        { icon: '🏔️', name: 'Wave 50',         bg: 'linear-gradient(135deg,#081828,#1a4a6a)' },
+  'badge_boss_slayer':    { icon: '🐉', name: 'Boss Slayer',     bg: 'linear-gradient(135deg,#180800,#603000)' },
+  'badge_speed_clear':    { icon: '⏱️', name: 'Speed Clear',     bg: 'linear-gradient(135deg,#001820,#006050)' },
+  'badge_no_hit':         { icon: '🛡️', name: 'No Hit Run',      bg: 'linear-gradient(135deg,#101030,#3030aa)' },
+  'badge_crate_addict':   { icon: '🎰', name: 'Crate Addict',    bg: 'linear-gradient(135deg,#181000,#5a4000)' },
+  'badge_beta_tester':    { icon: '🧪', name: 'Beta Tester',     bg: 'linear-gradient(135deg,#001410,#005530)' },
 };
 
 // ── Name color lookup ─────────────────────────────────────────────────────────
@@ -101,6 +130,10 @@ var PC_NAME_COLORS = {
   'name_pink':      '#ff2d9e',
   'name_ice':       '#a8d8ff',
   'name_fire':      'ANIMATED:pc-name-fire',
+  'name_mint':      '#00e6a8',
+  'name_coral':     '#ff6f61',
+  'name_lavender':  '#b39ddb',
+  'name_toxic':     '#39ff14',
 };
 
 // ── Card glow lookup (box-shadow value, or ANIMATED: prefix for CSS class) ──
@@ -116,12 +149,17 @@ var PC_GLOW_STYLES = {
   'glow_orange':  '0 0 22px rgba(255,130,0,0.45),  0 0 44px rgba(220,80,0,0.15)',
   'glow_pink':    '0 0 22px rgba(255,40,200,0.45),  0 0 44px rgba(200,0,160,0.15)',
   'glow_white':   '0 0 22px rgba(255,255,255,0.3),  0 0 44px rgba(200,220,255,0.12)',
+  'glow_toxic':   '0 0 22px rgba(57,255,20,0.45),   0 0 44px rgba(30,200,10,0.15)',
+  'glow_blood':   '0 0 22px rgba(180,0,0,0.45),     0 0 44px rgba(120,0,0,0.15)',
+  'glow_ice':     '0 0 22px rgba(160,216,255,0.4),   0 0 44px rgba(100,180,240,0.12)',
 };
 
 // ── Title CSS class ──────────────────────────────────────────────────────────
 var PC_TITLE_CSS_CLASS = {
   'title_sovereign':   'pc-title-sovereign',
   'title_number_one':  'pc-title-number-one',
+  'title_untouchable': 'pc-title-untouchable',
+  'title_perfectionist':'pc-title-perfectionist',
 };
 
 // ─── Profile cache ────────────────────────────────────────────────────────────
@@ -196,6 +234,9 @@ function renderProfileCard(data, containerEl, opts) {
   if (p.cardBorder === 'border_fire')            borderClass = ' pc-border-fire';
   if (p.cardBorder === 'border_ice')             borderClass = ' pc-border-ice';
   if (p.cardBorder === 'border_void')            borderClass = ' pc-border-void';
+  if (p.cardBorder === 'border_toxic')           borderClass = ' pc-border-toxic';
+  if (p.cardBorder === 'border_sakura')          borderClass = ' pc-border-sakura';
+  if (p.cardBorder === 'border_blood')           borderClass = ' pc-border-blood';
 
   var rankHtml = '';
   if (typeof rankBadgeSvg === 'function' && data.stats && data.stats.currentRank) {
@@ -665,39 +706,39 @@ function _renderCustomizer(box, profileData, unlockables) {
 
       // Background
       '<div class="pc-ctrl-section">' +
-        '<div class="pc-ctrl-label">Background</div>' +
+        '<div class="pc-ctrl-label">🎨 Background</div>' +
         '<input type="text" class="pc-ctrl-search" id="pcBgSearch" placeholder="Search backgrounds...">' +
         '<div class="pc-selector-grid" id="pcBgGrid">' + makeBgGrid('') + '</div>' +
       '</div>' +
 
       // Border
       '<div class="pc-ctrl-section">' +
-        '<div class="pc-ctrl-label">Border</div>' +
+        '<div class="pc-ctrl-label">🖼️ Border</div>' +
         '<div class="pc-selector-list" id="pcBorderList">' + makeBorderList('') + '</div>' +
       '</div>' +
 
       // Title
       '<div class="pc-ctrl-section">' +
-        '<div class="pc-ctrl-label">Title</div>' +
+        '<div class="pc-ctrl-label">🏷️ Title</div>' +
         '<div class="pc-selector-list" id="pcTitleList">' + makeTitleList('') + '</div>' +
       '</div>' +
 
       // Badges
       '<div class="pc-ctrl-section">' +
-        '<div class="pc-ctrl-label">Badges <span style="font-size:10px;opacity:0.5">(pick up to 3)</span></div>' +
+        '<div class="pc-ctrl-label">🏅 Badges <span style="font-size:10px;opacity:0.5">(pick up to 3)</span></div>' +
         '<div class="pc-cust-badge-slots" id="pcBadgeSlots">' + makeBadgeSlotsHtml() + '</div>' +
         '<div class="pc-cust-badge-grid" id="pcBadgeGrid">' + makeBadgeGridHtml() + '</div>' +
       '</div>' +
 
       // Accent color
       '<div class="pc-ctrl-section">' +
-        '<div class="pc-ctrl-label">Accent Color</div>' +
+        '<div class="pc-ctrl-label">🎯 Accent Color</div>' +
         '<div class="pc-color-row">' +
           '<input type="color" class="pc-color-input" id="pcAccentColor" value="' + _escapeHtml(pending.cardAccentColor) + '">' +
           '<span class="pc-color-hex" id="pcColorHex">' + _escapeHtml(pending.cardAccentColor) + '</span>' +
         '</div>' +
         '<div class="pc-color-presets" id="pcColorPresets">' +
-          ['#4a9eff','#ff4a6a','#4aff9e','#ffcc00','#ff6a00','#cc44ff','#00e5ff','#ff44cc','#ffffff','#7fffaa'].map(function(c) {
+          ['#4a9eff','#ff4a6a','#4aff9e','#ffcc00','#ff6a00','#cc44ff','#00e5ff','#ff44cc','#ffffff','#7fffaa','#39ff14','#ff6f61','#b39ddb','#00e6a8','#ff1493'].map(function(c) {
             var sel = pending.cardAccentColor === c ? ' pc-selected' : '';
             return '<div class="pc-color-preset' + sel + '" data-color="' + c + '" style="background:' + c + '" title="' + c + '"></div>';
           }).join('') +
@@ -706,36 +747,36 @@ function _renderCustomizer(box, profileData, unlockables) {
 
       // Name Color
       '<div class="pc-ctrl-section">' +
-        '<div class="pc-ctrl-label">Name Color</div>' +
+        '<div class="pc-ctrl-label">✨ Name Color</div>' +
         '<div class="pc-selector-list" id="pcNameColorList">' + makeNameColorList() + '</div>' +
       '</div>' +
 
       // Card Glow
       '<div class="pc-ctrl-section">' +
-        '<div class="pc-ctrl-label">Card Glow</div>' +
+        '<div class="pc-ctrl-label">💫 Card Glow</div>' +
         '<div class="pc-selector-list" id="pcGlowList">' + makeGlowList() + '</div>' +
       '</div>' +
 
       // Showcase skin
       '<div class="pc-ctrl-section">' +
-        '<div class="pc-ctrl-label">Showcase Skin</div>' +
+        '<div class="pc-ctrl-label">🎮 Showcase Skin</div>' +
         '<div class="pc-skin-grid" id="pcSkinGrid">Loading skins...</div>' +
       '</div>' +
 
       // Bio
       '<div class="pc-ctrl-section">' +
-        '<div class="pc-ctrl-label">Bio</div>' +
+        '<div class="pc-ctrl-label">📝 Bio</div>' +
         '<div class="pc-bio-wrap">' +
-          '<textarea class="pc-bio-input" id="pcBioInput" maxlength="120" placeholder="Write a short bio...">' +
+          '<textarea class="pc-bio-input" id="pcBioInput" maxlength="200" placeholder="Write a short bio...">' +
             _escapeHtml(pending.bio) +
           '</textarea>' +
-          '<span class="pc-bio-counter" id="pcBioCounter">' + (pending.bio || '').length + '/120</span>' +
+          '<span class="pc-bio-counter" id="pcBioCounter">' + (pending.bio || '').length + '/200</span>' +
         '</div>' +
       '</div>' +
 
       // Visibility
       '<div class="pc-ctrl-section">' +
-        '<div class="pc-ctrl-label">Visibility</div>' +
+        '<div class="pc-ctrl-label">👁️ Visibility</div>' +
         '<div class="pc-visibility-row">' +
           '<button class="pc-vis-btn' + (pending.cardVisibility === 'public'  ? ' pc-selected' : '') + '" data-vis="public">Public</button>' +
           '<button class="pc-vis-btn' + (pending.cardVisibility === 'friends' ? ' pc-selected' : '') + '" data-vis="friends">Friends</button>' +
@@ -939,8 +980,8 @@ function _renderCustomizer(box, profileData, unlockables) {
   var bioCounter  = document.getElementById('pcBioCounter');
   if (bioInput) {
     bioInput.addEventListener('input', function() {
-      pending.bio = this.value.slice(0, 120);
-      if (bioCounter) bioCounter.textContent = pending.bio.length + '/120';
+      pending.bio = this.value.slice(0, 200);
+      if (bioCounter) bioCounter.textContent = pending.bio.length + '/200';
       rebuildPreview();
     });
   }

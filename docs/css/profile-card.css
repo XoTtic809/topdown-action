@@ -88,6 +88,24 @@
 }
 .pc-card.pc-border-void { animation: pc-void-pulse 2s ease-in-out infinite; }
 
+@keyframes pc-toxic-pulse {
+  0%, 100% { border-color: rgba(57,255,20,0.5); box-shadow: 0 0 8px rgba(57,255,20,0.2); }
+  50% { border-color: rgba(57,255,20,0.9); box-shadow: 0 0 16px rgba(57,255,20,0.4); }
+}
+.pc-card.pc-border-toxic { animation: pc-toxic-pulse 1.8s ease-in-out infinite; }
+
+@keyframes pc-sakura-pulse {
+  0%, 100% { border-color: rgba(255,105,180,0.5); box-shadow: 0 0 8px rgba(255,105,180,0.2); }
+  50% { border-color: rgba(255,105,180,0.9); box-shadow: 0 0 16px rgba(255,105,180,0.4); }
+}
+.pc-card.pc-border-sakura { animation: pc-sakura-pulse 2.2s ease-in-out infinite; }
+
+@keyframes pc-blood-pulse {
+  0%, 100% { border-color: rgba(180,0,0,0.5); box-shadow: 0 0 8px rgba(180,0,0,0.2); }
+  50% { border-color: rgba(180,0,0,0.9); box-shadow: 0 0 18px rgba(180,0,0,0.5); }
+}
+.pc-card.pc-border-blood { animation: pc-blood-pulse 2s ease-in-out infinite; }
+
 /* ── Header ──────────────────────────────────────────────────────────────── */
 .pc-header {
   display: flex;
@@ -194,6 +212,27 @@
 .pc-title.pc-title-number-one {
   color: #fff;
   animation: pc-number-one-glow 2.5s ease-in-out infinite;
+}
+
+@keyframes pc-untouchable-shimmer {
+  0%, 100% { text-shadow: 0 0 8px rgba(0,200,255,0.6); }
+  50% { text-shadow: 0 0 16px rgba(0,200,255,0.9), 0 0 30px rgba(0,150,255,0.4); }
+}
+.pc-title.pc-title-untouchable {
+  color: #00d4ff;
+  animation: pc-untouchable-shimmer 2s ease-in-out infinite;
+}
+
+@keyframes pc-perfectionist-pulse {
+  0%, 100% { text-shadow: 0 0 6px rgba(255,215,0,0.5); opacity: 1; }
+  50% { text-shadow: 0 0 14px rgba(255,215,0,0.8), 0 0 24px rgba(255,180,0,0.3); opacity: 0.9; }
+}
+.pc-title.pc-title-perfectionist {
+  background: linear-gradient(90deg, #ffd700, #ff8c00, #ffd700);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: pc-perfectionist-pulse 3s ease-in-out infinite;
 }
 
 /* ── Bio ─────────────────────────────────────────────────────────────────── */
@@ -874,6 +913,30 @@
   background: linear-gradient(135deg,#1c0300 0%,#601200 35%,#a02200 55%,#601200 75%,#1c0300 100%);
   background-size: 200% 200%;
   animation: pc-ember-glow 2.5s ease-in-out infinite;
+}
+
+/* Lightning background */
+@keyframes pc-lightning-flash {
+  0%, 90%, 100% { background-position: 0% 0%; filter: brightness(1); }
+  93% { filter: brightness(2.5) saturate(2); }
+  95% { filter: brightness(0.8); }
+  97% { filter: brightness(1.8) saturate(1.5); }
+}
+.pc-bg-lightning {
+  background: linear-gradient(135deg,#050818 0%,#0a1530 30%,#182848 55%,#0a1530 75%,#050818 100%);
+  background-size: 200% 200%;
+  animation: pc-lightning-flash 4s ease-in-out infinite;
+}
+
+/* Sakura background */
+@keyframes pc-sakura-drift {
+  0%, 100% { background-position: 0% 50%; filter: brightness(1) saturate(1.2); }
+  50% { background-position: 100% 50%; filter: brightness(1.15) saturate(1.5) hue-rotate(5deg); }
+}
+.pc-bg-sakura {
+  background: linear-gradient(135deg,#1a0818 0%,#3a1028 30%,#6a2048 50%,#3a1028 70%,#1a0818 100%);
+  background-size: 200% 200%;
+  animation: pc-sakura-drift 6s ease-in-out infinite;
 }
 
 /* ── Gold shine + sparkle ────────────────────────────────────────────────── */

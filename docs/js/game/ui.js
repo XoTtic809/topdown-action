@@ -23,6 +23,9 @@ function updateUIForLoggedInUser() {
   if (usernameDisplay) usernameDisplay.textContent = currentUser.displayName || currentUser.email;
   if (adminBtn)        adminBtn.classList.toggle('hidden', !isAdmin);
 
+  // Render equipped skin as avatar
+  _renderHomeAvatar();
+
   document.getElementById('homeScreen')?.classList.remove('hidden');
   // Refresh chat widget visibility now that the user is logged in
   if (typeof window.chatRefreshVisibility === 'function') window.chatRefreshVisibility();
@@ -348,5 +351,18 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
 });
+
+// ── Home screen avatar skin preview ──────────────────────────
+function _renderHomeAvatar() {
+  const el = document.getElementById('hsAvatarSkin');
+  if (!el) return;
+  const skin = typeof activeSkin !== 'undefined' ? activeSkin : 'agent';
+  if (typeof applyRichSkinPreview === 'function') {
+    el.textContent = '';
+    el.style.overflow = 'hidden';
+    const skinData = typeof SKINS !== 'undefined' ? SKINS.find(s => s.id === skin) : null;
+    applyRichSkinPreview(el, skin, skinData ? skinData.color : null);
+  }
+}
 
 console.log('✅ ui.js loaded');
