@@ -1154,7 +1154,7 @@ function initCosmeticsTab() {
   header.className = 'cosmetics-header';
   header.innerHTML = `
     <div class="cosmetics-header-title">✨ COSMETICS</div>
-    <div class="cosmetics-header-sub">Equip trails and death effects earned from the Battle Pass</div>
+    <div class="cosmetics-header-sub">Equip trails, death effects, titles &amp; badges earned from the Battle Pass</div>
   `;
   container.appendChild(header);
 
@@ -1251,6 +1251,99 @@ function initCosmeticsTab() {
 
   deathSection.appendChild(deathGrid);
   container.appendChild(deathSection);
+
+  // profile titles
+  const titleSection = document.createElement('div');
+  titleSection.className = 'cosmetics-section';
+  titleSection.innerHTML = `
+    <div class="cosmetics-section-header">
+      <span class="cosmetics-section-icon">🏷️</span>
+      <span class="cosmetics-section-title">PROFILE TITLES</span>
+      <span class="cosmetics-section-desc">Title displayed on your profile card</span>
+    </div>
+  `;
+
+  const titleGrid = document.createElement('div');
+  titleGrid.className = 'cosmetics-card-grid';
+
+  const noneTitle = _makeCosmCard(
+    '🚫', 'None', '#888',
+    'No custom title',
+    battlePassData.activeTitle === null,
+    true,
+    () => { battlePassData.activeTitle = null; saveBattlePassData(); initCosmeticsTab(); }
+  );
+  titleGrid.appendChild(noneTitle);
+
+  const TITLE_META = {
+    battleborn:      { icon: '⚔️', desc: 'Earned at Tier 12' },
+    seasonwarrior:   { icon: '🛡️', desc: 'Earned at Tier 22' },
+    eliteoperative:  { icon: '🎖️', desc: 'Earned at Tier 42' }
+  };
+
+  for (const [titleId, title] of Object.entries(PROFILE_TITLES)) {
+    const isOwned = battlePassData.ownedTitles.includes(titleId);
+    const isActive = battlePassData.activeTitle === titleId;
+    const meta = TITLE_META[titleId] || { icon: '🏷️', desc: title.name };
+
+    const card = _makeCosmCard(
+      meta.icon, title.name, title.color,
+      meta.desc,
+      isActive, isOwned,
+      isOwned ? () => { battlePassData.activeTitle = titleId; saveBattlePassData(); initCosmeticsTab(); } : null,
+      'Earn from Battle Pass'
+    );
+    titleGrid.appendChild(card);
+  }
+
+  titleSection.appendChild(titleGrid);
+  container.appendChild(titleSection);
+
+  // profile badges
+  const badgeSection = document.createElement('div');
+  badgeSection.className = 'cosmetics-section';
+  badgeSection.innerHTML = `
+    <div class="cosmetics-section-header">
+      <span class="cosmetics-section-icon">🎖️</span>
+      <span class="cosmetics-section-title">PROFILE BADGES</span>
+      <span class="cosmetics-section-desc">Badge shown on your profile card</span>
+    </div>
+  `;
+
+  const badgeGrid = document.createElement('div');
+  badgeGrid.className = 'cosmetics-card-grid';
+
+  const noneBadge = _makeCosmCard(
+    '🚫', 'None', '#888',
+    'No badge equipped',
+    battlePassData.activeBadge === null,
+    true,
+    () => { battlePassData.activeBadge = null; saveBattlePassData(); initCosmeticsTab(); }
+  );
+  badgeGrid.appendChild(noneBadge);
+
+  const BADGE_META = {
+    seasonwarrior: { preview: '#ffd700', desc: 'Earned at Tier 22' },
+    s1champion:    { preview: '#ff4500', desc: 'Earned at Tier 50' }
+  };
+
+  for (const [badgeId, badge] of Object.entries(PROFILE_BADGES)) {
+    const isOwned = battlePassData.ownedBadges.includes(badgeId);
+    const isActive = battlePassData.activeBadge === badgeId;
+    const meta = BADGE_META[badgeId] || { preview: '#888', desc: badge.name };
+
+    const card = _makeCosmCard(
+      badge.icon, badge.name, meta.preview,
+      meta.desc,
+      isActive, isOwned,
+      isOwned ? () => { battlePassData.activeBadge = badgeId; saveBattlePassData(); initCosmeticsTab(); } : null,
+      'Earn from Battle Pass'
+    );
+    badgeGrid.appendChild(card);
+  }
+
+  badgeSection.appendChild(badgeGrid);
+  container.appendChild(badgeSection);
 
   // earn more hint
   const hint = document.createElement('div');

@@ -209,6 +209,249 @@ const sounds = {
   coin: () => playSound(1400, 0.05, 'sine'),
 };
 
+// --- procedural music system ---
+
+const MUSIC_THEMES = {
+  classic: {
+    bassFreq: 55,   // A1
+    padNotes: [130.81, 164.81, 196.00], // C3, E3, G3 — C major
+    tempo: 0.8,
+    filterFreq: 400
+  },
+  timeattack: {
+    bassFreq: 65.41, // C2
+    padNotes: [146.83, 174.61, 220.00], // D3, F3, A3 — D minor
+    tempo: 1.4,
+    filterFreq: 600
+  },
+  bossrush: {
+    bassFreq: 49,    // G1
+    padNotes: [123.47, 146.83, 185.00], // B2, D3, F#3 — B minor
+    tempo: 0.6,
+    filterFreq: 350
+  },
+  ranked: {
+    bassFreq: 58.27, // Bb1
+    padNotes: [138.59, 164.81, 207.65], // C#3, E3, G#3 — C# minor
+    tempo: 0.9,
+    filterFreq: 420
+  }
+};
+
+const BOSS_MUSIC = {
+  bassFreq: 41.20, // E1
+  padNotes: [103.83, 130.81, 155.56], // G#2, C3, Eb3 — diminished
+  filterFreq: 300
+};
+
+let musicNodes = [];
+let musicGainNode = null;
+let musicBossLayer = null;
+let musicPlaying = false;
+let _currentMusicMode = null;
+
+function startMusic(mode) {
+  if (!audioCtx || !gameSettings.masterSound || !gameSettings.musicEnabled) return;
+  if (musicPlaying) stopMusic();
+
+  const theme = MUSIC_THEMES[mode] || MUSIC_THEMES.classic;
+  _currentMusicMode = mode;
+  musicPlaying = true;
+
+  // Master gain for all music
+  musicGainNode = audioCtx.createGain();
+  const vol = (gameSettings.musicVolume != null ? gameSettings.musicVolume : 50) / 100;
+  musicGainNode.gain.setValueAtTime(0.001, audioCtx.currentTime);
+  musicGainNode.gain.exponentialRampToValueAtTime(Math.max(0.001, vol * 0.12), audioCtx.currentTime + 2);
+  musicGainNode.connect(audioCtx.destination);
+  musicNodes.push(musicGainNode);
+
+  // --- Bass layer: low sine with LFO tremolo ---
+  const bassOsc = audioCtx.createOscillator();
+  const bassGain = audioCtx.createGain();
+  const lfo = audioCtx.createOscillator();
+  const lfoGain = audioCtx.createGain();
+
+  bassOsc.type = 'sine';
+  bassOsc.frequency.value = theme.bassFreq;
+  lfo.type = 'sine';
+  lfo.frequency.value = theme.tempo * 2; // Pulse speed
+  lfoGain.gain.value = 0.3; // Tremolo depth
+
+  lfo.connect(lfoGain);
+  lfoGain.connect(bassGain.gain);
+  bassOsc.connect(bassGain);
+  bassGain.gain.value = 0.7;
+  bassGain.connect(musicGainNode);
+
+  bassOsc.start();
+  lfo.start();
+  musicNodes.push(bassOsc, lfo, bassGain, lfoGain);
+
+  // --- Pad layer: filtered sawtooth chord ---
+  const padFilter = audioCtx.createBiquadFilter();
+  padFilter.type = 'lowpass';
+  padFilter.frequency.value = theme.filterFreq;
+  padFilter.Q.value = 2;
+  padFilter.connect(musicGainNode);
+  musicNodes.push(padFilter);
+
+  // Slow filter sweep LFO
+  const filterLfo = audioCtx.createOscillator();
+  const filterLfoGain = audioCtx.createGain();
+  filterLfo.type = 'sine';
+  filterLfo.frequency.value = 0.1; // Very slow sweep
+  filterLfoGain.gain.value = theme.filterFreq * 0.5;
+  filterLfo.connect(filterLfoGain);
+  filterLfoGain.connect(padFilter.frequency);
+  filterLfo.start();
+  musicNodes.push(filterLfo, filterLfoGain);
+
+  for (const freq of theme.padNotes) {
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = 'sawtooth';
+    osc.frequency.value = freq;
+    // Slight detune for warmth
+    osc.detune.value = (Math.random() - 0.5) * 10;
+    gain.gain.value = 0.15;
+    osc.connect(gain);
+    gain.connect(padFilter);
+    osc.start();
+    musicNodes.push(osc, gain);
+  }
+
+  // --- Sub-bass layer for depth ---
+  const subOsc = audioCtx.createOscillator();
+  const subGain = audioCtx.createGain();
+  subOsc.type = 'sine';
+  subOsc.frequency.value = theme.bassFreq / 2; // One octave below
+  subGain.gain.value = 0.4;
+  subOsc.connect(subGain);
+  subGain.connect(musicGainNode);
+  subOsc.start();
+  musicNodes.push(subOsc, subGain);
+}
+
+function stopMusic() {
+  if (!musicPlaying || !audioCtx) { musicPlaying = false; return; }
+
+  // Fade out over 1 second
+  if (musicGainNode) {
+    try {
+      musicGainNode.gain.cancelScheduledValues(audioCtx.currentTime);
+      musicGainNode.gain.setValueAtTime(musicGainNode.gain.value, audioCtx.currentTime);
+      musicGainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 1);
+    } catch(e) {}
+  }
+
+  // Stop and disconnect all nodes after fade
+  setTimeout(() => {
+    for (const node of musicNodes) {
+      try {
+        if (node.stop) node.stop();
+        node.disconnect();
+      } catch(e) {}
+    }
+    musicNodes = [];
+    musicGainNode = null;
+    musicBossLayer = null;
+  }, 1100);
+
+  musicPlaying = false;
+  _currentMusicMode = null;
+}
+
+function updateMusicIntensity(currentWave) {
+  if (!musicPlaying || !musicGainNode || !audioCtx) return;
+  // Gradually increase volume and filter brightness with wave progression
+  const intensity = Math.min(1.0, 0.4 + (currentWave / 50) * 0.6);
+  const vol = (gameSettings.musicVolume != null ? gameSettings.musicVolume : 50) / 100;
+  const targetGain = Math.max(0.001, vol * 0.12 * intensity);
+
+  try {
+    musicGainNode.gain.cancelScheduledValues(audioCtx.currentTime);
+    musicGainNode.gain.setValueAtTime(musicGainNode.gain.value, audioCtx.currentTime);
+    musicGainNode.gain.exponentialRampToValueAtTime(targetGain, audioCtx.currentTime + 2);
+  } catch(e) {}
+
+  // Brighten filter on pad layer as waves increase
+  for (const node of musicNodes) {
+    if (node instanceof BiquadFilterNode) {
+      const theme = MUSIC_THEMES[_currentMusicMode] || MUSIC_THEMES.classic;
+      const targetFreq = theme.filterFreq * (1 + intensity * 0.8);
+      node.frequency.cancelScheduledValues(audioCtx.currentTime);
+      node.frequency.setValueAtTime(node.frequency.value, audioCtx.currentTime);
+      node.frequency.exponentialRampToValueAtTime(targetFreq, audioCtx.currentTime + 2);
+      break; // Only the pad filter
+    }
+  }
+}
+
+function startBossMusic() {
+  if (!musicPlaying || !audioCtx || musicBossLayer) return;
+  musicBossLayer = [];
+
+  // Add dissonant boss drone
+  const bossGain = audioCtx.createGain();
+  bossGain.gain.setValueAtTime(0.001, audioCtx.currentTime);
+  const vol = (gameSettings.musicVolume != null ? gameSettings.musicVolume : 50) / 100;
+  bossGain.gain.exponentialRampToValueAtTime(Math.max(0.001, vol * 0.08), audioCtx.currentTime + 1.5);
+  bossGain.connect(musicGainNode || audioCtx.destination);
+
+  // Low rumble
+  const rumble = audioCtx.createOscillator();
+  rumble.type = 'sawtooth';
+  rumble.frequency.value = BOSS_MUSIC.bassFreq;
+  const rumbleFilter = audioCtx.createBiquadFilter();
+  rumbleFilter.type = 'lowpass';
+  rumbleFilter.frequency.value = 120;
+  rumble.connect(rumbleFilter);
+  rumbleFilter.connect(bossGain);
+  rumble.start();
+
+  // Dissonant pad
+  for (const freq of BOSS_MUSIC.padNotes) {
+    const osc = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    osc.type = 'sawtooth';
+    osc.frequency.value = freq;
+    osc.detune.value = (Math.random() - 0.5) * 20; // More detune = more menacing
+    g.gain.value = 0.2;
+    osc.connect(g);
+    g.connect(bossGain);
+    osc.start();
+    musicBossLayer.push(osc, g);
+  }
+
+  musicBossLayer.push(rumble, rumbleFilter, bossGain);
+  musicNodes.push(...musicBossLayer);
+}
+
+function stopBossMusic() {
+  if (!musicBossLayer || !audioCtx) return;
+  // Find the boss gain node (last element) and fade it
+  const bossGain = musicBossLayer[musicBossLayer.length - 1];
+  if (bossGain && bossGain.gain) {
+    try {
+      bossGain.gain.cancelScheduledValues(audioCtx.currentTime);
+      bossGain.gain.setValueAtTime(bossGain.gain.value, audioCtx.currentTime);
+      bossGain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 1);
+    } catch(e) {}
+  }
+  setTimeout(() => {
+    for (const node of musicBossLayer) {
+      try {
+        if (node.stop) node.stop();
+        node.disconnect();
+      } catch(e) {}
+      const idx = musicNodes.indexOf(node);
+      if (idx !== -1) musicNodes.splice(idx, 1);
+    }
+    musicBossLayer = null;
+  }, 1100);
+}
+
 // --- settings ---
 
 const defaultSettings = {
@@ -219,6 +462,8 @@ const defaultSettings = {
   showFPS: false,
   autoShoot: false,
   perfMode: false,
+  musicEnabled: true,
+  musicVolume: 50,
 };
 
 const gameSettings = Object.assign({}, defaultSettings,
@@ -4666,35 +4911,47 @@ class Boss {
     this.moveTimer = 0;
     this.isBoss = true;
     this.wave = wave;
+    this.enrageTime = 0;
+    this.enraged = false;
   }
 
   update(dt) {
+    // Enrage after 45 seconds
+    this.enrageTime += dt;
+    if (!this.enraged && this.enrageTime >= 45) {
+      this.enraged = true;
+      if (gameSettings.screenShake) screenShakeAmt = 1.0;
+      playSound(50, 0.8, 'sawtooth');
+    }
+    const eMult = this.enraged ? 1.3 : 1.0; // 30% speed/attack boost
+    const aCoolMult = this.enraged ? 0.7 : 1.0; // 30% faster attacks
+
     this.moveTimer += dt;
-    
+
     if (this.moveTimer > 4) {
       this.moveTimer = 0;
       this.movePattern = (this.movePattern + 1) % 3;
     }
-    
+
     if (this.movePattern === 0) {
       const angle = Math.atan2(player.y - this.y, player.x - this.x) + Math.PI / 2;
-      this.x += Math.cos(angle) * this.speed * dt;
-      this.y += Math.sin(angle) * this.speed * dt;
+      this.x += Math.cos(angle) * this.speed * eMult * dt;
+      this.y += Math.sin(angle) * this.speed * eMult * dt;
     } else if (this.movePattern === 1) {
       const angle = Math.atan2(player.y - this.y, player.x - this.x);
-      this.x += Math.cos(angle) * this.speed * 0.6 * dt;
-      this.y += Math.sin(angle) * this.speed * 0.6 * dt;
+      this.x += Math.cos(angle) * this.speed * 0.6 * eMult * dt;
+      this.y += Math.sin(angle) * this.speed * 0.6 * eMult * dt;
     } else {
-      this.x += (Math.random() - 0.5) * this.speed * 1.2 * dt;
-      this.y += (Math.random() - 0.5) * this.speed * 1.2 * dt;
+      this.x += (Math.random() - 0.5) * this.speed * 1.2 * eMult * dt;
+      this.y += (Math.random() - 0.5) * this.speed * 1.2 * eMult * dt;
     }
-    
+
     this.x = Math.max(60, Math.min(canvas.width - 60, this.x));
     this.y = Math.max(60, Math.min(canvas.height - 60, this.y));
-    
+
     this.shootCooldown -= dt;
     if (this.shootCooldown <= 0) {
-      this.shootCooldown = 1.2;
+      this.shootCooldown = 1.2 * aCoolMult;
       this.shootBurst();
     }
   }
@@ -4716,14 +4973,26 @@ class Boss {
   }
 
   draw() {
+    // Enrage pulsing red glow
+    if (this.enraged) {
+      const pulse = 0.5 + 0.5 * Math.sin(_frameNow / 150);
+      ctx.shadowBlur = 40;
+      ctx.shadowColor = `rgba(255, 0, 0, ${pulse})`;
+      ctx.strokeStyle = `rgba(255, 0, 0, ${0.3 + pulse * 0.4})`;
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.r + 30 + pulse * 8, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+
     ctx.shadowBlur = 25;
     ctx.shadowColor = this.color;
-    
+
  // Rotating outer rings
     const time = _frameNow / 1000;
     ctx.strokeStyle = this.color;
     ctx.lineWidth = 5;
-    
+
     for (let i = 0; i < 2; i++) {
       ctx.beginPath();
       ctx.arc(this.x, this.y, this.r + 15 + i * 10 + Math.sin(time * 2) * 5, 0, Math.PI * 2);
@@ -4782,42 +5051,60 @@ class MegaBoss {
     this.isMegaBoss = true;
     this.wave = wave;
     this.phase = 1; // Changes at 66% and 33% HP
+    this.enrageTime = 0;
+    this.enraged = false;
+    // Ground slam mechanic
+    this.slamCooldown = 8;
+    this.slamCharging = false;
+    this.slamChargeTimer = 0;
+    this.slamRing = null; // { x, y, radius, maxRadius, alpha }
   }
 
   update(dt) {
+ // Enrage
+    this.enrageTime += dt;
+    if (!this.enraged && this.enrageTime >= 45) {
+      this.enraged = true;
+      if (gameSettings.screenShake) screenShakeAmt = 1.5;
+      playSound(50, 0.8, 'sawtooth');
+    }
+    const eMult = this.enraged ? 1.3 : 1.0;
+    const aCoolMult = this.enraged ? 0.7 : 1.0;
+
  // Update phase based on HP
     const hpPercent = this.hp / this.maxHp;
     if (hpPercent <= 0.33) this.phase = 3;
     else if (hpPercent <= 0.66) this.phase = 2;
     else this.phase = 1;
-    
+
     this.moveTimer += dt;
-    
+
     if (this.moveTimer > 3) {
       this.moveTimer = 0;
       this.movePattern = (this.movePattern + 1) % 4;
     }
     
  // Movement patterns
+    const spd = this.speed * eMult;
     if (this.movePattern === 0) {
  // Circle strafe
       const angle = Math.atan2(player.y - this.y, player.x - this.x) + Math.PI / 2;
-      this.x += Math.cos(angle) * this.speed * dt;
-      this.y += Math.sin(angle) * this.speed * dt;
+      this.x += Math.cos(angle) * spd * dt;
+      this.y += Math.sin(angle) * spd * dt;
     } else if (this.movePattern === 1) {
  // Chase player slowly
       const angle = Math.atan2(player.y - this.y, player.x - this.x);
-      this.x += Math.cos(angle) * this.speed * 0.5 * dt;
-      this.y += Math.sin(angle) * this.speed * 0.5 * dt;
+      this.x += Math.cos(angle) * spd * 0.5 * dt;
+      this.y += Math.sin(angle) * spd * 0.5 * dt;
     } else if (this.movePattern === 2) {
  // Dash towards player
       const angle = Math.atan2(player.y - this.y, player.x - this.x);
-      this.x += Math.cos(angle) * this.speed * 1.8 * dt;
-      this.y += Math.sin(angle) * this.speed * 1.8 * dt;
+      this.x += Math.cos(angle) * spd * 1.8 * dt;
+      this.y += Math.sin(angle) * spd * 1.8 * dt;
     } else {
  // Erratic movement
-      this.x += (Math.random() - 0.5) * this.speed * 1.5 * dt;
-      this.y += (Math.random() - 0.5) * this.speed * 1.5 * dt;
+      this.x += (Math.random() - 0.5) * spd * 1.5 * dt;
+      this.y += (Math.random() - 0.5) * spd * 1.5 * dt;
     }
     
     this.x = Math.max(80, Math.min(canvas.width - 80, this.x));
@@ -4826,22 +5113,70 @@ class MegaBoss {
  // Regular shooting pattern
     this.shootCooldown -= dt;
     if (this.shootCooldown <= 0) {
-      this.shootCooldown = 0.8; // Faster than regular boss
+      this.shootCooldown = 0.8 * aCoolMult;
       this.shootSpiral();
     }
-    
+
  // Special attacks based on phase
     this.specialCooldown -= dt;
     if (this.specialCooldown <= 0) {
       if (this.phase === 1) {
-        this.specialCooldown = 4;
+        this.specialCooldown = 4 * aCoolMult;
         this.shootWave();
       } else if (this.phase === 2) {
-        this.specialCooldown = 3.5;
+        this.specialCooldown = 3.5 * aCoolMult;
         this.shootCross();
       } else {
-        this.specialCooldown = 3;
+        this.specialCooldown = 3 * aCoolMult;
         this.shootChaos();
+      }
+    }
+
+    // Ground slam (phase 2+)
+    if (this.phase >= 2 && !this.slamCharging && !this.slamRing) {
+      this.slamCooldown -= dt;
+      if (this.slamCooldown <= 0) {
+        this.slamCharging = true;
+        this.slamChargeTimer = 1.0; // 1s telegraph
+        playSound(60, 1.0, 'sawtooth');
+      }
+    }
+
+    if (this.slamCharging) {
+      this.slamChargeTimer -= dt;
+      if (this.slamChargeTimer <= 0) {
+        // Execute slam
+        this.slamCharging = false;
+        this.slamCooldown = this.phase === 3 ? 6 : 8;
+        const slamMaxRadius = 220 + (this.phase === 3 ? 60 : 0);
+        this.slamRing = { x: this.x, y: this.y, radius: this.r, maxRadius: slamMaxRadius, alpha: 1.0, damaged: false };
+        if (gameSettings.screenShake) screenShakeAmt = 1.2;
+        playSound(40, 0.5, 'sawtooth');
+      }
+    }
+
+    // Expand slam ring
+    if (this.slamRing) {
+      this.slamRing.radius += 400 * dt;
+      this.slamRing.alpha = 1.0 - (this.slamRing.radius / this.slamRing.maxRadius);
+
+      // Damage player if ring passes through them
+      if (!this.slamRing.damaged) {
+        const dx = player.x - this.slamRing.x;
+        const dy = player.y - this.slamRing.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        const ringInner = this.slamRing.radius - 25;
+        const ringOuter = this.slamRing.radius + 25;
+        if (dist >= ringInner && dist <= ringOuter) {
+          player.hp -= 20;
+          this.slamRing.damaged = true;
+          sounds.damage();
+          if (gameSettings.screenShake) screenShakeAmt = 0.8;
+        }
+      }
+
+      if (this.slamRing.radius >= this.slamRing.maxRadius) {
+        this.slamRing = null;
       }
     }
   }
@@ -4929,7 +5264,19 @@ class MegaBoss {
 
   draw() {
     const time = _frameNow / 1000;
-    
+
+    // Enrage pulsing red glow
+    if (this.enraged) {
+      const pulse = 0.5 + 0.5 * Math.sin(_frameNow / 150);
+      ctx.shadowBlur = 50;
+      ctx.shadowColor = `rgba(255, 0, 0, ${pulse})`;
+      ctx.strokeStyle = `rgba(255, 0, 0, ${0.3 + pulse * 0.4})`;
+      ctx.lineWidth = 5;
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.r + 35 + pulse * 10, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+
  // Pulsing glow based on phase
     const glowIntensity = this.phase === 3 ? 40 : this.phase === 2 ? 30 : 25;
     ctx.shadowBlur = glowIntensity;
@@ -4971,7 +5318,39 @@ class MegaBoss {
     ctx.restore();
     
     ctx.shadowBlur = 0;
-    
+
+    // Ground slam charge telegraph
+    if (this.slamCharging) {
+      const chargeProgress = 1.0 - (this.slamChargeTimer / 1.0);
+      const pulseAlpha = 0.3 + chargeProgress * 0.5;
+      ctx.strokeStyle = `rgba(255, 50, 50, ${pulseAlpha})`;
+      ctx.lineWidth = 3 + chargeProgress * 5;
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.r + 10 + chargeProgress * 30, 0, Math.PI * 2);
+      ctx.stroke();
+      // Inner pulse
+      ctx.fillStyle = `rgba(255, 0, 0, ${pulseAlpha * 0.2})`;
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.r * (1 + chargeProgress * 0.3), 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // Expanding slam shockwave ring
+    if (this.slamRing) {
+      const sr = this.slamRing;
+      ctx.strokeStyle = `rgba(255, 80, 40, ${sr.alpha})`;
+      ctx.lineWidth = 8 * sr.alpha;
+      ctx.beginPath();
+      ctx.arc(sr.x, sr.y, sr.radius, 0, Math.PI * 2);
+      ctx.stroke();
+      // Inner glow ring
+      ctx.strokeStyle = `rgba(255, 200, 100, ${sr.alpha * 0.5})`;
+      ctx.lineWidth = 3 * sr.alpha;
+      ctx.beginPath();
+      ctx.arc(sr.x, sr.y, sr.radius - 10, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+
  // MEGA BOSS HP bar (wider and more prominent)
     const barWidth = 200;
     const barHeight = 14;
@@ -5048,6 +5427,14 @@ class UltraBoss {
     this.specialCooldown = 0;
     this.summonCooldown  = 4;
 
+    // Shield phase mechanic
+    this.shieldNodes = [];         // Array of { hp, angle, maxHp }
+    this.shieldSpawned = false;
+    this.shieldAngle = 0;          // Rotation offset for orbiting nodes
+    this._origDamageReduction = 0; // Track shield-based damage reduction
+    this.enrageTime = 0;
+    this.enraged = false;
+
  // Movement
     this.moveTimer   = 0;
     this.movePattern = 0;
@@ -5065,6 +5452,16 @@ class UltraBoss {
   get hpPct() { return this.hp / this.maxHp; }
 
   update(dt) {
+    // Enrage
+    this.enrageTime += dt;
+    if (!this.enraged && this.enrageTime >= 45) {
+      this.enraged = true;
+      if (gameSettings.screenShake) screenShakeAmt = 2.0;
+      playSound(45, 1.0, 'sawtooth');
+    }
+    const eMult = this.enraged ? 1.3 : 1.0;
+    const aCoolMult = this.enraged ? 0.7 : 1.0;
+
  // Phase transitions at 75 / 50 / 25 % HP
     if      (this.hpPct <= 0.25) this.phase = 4;
     else if (this.hpPct <= 0.50) this.phase = 3;
@@ -5086,7 +5483,7 @@ class UltraBoss {
       this.movePattern = (this.movePattern + 1) % (2 + this.phase);
     }
 
-    const spd = this.speed * (1 + (this.phase - 1) * 0.25);
+    const spd = this.speed * (1 + (this.phase - 1) * 0.25) * eMult;
     if (this.dashTimer > 0) {
  // Active dash towards dashTarget
       this.dashTimer -= dt;
@@ -5124,7 +5521,7 @@ class UltraBoss {
 
     // dual counter-rotating spirals (constant)
     this.spiralCooldown -= dt;
-    const spiralRate = Math.max(0.46, 0.92 - this.phase * 0.1); // Final tuning: +6% faster on top of previous
+    const spiralRate = Math.max(0.46, 0.92 - this.phase * 0.1) * aCoolMult;
     if (this.spiralCooldown <= 0) {
       this.spiralCooldown = spiralRate;
       this.shootDualSpiral();
@@ -5132,7 +5529,7 @@ class UltraBoss {
 
     // phase special attacks
     this.specialCooldown -= dt;
-    const specialRate = Math.max(1.9, 4.9 - this.phase * 0.6); // Final tuning: +6% faster overall
+    const specialRate = Math.max(1.9, 4.9 - this.phase * 0.6) * aCoolMult;
     if (this.specialCooldown <= 0) {
       this.specialCooldown = specialRate;
       if      (this.phase === 1) this.shootStarBurst();
@@ -5149,6 +5546,22 @@ class UltraBoss {
         this.summonCooldown = summonRate;
         this.summonMinions();
       }
+    }
+
+    // Shield phase (spawns once at phase 3)
+    if (this.phase >= 3 && !this.shieldSpawned) {
+      this.shieldSpawned = true;
+      const nodeCount = 4;
+      for (let i = 0; i < nodeCount; i++) {
+        this.shieldNodes.push({ hp: 5, maxHp: 5, angle: (Math.PI * 2 / nodeCount) * i });
+      }
+      playSound(400, 0.5, 'sine');
+      if (gameSettings.screenShake) screenShakeAmt = 0.6;
+    }
+
+    // Rotate shield nodes
+    if (this.shieldNodes.length > 0) {
+      this.shieldAngle += 1.5 * dt; // Rotation speed
     }
   }
 
@@ -5265,6 +5678,18 @@ class UltraBoss {
     const phaseColors = ['#ffd700', '#ff9900', '#ff4400', '#cc00ff'];
     const pColor = phaseColors[this.phase - 1];
 
+ // Enrage pulsing red glow
+    if (this.enraged) {
+      const pulse = 0.5 + 0.5 * Math.sin(_frameNow / 150);
+      ctx.shadowBlur = 60;
+      ctx.shadowColor = `rgba(255, 0, 0, ${pulse})`;
+      ctx.strokeStyle = `rgba(255, 0, 0, ${0.3 + pulse * 0.4})`;
+      ctx.lineWidth = 6;
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.r + 40 + pulse * 12, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+
  // Intense glow
     ctx.shadowBlur = 40 + this.phase * 8;
     ctx.shadowColor = pColor;
@@ -5326,6 +5751,50 @@ class UltraBoss {
     ctx.restore();
 
     ctx.shadowBlur = 0;
+
+    // Draw shield nodes
+    if (this.shieldNodes.length > 0) {
+      const shieldOrbitR = this.r + 45;
+      for (const node of this.shieldNodes) {
+        const nx = this.x + Math.cos(node.angle + this.shieldAngle) * shieldOrbitR;
+        const ny = this.y + Math.sin(node.angle + this.shieldAngle) * shieldOrbitR;
+        node._drawX = nx;
+        node._drawY = ny;
+
+        // Shield node glow
+        const hpRatio = node.hp / node.maxHp;
+        ctx.shadowBlur = 15;
+        ctx.shadowColor = '#00ccff';
+        ctx.fillStyle = `rgba(0, 200, 255, ${0.4 + hpRatio * 0.5})`;
+        ctx.beginPath();
+        ctx.arc(nx, ny, 14, 0, Math.PI * 2);
+        ctx.fill();
+        // Core
+        ctx.fillStyle = `rgba(255, 255, 255, ${hpRatio})`;
+        ctx.beginPath();
+        ctx.arc(nx, ny, 7, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+        // Node HP pip
+        ctx.fillStyle = '#00ccff';
+        ctx.font = 'bold 9px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText(node.hp, nx, ny - 18);
+      }
+      // Connecting lines between nodes
+      ctx.strokeStyle = 'rgba(0, 200, 255, 0.15)';
+      ctx.lineWidth = 1;
+      for (let i = 0; i < this.shieldNodes.length; i++) {
+        const a = this.shieldNodes[i];
+        const b = this.shieldNodes[(i + 1) % this.shieldNodes.length];
+        if (a._drawX && b._drawX) {
+          ctx.beginPath();
+          ctx.moveTo(a._drawX, a._drawY);
+          ctx.lineTo(b._drawX, b._drawY);
+          ctx.stroke();
+        }
+      }
+    }
 
     // hp bar
     const barW = 260;
@@ -5421,13 +5890,33 @@ class LegendaryBoss {
  // Visual effects
     this.spiralAngle = 0;
     this.pulseTime = 0;
+
+    // Teleport dash mechanic
+    this.teleportCooldown = 10;
+    this.teleporting = false;    // fade-out phase
+    this.teleportTimer = 0;
+    this.teleportAlpha = 1.0;
+    this.teleportTarget = null;  // position to reappear at
+    this.dead = false;
+    this.enrageTime = 0;
+    this.enraged = false;
   }
 
   get hpPct() { return this.hp / this.maxHp; }
 
   update(dt) {
     this.pulseTime += dt;
-    
+
+    // Enrage
+    this.enrageTime += dt;
+    if (!this.enraged && this.enrageTime >= 45) {
+      this.enraged = true;
+      if (gameSettings.screenShake) screenShakeAmt = 2.5;
+      playSound(40, 1.0, 'sawtooth');
+    }
+    const eMult = this.enraged ? 1.3 : 1.0;
+    const aCoolMult = this.enraged ? 0.7 : 1.0;
+
  // Phase transitions at 80 / 60 / 40 / 20 % HP (5 phases!)
     if      (this.hpPct <= 0.20) this.phase = 5;
     else if (this.hpPct <= 0.40) this.phase = 4;
@@ -5451,7 +5940,7 @@ class LegendaryBoss {
       this.movePattern = (this.movePattern + 1) % (3 + this.phase);
     }
 
-    const spd = this.speed * (1 + (this.phase - 1) * 0.25); // Reduced from 0.3
+    const spd = this.speed * (1 + (this.phase - 1) * 0.25) * eMult; // Reduced from 0.3
     if (this.dashTimer > 0) {
       this.dashTimer -= dt;
       if (this.dashTarget) {
@@ -5481,7 +5970,7 @@ class LegendaryBoss {
  // Constant spiral attack - slower
     this.spiralCooldown -= dt;
     if (this.spiralCooldown <= 0) {
-      this.spiralCooldown = Math.max(0.6, 1.2 - this.phase * 0.1); // Increased from 0.4/0.9
+      this.spiralCooldown = Math.max(0.6, 1.2 - this.phase * 0.1) * aCoolMult;
       this.shootDualSpiral();
     }
 
@@ -5489,19 +5978,19 @@ class LegendaryBoss {
     this.specialCooldown -= dt;
     if (this.specialCooldown <= 0) {
       if (this.phase === 1) {
-        this.specialCooldown = 4.5; // Increased from 3.5
+        this.specialCooldown = 4.5 * aCoolMult;
         this.shootRing();
       } else if (this.phase === 2) {
-        this.specialCooldown = 4.0; // Increased from 3.0
+        this.specialCooldown = 4.0 * aCoolMult;
         this.shootCross();
       } else if (this.phase === 3) {
-        this.specialCooldown = 3.5; // Increased from 2.5
+        this.specialCooldown = 3.5 * aCoolMult;
         this.shootHexagon();
       } else if (this.phase === 4) {
-        this.specialCooldown = 3.0; // Increased from 2.0
+        this.specialCooldown = 3.0 * aCoolMult;
         this.shootChaosStorm();
       } else {
-        this.specialCooldown = 2.5; // Increased from 1.5
+        this.specialCooldown = 2.5 * aCoolMult;
         this.shootApocalypse();
       }
     }
@@ -5521,6 +6010,53 @@ class LegendaryBoss {
       if (this.summonCooldown <= 0) {
         this.summonCooldown = 8; // Increased from 6
         this.summonMinions();
+      }
+    }
+
+    // Teleport dash (phase 4+)
+    if (this.teleporting) {
+      this.teleportTimer -= dt;
+      if (this.teleportTimer > 0.15) {
+        // Fade out phase
+        this.teleportAlpha = Math.max(0, this.teleportTimer - 0.15) / 0.15;
+      } else if (this.teleportTimer > 0) {
+        // Invisible — reposition
+        if (this.teleportTarget) {
+          this.x = this.teleportTarget.x;
+          this.y = this.teleportTarget.y;
+          this.teleportTarget = null;
+        }
+        this.teleportAlpha = 0;
+      } else {
+        // Fade in + attack burst
+        this.teleporting = false;
+        this.teleportAlpha = 1.0;
+        this.teleportCooldown = 8;
+        // Targeted burst upon reappearance
+        const ang = Math.atan2(player.y - this.y, player.x - this.x);
+        for (let i = -3; i <= 3; i++) {
+          const a = ang + i * 0.2;
+          enemyBullets.push({ x: this.x, y: this.y, vx: Math.cos(a) * 320, vy: Math.sin(a) * 320, r: 8 });
+        }
+        playSound(300, 0.3, 'square');
+        if (gameSettings.screenShake) screenShakeAmt = 1.0;
+        createExplosion(this.x, this.y, '#ff0066', 25);
+      }
+    } else if (this.phase >= 4) {
+      this.teleportCooldown -= dt;
+      if (this.teleportCooldown <= 0) {
+        this.teleporting = true;
+        this.teleportTimer = 0.3; // 0.15s fade out + 0.15s reappear
+        // Target: behind player's current position
+        const ang = Math.atan2(player.y - this.y, player.x - this.x);
+        const behindDist = 120;
+        let tx = player.x + Math.cos(ang) * behindDist;
+        let ty = player.y + Math.sin(ang) * behindDist;
+        tx = Math.max(120, Math.min(canvas.width - 120, tx));
+        ty = Math.max(120, Math.min(canvas.height - 120, ty));
+        this.teleportTarget = { x: tx, y: ty };
+        playSound(800, 0.2, 'sine');
+        createExplosion(this.x, this.y, '#ff0066', 15);
       }
     }
   }
@@ -5691,8 +6227,25 @@ class LegendaryBoss {
   }
 
   draw() {
+    // Teleport alpha
+    if (this.teleportAlpha < 1.0) {
+      ctx.globalAlpha = this.teleportAlpha;
+    }
+
     const time = this.pulseTime;
-    
+
+    // Enrage pulsing red glow
+    if (this.enraged) {
+      const pulse = 0.5 + 0.5 * Math.sin(_frameNow / 150);
+      ctx.shadowBlur = 70;
+      ctx.shadowColor = `rgba(255, 0, 0, ${pulse})`;
+      ctx.strokeStyle = `rgba(255, 0, 0, ${0.3 + pulse * 0.4})`;
+      ctx.lineWidth = 7;
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.r + 45 + pulse * 15, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+
  // Ultra glow based on phase
     const glowIntensity = 30 + this.phase * 15;
     ctx.shadowBlur = glowIntensity;
@@ -5816,6 +6369,11 @@ class LegendaryBoss {
     const ptxt = `PHASE ${this.phase} — ${phaseNames[this.phase - 1]}`;
     ctx.strokeText(ptxt, this.x, barY + barH + 6);
     ctx.fillText(ptxt, this.x, barY + barH + 6);
+
+    // Restore alpha after teleport
+    if (this.teleportAlpha < 1.0) {
+      ctx.globalAlpha = 1.0;
+    }
   }
 }
 
@@ -6604,6 +7162,10 @@ function initSettingsUI(fromPause = false) {
   document.getElementById('particlesToggle').checked = gameSettings.particles;
   document.getElementById('showFPSToggle').checked = gameSettings.showFPS;
   document.getElementById('autoShootToggle').checked = gameSettings.autoShoot;
+  const _musicToggleEl = document.getElementById('musicEnabledToggle');
+  if (_musicToggleEl) _musicToggleEl.checked = gameSettings.musicEnabled !== false;
+  const _musicSliderEl = document.getElementById('musicVolumeSlider');
+  if (_musicSliderEl) _musicSliderEl.value = gameSettings.musicVolume != null ? gameSettings.musicVolume : 50;
 
  // Wire up toggles
   const wire = (id, key) => {
@@ -6616,6 +7178,36 @@ function initSettingsUI(fromPause = false) {
   wire('particlesToggle', 'particles');
   wire('showFPSToggle', 'showFPS');
   wire('autoShootToggle', 'autoShoot');
+
+  // music toggle
+  const musicToggle = document.getElementById('musicEnabledToggle');
+  if (musicToggle) {
+    musicToggle.checked = gameSettings.musicEnabled !== false;
+    musicToggle.onchange = () => {
+      gameSettings.musicEnabled = musicToggle.checked;
+      saveSettings();
+      if (!musicToggle.checked) stopMusic();
+    };
+  }
+
+  // music volume slider
+  const musicSlider = document.getElementById('musicVolumeSlider');
+  if (musicSlider) {
+    musicSlider.value = gameSettings.musicVolume != null ? gameSettings.musicVolume : 50;
+    musicSlider.oninput = () => {
+      gameSettings.musicVolume = parseInt(musicSlider.value, 10);
+      saveSettings();
+      // Live-update volume if music is playing
+      if (musicPlaying && musicGainNode && audioCtx) {
+        const vol = gameSettings.musicVolume / 100;
+        try {
+          musicGainNode.gain.cancelScheduledValues(audioCtx.currentTime);
+          musicGainNode.gain.setValueAtTime(musicGainNode.gain.value, audioCtx.currentTime);
+          musicGainNode.gain.exponentialRampToValueAtTime(Math.max(0.001, vol * 0.12), audioCtx.currentTime + 0.3);
+        } catch(e) {}
+      }
+    };
+  }
 
   // performance mode toggle
   const perfToggle = document.getElementById('perfModeToggle');
@@ -7808,6 +8400,7 @@ function loop(time) {
               }
               if (isLegendaryBoss && typeof achOnLegendaryBossKill === 'function') achOnLegendaryBossKill();
               if (typeof achOnBossKill === 'function') achOnBossKill();
+              stopBossMusic();
               boss = null;
             }
           }
@@ -7850,12 +8443,41 @@ if (gameSettings.screenShake) screenShakeAmt = 1.2;
       const b = bullets[i];
       let hit = false;
       
+ // Shield node collision (UltraBoss)
+      if (boss && boss.shieldNodes && boss.shieldNodes.length > 0 && !b._hitBoss) {
+        for (let sn = boss.shieldNodes.length - 1; sn >= 0; sn--) {
+          const node = boss.shieldNodes[sn];
+          if (!node._drawX) continue;
+          const sdx = b.x - node._drawX, sdy = b.y - node._drawY;
+          if (sdx * sdx + sdy * sdy < (b.r + 14) * (b.r + 14)) {
+            node.hp--;
+            b._hitBoss = true;
+            createExplosion(node._drawX, node._drawY, '#00ccff', 6);
+            if (node.hp <= 0) {
+              createExplosion(node._drawX, node._drawY, '#00ccff', 20);
+              playSound(600, 0.3, 'sine');
+              boss.shieldNodes.splice(sn, 1);
+            }
+            break;
+          }
+        }
+      }
+
  // Boss collision
       if (boss && !b._hitBoss) {
         const dx = b.x - boss.x, dy = b.y - boss.y;
         const rSum = b.r + boss.r;
         if (dx * dx + dy * dy < rSum * rSum) {
           b._hitBoss = true; // prevent same bullet hitting boss multiple times (pierce bug)
+          // Shield damage reduction: 50% chance to negate hit while shields active
+          if (boss.shieldNodes && boss.shieldNodes.length > 0 && Math.random() < 0.5) {
+            sounds.hit();
+            hit = true;
+            if (player.pierce <= 0) {
+              bullets[i] = bullets[bullets.length - 1]; bullets.pop();
+            }
+            continue;
+          }
           boss.hp--;
           
           if (boss.hp <= 0) {
@@ -7899,6 +8521,7 @@ if (gameSettings.screenShake) screenShakeAmt = 1.2;
             }
             // Reset pierce boss-hit flag on all bullets so next boss can be hit
             for (let bi = 0; bi < bullets.length; bi++) bullets[bi]._hitBoss = false;
+            stopBossMusic();
             boss = null;
             playSound(800, 0.6, 'sine');
             setTimeout(() => playSound(1000, 0.6, 'sine'), 120);
@@ -8148,6 +8771,7 @@ if (gameSettings.screenShake) screenShakeAmt = 1;
         pendingBossType = null;
  // Play spawn sound effect
         sounds.bossSpawn();
+        startBossMusic();
       }
     }
 
@@ -8191,6 +8815,7 @@ if (gameSettings.screenShake) screenShakeAmt = 1;
       saveCoins();
       player.hp = Math.min(player.maxHp, player.hp + 30);
       wave++;
+      updateMusicIntensity(wave);
       if (typeof achOnWaveReached === 'function') achOnWaveReached(wave);
       if (activeSkin === 'icon_the_creator') triggerCreatorMilestone();
       if (_hasBattlePassXP) battlePassAddXP(BP_XP_CONFIG.perWave);
@@ -8345,6 +8970,7 @@ if (gameSettings.screenShake) screenShakeAmt = 1;
 
  // Pause game logic (enemies/bullets stop moving) but keep loop alive for particles
       running = false;
+      stopMusic();
 
  // Wait for death effect to finish before showing home screen
       const deathDelay = (typeof battlePassData !== 'undefined' && battlePassData.activeDeathEffect)
@@ -8817,6 +9443,7 @@ async function endModeRun(reason) {
   if (!modeRunActive) return;
   modeRunActive = false;
   running = false;
+  stopMusic();
   paused = false;
   hideModeHUDs();
   comboEl.classList.add('hidden');
@@ -8888,6 +9515,7 @@ function startGame() {
   _hasBattlePassXP  = typeof battlePassAddXP === 'function';
   _hasDeathEffect   = typeof createDeathEffect === 'function';
   initAudio();
+  startMusic(currentGameMode);
   document.getElementById('homeScreen').classList.add('hidden');
   document.getElementById('modeSelectPanel')?.classList.add('hidden');
   document.getElementById('gameOverMsg').classList.add('hidden');
@@ -9518,6 +10146,7 @@ document.getElementById('rankedQuitConfirmNo').addEventListener('click', () => {
 
 document.getElementById('rankedQuitConfirmYes').addEventListener('click', () => {
   running = false;
+  stopMusic();
   paused = false;
   document.getElementById('pauseOverlay').classList.add('hidden');
   document.getElementById('rankedQuitConfirm').classList.add('hidden');
