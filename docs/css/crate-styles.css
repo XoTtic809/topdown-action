@@ -3,63 +3,77 @@
    Additional styles for loot boxes and fixes
    ================================================ */
 
-/* ─────────────── SHOP TABS ─────────────── */
-.shop-tabs {
+/* ─────────────── SHOP CATEGORY TABS ─────────────── */
+.shop-categories {
   display: flex;
-  gap: 10px;
-  margin: 20px 0 25px;
-  border-bottom: 2px solid rgba(88, 166, 255, 0.2);
+  gap: 8px;
+  margin: 16px 0 0;
+  flex-shrink: 0;
+}
+
+.shop-category {
+  flex: 1;
+  background: linear-gradient(135deg, rgba(13, 21, 37, 0.8), rgba(13, 21, 37, 0.6));
+  border: 2px solid rgba(88, 166, 255, 0.25);
+  border-radius: 10px 10px 0 0;
+  padding: 12px 16px;
+  color: var(--muted);
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 0.8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-align: center;
+}
+
+.shop-cat-icon { margin-right: 6px; }
+
+.shop-category:hover {
+  background: linear-gradient(135deg, rgba(88, 166, 255, 0.12), rgba(88, 166, 255, 0.06));
+  border-color: rgba(88, 166, 255, 0.45);
+  color: var(--accent2);
+}
+
+.shop-category.active {
+  background: linear-gradient(135deg, rgba(88, 166, 255, 0.2), rgba(88, 166, 255, 0.1));
+  border-color: var(--accent);
+  color: var(--accent2);
+  box-shadow: 0 -3px 12px rgba(88, 166, 255, 0.25);
+}
+
+/* ─────────────── SUB-TAB PILLS ─────────────── */
+.shop-sub-tabs {
+  display: flex;
+  gap: 6px;
+  padding: 10px 0 14px;
+  border-bottom: 1px solid rgba(88, 166, 255, 0.15);
   flex-shrink: 0;
   flex-wrap: wrap;
 }
 
-.shop-tab {
-  flex: 1;
-  background: linear-gradient(135deg, rgba(13, 21, 37, 0.8), rgba(13, 21, 37, 0.6));
-  border: 2px solid rgba(88, 166, 255, 0.3);
-  border-bottom: none;
-  border-radius: 8px 8px 0 0;
-  padding: 12px 20px;
+.shop-sub-tab {
+  background: rgba(88, 166, 255, 0.08);
+  border: 1px solid rgba(88, 166, 255, 0.2);
+  border-radius: 20px;
+  padding: 6px 16px;
   color: var(--muted);
   font-weight: 600;
-  font-size: 14px;
+  font-size: 12px;
   cursor: pointer;
-  transition: all 0.3s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
+  transition: all 0.25s ease;
 }
 
-.shop-tab-icon {
-  font-size: 18px;
-  filter: grayscale(1);
-  opacity: 0.6;
-  transition: all 0.3s ease;
-}
-
-.shop-tab:hover {
-  background: linear-gradient(135deg, rgba(88, 166, 255, 0.15), rgba(88, 166, 255, 0.08));
-  border-color: rgba(88, 166, 255, 0.5);
+.shop-sub-tab:hover {
+  background: rgba(88, 166, 255, 0.15);
+  border-color: rgba(88, 166, 255, 0.4);
   color: var(--accent2);
 }
 
-.shop-tab:hover .shop-tab-icon {
-  filter: grayscale(0);
-  opacity: 1;
-}
-
-.shop-tab.active {
-  background: linear-gradient(135deg, rgba(88, 166, 255, 0.25), rgba(88, 166, 255, 0.12));
+.shop-sub-tab.active {
+  background: linear-gradient(135deg, rgba(88, 166, 255, 0.3), rgba(88, 166, 255, 0.15));
   border-color: var(--accent);
-  color: var(--accent2);
-  box-shadow: 0 -3px 15px rgba(88, 166, 255, 0.3);
-}
-
-.shop-tab.active .shop-tab-icon {
-  filter: grayscale(0);
-  opacity: 1;
-  animation: bounce 0.6s ease;
+  color: #fff;
+  box-shadow: 0 0 8px rgba(88, 166, 255, 0.2);
 }
 
 @keyframes bounce {
@@ -665,13 +679,14 @@
 }
 
 @media (max-width: 600px) {
-  .shop-tabs {
+  .shop-categories {
     flex-direction: column;
+    gap: 4px;
   }
-  
-  .shop-tab {
+
+  .shop-category {
     border-radius: 8px;
-    border: 2px solid rgba(88, 166, 255, 0.3);
+    font-size: 12px;
   }
   
   .crates-grid {

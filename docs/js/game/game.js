@@ -185,8 +185,9 @@ function playSound(freq, duration, type) {
     gain.connect(audioCtx.destination);
     osc.frequency.value = freq;
     osc.type = type || 'sine';
-    gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+    const sfxVol = (gameSettings.sfxVolume != null ? gameSettings.sfxVolume : 80) / 100;
+    gain.gain.setValueAtTime(0.1 * sfxVol, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(Math.max(0.001, 0.01 * sfxVol), audioCtx.currentTime + duration);
     osc.start(audioCtx.currentTime);
     osc.stop(audioCtx.currentTime + duration);
   } catch(e) {}
@@ -464,6 +465,10 @@ const defaultSettings = {
   perfMode: false,
   musicEnabled: true,
   musicVolume: 50,
+  sfxVolume: 80,
+  damageNumbers: true,
+  enemyHP: true,
+  hudOpacity: 100,
 };
 
 const gameSettings = Object.assign({}, defaultSettings,
@@ -1300,6 +1305,7 @@ let high = Number(localStorage.getItem('highscore') || 0);
 // --- score popup ---
 
 function createScorePopup(x, y, points) {
+  if (gameSettings.damageNumbers === false) return;
   const popup = document.createElement('div');
   popup.className = 'score-popup';
   popup.textContent = `+${points}`;
@@ -4780,7 +4786,7 @@ class Enemy {
     }
     
  // HP bar for tanks, enforcers, and minibosses
-    if (this.type === 'tank' || this.type === 'miniboss' || this.type === 'enforcer' || this.type === 'splitter' || this.type === 'bomber') {
+    if (gameSettings.enemyHP !== false && (this.type === 'tank' || this.type === 'miniboss' || this.type === 'enforcer' || this.type === 'splitter' || this.type === 'bomber')) {
       const barWidth = this.r * 2;
       const barHeight = 4;
       const barX = this.x - barWidth / 2;
@@ -7219,6 +7225,55 @@ function initSettingsUI(fromPause = false) {
     };
   }
 
+  // SFX volume slider
+  const sfxSlider = document.getElementById('sfxVolumeSlider');
+  if (sfxSlider) {
+    sfxSlider.value = gameSettings.sfxVolume != null ? gameSettings.sfxVolume : 80;
+    sfxSlider.oninput = () => {
+      gameSettings.sfxVolume = parseInt(sfxSlider.value, 10);
+      saveSettings();
+    };
+  }
+
+  // Damage numbers toggle
+  const dmgToggle = document.getElementById('damageNumbersToggle');
+  if (dmgToggle) {
+    dmgToggle.checked = gameSettings.damageNumbers !== false;
+    dmgToggle.onchange = () => {
+      gameSettings.damageNumbers = dmgToggle.checked;
+      saveSettings();
+    };
+  }
+
+  // Enemy HP bars toggle
+  const ehpToggle = document.getElementById('enemyHPToggle');
+  if (ehpToggle) {
+    ehpToggle.checked = gameSettings.enemyHP !== false;
+    ehpToggle.onchange = () => {
+      gameSettings.enemyHP = ehpToggle.checked;
+      saveSettings();
+    };
+  }
+
+  // HUD opacity slider
+  const hudSlider = document.getElementById('hudOpacitySlider');
+  if (hudSlider) {
+    hudSlider.value = gameSettings.hudOpacity != null ? gameSettings.hudOpacity : 100;
+    const applyHudOpacity = () => {
+      const op = (gameSettings.hudOpacity != null ? gameSettings.hudOpacity : 100) / 100;
+      ['score', 'wave', 'hp'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.style.opacity = op;
+      });
+    };
+    hudSlider.oninput = () => {
+      gameSettings.hudOpacity = parseInt(hudSlider.value, 10);
+      saveSettings();
+      applyHudOpacity();
+    };
+    applyHudOpacity();
+  }
+
   // cursor color buttons
   const colorBtns = document.querySelectorAll('.cursor-color-btn');
   colorBtns.forEach(btn => {
@@ -8217,7 +8272,7 @@ function loop(time) {
   }
 
   _frameNow = Date.now();
-  const dt = Math.min((time - lastTime) / 1000, 0.1);
+  const dt = Math.min((time - lastTime) / 1000, 0.1) * (typeof devTimeScale !== 'undefined' ? devTimeScale : 1);
   lastTime = time;
 
   // Capture shake state ONCE so save/restore are always paired
@@ -9644,41 +9699,59 @@ document.getElementById('shopBackBtn').addEventListener('click', () => {
   }, { once: true });
 });
 
-// Shop tab switching
-document.querySelectorAll('.shop-tab').forEach(tab => {
-  tab.addEventListener('click', () => {
-    const targetTab = tab.dataset.tab;
-    
- // Update active tab
-    document.querySelectorAll('.shop-tab').forEach(t => t.classList.remove('active'));
-    tab.classList.add('active');
-    
- // Show correct content
-    document.querySelectorAll('.shop-tab-content').forEach(c => c.classList.add('hidden'));
-    document.getElementById(`shopTab-${targetTab}`).classList.remove('hidden');
+// ── Two-level shop navigation (category → sub-tab) ──
 
- // Initialize content if needed
-    if (targetTab === 'crates' && typeof initCratesTab === 'function') {
-      initCratesTab();
-    }
-    if (targetTab === 'battlepass' && typeof initBattlePassTab === 'function') {
-      initBattlePassTab();
-    }
-    if (targetTab === 'cosmetics' && typeof initCosmeticsTab === 'function') {
-      initCosmeticsTab();
-    }
-    if (targetTab === 'marketplace' && typeof openMarketplaceTab === 'function') {
-      openMarketplaceTab();
-    }
-    if (targetTab === 'inventory') {
-      initInventoryTab();
-    }
-    if (targetTab === 'trades' && typeof initTradesTab === 'function') {
-      initTradesTab();
-    }
-    if (targetTab === 'tradeup' && typeof initTradeUpTab === 'function') {
-      initTradeUpTab();
-    }
+const _categoryLastTab = { collection: 'inventory', shop: 'crates', trading: 'marketplace' };
+
+function _activateShopSubTab(tabName) {
+  // Hide all content, show target
+  document.querySelectorAll('.shop-tab-content').forEach(c => c.classList.add('hidden'));
+  const el = document.getElementById(`shopTab-${tabName}`);
+  if (el) el.classList.remove('hidden');
+
+  // Mark active sub-tab
+  document.querySelectorAll('.shop-sub-tab').forEach(t => t.classList.remove('active'));
+  const btn = document.querySelector(`.shop-sub-tab[data-tab="${tabName}"]`);
+  if (btn) btn.classList.add('active');
+
+  // Init content
+  if (tabName === 'inventory') initInventoryTab();
+  if (tabName === 'crates' && typeof initCratesTab === 'function') initCratesTab();
+  if (tabName === 'battlepass' && typeof initBattlePassTab === 'function') initBattlePassTab();
+  if (tabName === 'cosmetics' && typeof initCosmeticsTab === 'function') initCosmeticsTab();
+  if (tabName === 'marketplace' && typeof openMarketplaceTab === 'function') openMarketplaceTab();
+  if (tabName === 'trades' && typeof initTradesTab === 'function') initTradesTab();
+  if (tabName === 'tradeup' && typeof initTradeUpTab === 'function') initTradeUpTab();
+}
+
+function _activateShopCategory(cat) {
+  // Mark active category
+  document.querySelectorAll('.shop-category').forEach(c => c.classList.remove('active'));
+  const btn = document.querySelector(`.shop-category[data-category="${cat}"]`);
+  if (btn) btn.classList.add('active');
+
+  // Show correct sub-tab bar
+  document.querySelectorAll('.shop-sub-tabs').forEach(s => s.classList.add('hidden'));
+  const bar = document.querySelector(`.shop-sub-tabs[data-for="${cat}"]`);
+  if (bar) bar.classList.remove('hidden');
+
+  // Activate remembered sub-tab
+  _activateShopSubTab(_categoryLastTab[cat]);
+}
+
+// Category click
+document.querySelectorAll('.shop-category').forEach(btn => {
+  btn.addEventListener('click', () => _activateShopCategory(btn.dataset.category));
+});
+
+// Sub-tab click
+document.querySelectorAll('.shop-sub-tab').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const tab = btn.dataset.tab;
+    // Remember for this category
+    const bar = btn.closest('.shop-sub-tabs');
+    if (bar) _categoryLastTab[bar.dataset.for] = tab;
+    _activateShopSubTab(tab);
   });
 });
 
@@ -10104,13 +10177,10 @@ function stopTrySkin() {
 }
 
 function quickListSkin(skinId) {
-  // Switch to marketplace tab
-  document.querySelectorAll('.shop-tab').forEach(t => t.classList.remove('active'));
-  const mpTab = document.querySelector('.shop-tab[data-tab="marketplace"]');
-  if (mpTab) mpTab.classList.add('active');
-  document.querySelectorAll('.shop-tab-content').forEach(c => c.classList.add('hidden'));
-  document.getElementById('shopTab-marketplace')?.classList.remove('hidden');
-  if (typeof openMarketplaceTab === 'function') openMarketplaceTab();
+  // Switch to trading > marketplace
+  _activateShopCategory('trading');
+  _categoryLastTab.trading = 'marketplace';
+  _activateShopSubTab('marketplace');
   // Pre-select the skin after marketplace initializes
   setTimeout(() => {
     if (typeof openSellModal === 'function') openSellModal();
@@ -10755,6 +10825,54 @@ function devFullHeal() {
   document.getElementById('hpVal').textContent = Math.round(player.hp);
   console.log('[DEV] Full heal applied');
 }
+
+let devTimeScale = 1.0;
+
+function devEnrageBoss() {
+  if (!isAdmin || !running) return;
+  if (boss) {
+    boss.enraged = true;
+    if (boss.eMult != null) boss.eMult = 1.5;
+    if (boss.aCoolMult != null) boss.aCoolMult = 0.5;
+    console.log('[DEV] Boss enraged');
+  } else {
+    console.log('[DEV] No boss alive');
+  }
+}
+
+function devToggleMusic() {
+  if (!isAdmin) return;
+  gameSettings.musicEnabled = !gameSettings.musicEnabled;
+  saveSettings();
+  if (!gameSettings.musicEnabled) stopMusic();
+  console.log('[DEV] Music:', gameSettings.musicEnabled ? 'ON' : 'OFF');
+}
+
+function devSetTimeScale(val) {
+  devTimeScale = Math.max(0.25, Math.min(3.0, val));
+  const label = document.getElementById('ovTimeScaleVal');
+  if (label) label.textContent = devTimeScale.toFixed(1) + 'x';
+  console.log('[DEV] Time scale:', devTimeScale);
+}
+
+function devSpawnAllPowerups() {
+  if (!isAdmin || !running) return;
+  const allTypes = ['health', 'rapidfire', 'speed', 'shield', 'weapon', 'maxhp', 'speedup', 'nuke', 'explosive', 'pierce', 'freeze', 'magnet', 'turret'];
+  const cx = player.x, cy = player.y;
+  allTypes.forEach((t, i) => {
+    const angle = (i / allTypes.length) * Math.PI * 2;
+    const dist = 80;
+    const px = Math.max(15, Math.min(canvas.width - 15, cx + Math.cos(angle) * dist));
+    const py = Math.max(15, Math.min(canvas.height - 15, cy + Math.sin(angle) * dist));
+    powerups.push(new PowerUp(px, py, t));
+  });
+  console.log('[DEV] Spawned all powerup types');
+}
+
+// Wire time scale slider
+document.getElementById('ovTimeScale')?.addEventListener('input', function() {
+  devSetTimeScale(parseInt(this.value, 10) / 100);
+});
 
 // Patch player.takeDamage to respect god mode
 const _origTakeDamage = Player.prototype.takeDamage;

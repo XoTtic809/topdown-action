@@ -232,6 +232,8 @@
     <div class="panel-box">
       <h2 class="panel-title">⚙ SETTINGS</h2>
       <div class="settings-list">
+        <!-- ── AUDIO ── -->
+        <div class="settings-category-header">🔊 AUDIO</div>
         <div class="setting-row">
           <div class="setting-label">
             <span class="setting-icon">🔊</span>
@@ -262,11 +264,45 @@
         </div>
         <div class="setting-row">
           <div class="setting-label">
+            <span class="setting-icon">🔉</span>
+            <div><div class="setting-name">SFX Volume</div><div class="setting-desc">Sound effects volume</div></div>
+          </div>
+          <input type="range" id="sfxVolumeSlider" min="0" max="100" value="80" class="volume-slider" style="width:100px;accent-color:#00d4ff;">
+        </div>
+
+        <!-- ── GAMEPLAY ── -->
+        <div class="settings-category-header">🎮 GAMEPLAY</div>
+        <div class="setting-row">
+          <div class="setting-label">
+            <span class="setting-icon">🎯</span>
+            <div><div class="setting-name">Auto-Shoot</div><div class="setting-desc">Automatically fire (for trackpads)</div></div>
+          </div>
+          <label class="toggle"><input type="checkbox" id="autoShootToggle"><span class="slider"></span></label>
+        </div>
+        <div class="setting-row">
+          <div class="setting-label">
             <span class="setting-icon">📳</span>
             <div><div class="setting-name">Screen Shake</div><div class="setting-desc">Camera shake on damage</div></div>
           </div>
           <label class="toggle"><input type="checkbox" id="screenShakeToggle" checked><span class="slider"></span></label>
         </div>
+        <div class="setting-row">
+          <div class="setting-label">
+            <span class="setting-icon">💥</span>
+            <div><div class="setting-name">Damage Numbers</div><div class="setting-desc">Show floating damage text on hits</div></div>
+          </div>
+          <label class="toggle"><input type="checkbox" id="damageNumbersToggle" checked><span class="slider"></span></label>
+        </div>
+        <div class="setting-row">
+          <div class="setting-label">
+            <span class="setting-icon">❤️</span>
+            <div><div class="setting-name">Enemy Health Bars</div><div class="setting-desc">Show HP bars above enemies</div></div>
+          </div>
+          <label class="toggle"><input type="checkbox" id="enemyHPToggle" checked><span class="slider"></span></label>
+        </div>
+
+        <!-- ── DISPLAY ── -->
+        <div class="settings-category-header">🖥️ DISPLAY</div>
         <div class="setting-row">
           <div class="setting-label">
             <span class="setting-icon">✨</span>
@@ -283,28 +319,21 @@
         </div>
         <div class="setting-row">
           <div class="setting-label">
-            <span class="setting-icon">🎯</span>
-            <div><div class="setting-name">Auto-Shoot</div><div class="setting-desc">Automatically fire (for trackpads)</div></div>
-          </div>
-          <label class="toggle"><input type="checkbox" id="autoShootToggle"><span class="slider"></span></label>
-        </div>
-        <div class="setting-row">
-          <div class="setting-label">
             <span class="setting-icon">⚡</span>
             <div><div class="setting-name">Performance Mode</div><div class="setting-desc">Disables glow effects &amp; limits particles — recommended for Chromebooks</div></div>
           </div>
           <label class="toggle"><input type="checkbox" id="perfModeToggle"><span class="slider"></span></label>
         </div>
-        <div class="setting-row" id="chatSettingRow" style="display:none">
+        <div class="setting-row">
           <div class="setting-label">
-            <span class="setting-icon">💬</span>
-            <div>
-              <div class="setting-name">Global Chat</div>
-              <div class="setting-desc" id="chatOptInHint">Request access to join the live chat</div>
-            </div>
+            <span class="setting-icon">👁️</span>
+            <div><div class="setting-name">HUD Opacity</div><div class="setting-desc">Transparency of score, HP, and wave display</div></div>
           </div>
-          <button id="chatOptInBtn" class="admin-action-btn success" style="padding:6px 14px;font-size:11px;white-space:nowrap;">Request Access</button>
+          <input type="range" id="hudOpacitySlider" min="30" max="100" value="100" class="volume-slider" style="width:100px;accent-color:#00d4ff;">
         </div>
+
+        <!-- ── CONTROLS ── -->
+        <div class="settings-category-header">🎯 CONTROLS</div>
         <div class="setting-row">
           <div class="setting-label">
             <span class="setting-icon">🖱️</span>
@@ -319,6 +348,19 @@
             <button class="cursor-color-btn" data-color="#ffffff" style="background:#ffffff" title="White"></button>
           </div>
         </div>
+
+        <!-- ── SOCIAL ── -->
+        <div class="settings-category-header" id="socialCategoryHeader" style="display:none">💬 SOCIAL</div>
+        <div class="setting-row" id="chatSettingRow" style="display:none">
+          <div class="setting-label">
+            <span class="setting-icon">💬</span>
+            <div>
+              <div class="setting-name">Global Chat</div>
+              <div class="setting-desc" id="chatOptInHint">Request access to join the live chat</div>
+            </div>
+          </div>
+          <button id="chatOptInBtn" class="admin-action-btn success" style="padding:6px 14px;font-size:11px;white-space:nowrap;">Request Access</button>
+        </div>
       </div>
       <button class="panel-back-btn" id="settingsBackBtn">← BACK</button>
     </div>
@@ -332,36 +374,32 @@
       <p class="shop-hint">Earn coins by killing enemies and clearing waves</p>
       
       <!-- Shop Tabs -->
-      <div class="shop-tabs">
-        <button class="shop-tab active" data-tab="inventory">
-          <span class="shop-tab-icon">🎒</span>
-          <span>INVENTORY</span>
+      <!-- Category Tabs -->
+      <div class="shop-categories">
+        <button class="shop-category active" data-category="collection">
+          <span class="shop-cat-icon">🎒</span> MY COLLECTION
         </button>
-        <button class="shop-tab" data-tab="crates">
-          <span class="shop-tab-icon">📦</span>
-          <span>CRATES</span>
+        <button class="shop-category" data-category="shop">
+          <span class="shop-cat-icon">🛒</span> SHOP
         </button>
-        <button class="shop-tab" data-tab="battlepass">
-          <span class="shop-tab-icon">🎫</span>
-          <span>BATTLE PASS</span>
+        <button class="shop-category" data-category="trading">
+          <span class="shop-cat-icon">🤝</span> TRADING
         </button>
-        <button class="shop-tab" data-tab="cosmetics">
-          <span class="shop-tab-icon">✨</span>
-          <span>COSMETICS</span>
-        </button>
-        <button class="shop-tab" data-tab="marketplace">
-          <span class="shop-tab-icon">🏪</span>
-          <span>MARKET</span>
-        </button>
-        <button class="shop-tab" data-tab="trades">
-          <span class="shop-tab-icon">🤝</span>
-          <span>TRADES</span>
-          <span id="tradeBadge" class="trade-tab-badge" style="display:none">0</span>
-        </button>
-        <button class="shop-tab" data-tab="tradeup">
-          <span class="shop-tab-icon">⬆️</span>
-          <span>TRADE UP</span>
-        </button>
+      </div>
+
+      <!-- Sub-tab bars (one per category) -->
+      <div class="shop-sub-tabs" data-for="collection">
+        <button class="shop-sub-tab active" data-tab="inventory">🎒 Inventory</button>
+        <button class="shop-sub-tab" data-tab="cosmetics">✨ Cosmetics</button>
+      </div>
+      <div class="shop-sub-tabs hidden" data-for="shop">
+        <button class="shop-sub-tab active" data-tab="crates">📦 Crates</button>
+        <button class="shop-sub-tab" data-tab="battlepass">🎫 Battle Pass</button>
+        <button class="shop-sub-tab" data-tab="tradeup">⬆️ Trade Up</button>
+      </div>
+      <div class="shop-sub-tabs hidden" data-for="trading">
+        <button class="shop-sub-tab active" data-tab="marketplace">🏪 Marketplace</button>
+        <button class="shop-sub-tab" data-tab="trades">🤝 Trades <span id="tradeBadge" class="trade-tab-badge" style="display:none">0</span></button>
       </div>
       
       <!-- Inventory Tab Content -->
@@ -2301,6 +2339,9 @@
           <option value="shooter">Shooter</option>
           <option value="enforcer">Enforcer</option>
           <option value="miniboss">Mini</option>
+          <option value="splitter">Splitter</option>
+          <option value="phantom">Phantom</option>
+          <option value="bomber">Bomber</option>
         </select>
         <button onclick="devSpawnEnemyOverlay()" class="dev-ov-btn">SPAWN</button>
       </div>
@@ -2312,6 +2353,11 @@
           <option value="speedBoost">Speed</option>
           <option value="shield">Shield</option>
           <option value="weaponUpgrade">Weapon</option>
+          <option value="nuke">Nuke</option>
+          <option value="explosiveBullets">Explosive</option>
+          <option value="pierceShot">Pierce</option>
+          <option value="freeze">Freeze</option>
+          <option value="magnet">Magnet</option>
         </select>
         <button onclick="devSpawnPowerupOverlay()" class="dev-ov-btn">SPAWN</button>
       </div>
@@ -2337,6 +2383,25 @@
           <input type="number" id="ovDifficulty" class="dev-ov-input" value="1.0" step="0.1" min="0.1" max="5.0">
           <button onclick="devSetDifficultyOverlay()" class="dev-ov-btn">SET</button>
         </div>
+      </div>
+      <div class="dev-ov-group">
+        <label>😡 Enrage Boss</label>
+        <button onclick="devEnrageBoss()" class="dev-ov-btn danger full">ENRAGE</button>
+      </div>
+      <div class="dev-ov-group">
+        <label>🎵 Music</label>
+        <button onclick="devToggleMusic()" class="dev-ov-btn full">TOGGLE</button>
+      </div>
+      <div class="dev-ov-group">
+        <label>⏱️ Time Scale</label>
+        <div class="dev-ov-row">
+          <input type="range" id="ovTimeScale" class="dev-ov-input" min="25" max="300" value="100" style="width:80px">
+          <span id="ovTimeScaleVal" style="color:#fff;font-size:11px">1.0x</span>
+        </div>
+      </div>
+      <div class="dev-ov-group">
+        <label>⭐ All Powerups</label>
+        <button onclick="devSpawnAllPowerups()" class="dev-ov-btn success full">SPAWN ALL</button>
       </div>
     </div>
   </div>
