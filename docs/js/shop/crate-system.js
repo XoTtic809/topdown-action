@@ -1407,6 +1407,7 @@ function createCountdownTimer(endsAt) {
     el.textContent = d > 0 ? `⏱ Leaves in: ${d}d ${h}h ${m}m` : `⏱ ${h}h ${m}m ${s}s`;
   };
   update();
+  if (el._timer) clearInterval(el._timer);
   el._timer = setInterval(update, 1000);
   return el;
 }

@@ -195,6 +195,9 @@ router.post('/list', requireAuth, async (req, res) => {
     }
 
     const price = Math.floor(Number(rawPrice));
+    if (!Number.isFinite(price) || price <= 0) {
+      return res.status(400).json({ error: 'Invalid price.' });
+    }
     const limits = CRATE_PRICING[crateId];
     if (price < limits.floor || price > limits.ceiling) {
       return res.status(400).json({
@@ -274,6 +277,9 @@ router.post('/list', requireAuth, async (req, res) => {
   }
 
   const price = Math.floor(Number(rawPrice));
+  if (!Number.isFinite(price) || price <= 0) {
+    return res.status(400).json({ error: 'Invalid price.' });
+  }
   const baseLimits = RARITY_PRICING[rarity];
   if (!baseLimits) return res.status(400).json({ error: 'Invalid rarity tier' });
 

@@ -2,10 +2,11 @@
 // Complete self-hosted authentication.
 // No Firebase — passwords hashed with bcrypt, sessions via JWT.
 
-const express = require('express');
-const router  = express.Router();
-const bcrypt  = require('bcrypt');
-const jwt     = require('jsonwebtoken');
+const express    = require('express');
+const router     = express.Router();
+const bcrypt     = require('bcrypt');
+const jwt        = require('jsonwebtoken');
+const rateLimit  = require('express-rate-limit');
 const { query } = require('../config/db');
 const { requireAuth } = require('../middleware/auth');
 const { validateUsername } = require('../middleware/validation');
@@ -13,6 +14,14 @@ const { updateProgress, isWhitelisted } = require('../models/user');
 const { syncSkins } = require('../models/inventory');
 const { isValidSkinId } = require('./crates');
 const { checkUnlocks, reconcileNumberOneTitle } = require('../utils/unlock-checker');
+
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many login attempts. Please try again in 15 minutes.' },
+});
 
 const SALT_ROUNDS = 12;
 const MAX_COIN_DELTA_PER_SAVE  = 6000;   // flag if delta > this (~max from a long wave session)
@@ -92,7 +101,7 @@ router.post('/signup', async (req, res) => {
 
 // ─── POST /api/auth/login ─────────────────────────────────────
 // Body: { email, password }
-router.post('/login', async (req, res) => {
+router.post('/login', loginLimiter, async (req, res) => {
   const { email, password } = req.body;
 
   if (!email || !password) {

@@ -62,8 +62,8 @@ function renderTradeNotifications(data) {
           <div class="trade-notif-meta">Sent ${formatTradeDate(s.created_at)} · Expires ${formatTradeDate(s.expires_at)}</div>
         </div>
         <div class="trade-notif-actions">
-          <button class="trade-btn trade-btn-accept" onclick="acceptLiveInvite('${s.id}')">Accept</button>
-          <button class="trade-btn trade-btn-decline" onclick="declineLiveInvite('${s.id}', this)">Decline</button>
+          <button class="trade-btn trade-btn-accept" onclick="acceptLiveInvite('${escapeHtmlUI(s.id)}')">Accept</button>
+          <button class="trade-btn trade-btn-decline" onclick="declineLiveInvite('${escapeHtmlUI(s.id)}', this)">Decline</button>
         </div>
       </div>`;
   }
@@ -89,8 +89,8 @@ function renderTradeNotifications(data) {
           <div class="trade-notif-meta">Expires ${formatTradeDate(o.expires_at)}</div>
         </div>
         <div class="trade-notif-actions">
-          <button class="trade-btn trade-btn-accept" onclick="acceptOffer('${o.id}', this)">Accept</button>
-          <button class="trade-btn trade-btn-decline" onclick="declineOffer('${o.id}', this)">Decline</button>
+          <button class="trade-btn trade-btn-accept" onclick="acceptOffer('${escapeHtmlUI(o.id)}', this)">Accept</button>
+          <button class="trade-btn trade-btn-decline" onclick="declineOffer('${escapeHtmlUI(o.id)}', this)">Decline</button>
         </div>
       </div>`;
   }
