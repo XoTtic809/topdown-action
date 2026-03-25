@@ -106,90 +106,121 @@
           <button id="lobbyGuestBtn" style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);margin-left:8px;">PLAY AS GUEST</button>
         </div>
 
-        <div class="play-grid">
-          <!-- Mode cards -->
-          <div class="play-modes">
-            <div class="mode-card" data-mode="classic">
-              <div class="mode-card-tag">STANDARD</div>
-              <div class="mode-card-icon">🌊</div>
-              <div class="mode-card-name">CLASSIC</div>
-              <div class="mode-card-desc">Fight through escalating waves, grab power-ups, unlock upgrades. Reach as far as you can.</div>
-              <div class="mode-card-footer">
-                <div class="mode-card-best" id="modeBest_classic">Best: —</div>
-                <div class="mode-card-stat">Score</div>
-              </div>
+        <!-- Hero layout -->
+        <div class="play-hero">
+          <!-- Left: Featured area -->
+          <div class="play-featured">
+            <div class="play-featured-bg">
+              <div class="play-featured-glow"></div>
             </div>
-            <div class="mode-card" data-mode="timeattack">
-              <div class="mode-card-tag">TIMED</div>
-              <div class="mode-card-icon">⏱</div>
-              <div class="mode-card-name">TIME ATTACK</div>
-              <div class="mode-card-desc">3 minutes on the clock. Rack up kills before time runs out. Every second counts.</div>
-              <div class="mode-card-footer">
-                <div class="mode-card-best" id="modeBest_timeattack">Best: —</div>
-                <div class="mode-card-stat">Kills</div>
+            <div class="play-featured-content">
+              <div class="play-season-tag">SEASON 1</div>
+              <h1 class="play-title">TOPDOWN<br>ACTION</h1>
+              <p class="play-tagline">Survive the waves. Conquer the bosses. Climb the ranks.</p>
+              <div class="play-mode-display">
+                <div class="play-mode-label">SELECTED MODE</div>
+                <div class="play-mode-current" id="playModeCurrentName">NONE</div>
               </div>
-            </div>
-            <div class="mode-card" data-mode="bossrush">
-              <div class="mode-card-tag">ENDLESS</div>
-              <div class="mode-card-icon">👹</div>
-              <div class="mode-card-name">BOSS RUSH</div>
-              <div class="mode-card-desc">No minions. Just bosses, back to back, getting harder each round. How far can you go?</div>
-              <div class="mode-card-footer">
-                <div class="mode-card-best" id="modeBest_bossrush">Best: —</div>
-                <div class="mode-card-stat">Bosses</div>
-              </div>
-            </div>
-            <div class="mode-card mode-card-ranked" data-mode="ranked">
-              <div class="mode-card-tag ranked-tag">RANKED</div>
-              <div class="mode-card-icon">⚔️</div>
-              <div class="mode-card-name">RANKED</div>
-              <div class="mode-card-desc">Climb the ladder from Bronze to Sovereign. Earn RP each wave. Promote through divisions.</div>
-              <div class="mode-card-footer">
-                <div id="rankedModeBadge" class="mode-card-best">🥉 Bronze V</div>
-                <div class="mode-card-stat">Rank</div>
-              </div>
+              <button id="selectModeBtn" class="play-select-mode-btn">
+                <span class="play-select-mode-icon">🎯</span>
+                SELECT MODE
+              </button>
             </div>
           </div>
 
-          <!-- Player sidebar -->
+          <!-- Right: Player card -->
           <div class="play-sidebar" id="playSidebar">
-            <div id="userStatus" class="hs-pcard">
-              <div class="hs-pstats">
-                <div class="hs-pstat">
-                  <div class="hs-pstat-lbl">BEST SCORE</div>
-                  <div class="hs-pstat-val" id="homeHighVal">0</div>
+            <div id="userStatus" class="play-player-card">
+              <div class="play-card-header">PLAYER STATS</div>
+              <div class="play-stats-grid">
+                <div class="play-stat-item">
+                  <div class="play-stat-val" id="homeHighVal">0</div>
+                  <div class="play-stat-lbl">BEST SCORE</div>
                 </div>
-                <div class="hs-pstat">
-                  <div class="hs-pstat-lbl">COINS</div>
-                  <div class="hs-pstat-val hs-val-gold" id="homeCoinsVal">0</div>
-                </div>
-              </div>
-              <div class="hs-xp">
-                <div class="hs-xp-hdr">
-                  <span class="hs-xp-lvl">LEVEL <strong id="homeXPLevel">1</strong></span>
-                  <span class="hs-xp-num"><span id="homeXPCurrent">0</span>&thinsp;/&thinsp;<span id="homeXPNeeded">100</span> XP</span>
-                </div>
-                <div class="hs-xp-track">
-                  <div class="hs-xp-fill" id="homeXPBar"></div>
+                <div class="play-stat-item">
+                  <div class="play-stat-val play-stat-gold" id="homeCoinsVal">0</div>
+                  <div class="play-stat-lbl">COINS</div>
                 </div>
               </div>
-              <div class="hs-rank-row" id="homeRankRow" style="display:none;">
-                <div id="homeRankBadge" class="hs-rank-badge-wrap"></div>
-                <div class="hs-rank-info">
-                  <div class="hs-rank-lbl">RANKED</div>
-                  <div id="homeRankLabel" class="hs-rank-name">Unranked</div>
-                  <div id="homeRankRP" class="hs-rank-rp"></div>
+              <div class="play-xp-section">
+                <div class="play-xp-header">
+                  <span class="play-xp-lvl">LEVEL <strong id="homeXPLevel">1</strong></span>
+                  <span class="play-xp-num"><span id="homeXPCurrent">0</span> / <span id="homeXPNeeded">100</span> XP</span>
                 </div>
-                <button id="viewRanksBtn" class="hs-view-ranks-btn" onclick="document.getElementById('rankIndexOverlay').classList.remove('hidden')">VIEW RANKS</button>
+                <div class="play-xp-track">
+                  <div class="play-xp-fill" id="homeXPBar"></div>
+                </div>
               </div>
-              <button id="myProfileBtn" class="hs-btn hs-profile-btn" style="width:100%;margin-top:8px;">👤 My Profile</button>
+              <div class="play-rank-row" id="homeRankRow" style="display:none;">
+                <div id="homeRankBadge" class="play-rank-badge"></div>
+                <div class="play-rank-info">
+                  <div class="play-rank-lbl">RANKED</div>
+                  <div id="homeRankLabel" class="play-rank-name">Unranked</div>
+                  <div id="homeRankRP" class="play-rank-rp"></div>
+                </div>
+                <button id="viewRanksBtn" class="play-view-ranks-btn" onclick="document.getElementById('rankIndexOverlay').classList.remove('hidden')">VIEW RANKS</button>
+              </div>
+              <button id="myProfileBtn" class="play-profile-btn">👤 My Profile</button>
             </div>
-            <div class="hs-ctrls">
-              <div class="hs-ctrls-hdr">CONTROLS</div>
-              <div class="hs-ctrl"><kbd class="hs-key">WASD</kbd>Move</div>
-              <div class="hs-ctrl"><kbd class="hs-key">MOUSE</kbd>Aim &amp; Shoot</div>
-              <div class="hs-ctrl"><kbd class="hs-key">SPACE</kbd>Dash (invincible)</div>
-              <div class="hs-ctrl"><kbd class="hs-key">ESC</kbd>Pause</div>
+            <div class="play-controls-card">
+              <div class="play-controls-hdr">CONTROLS</div>
+              <div class="play-ctrl"><kbd class="play-key">WASD</kbd>Move</div>
+              <div class="play-ctrl"><kbd class="play-key">MOUSE</kbd>Aim &amp; Shoot</div>
+              <div class="play-ctrl"><kbd class="play-key">SPACE</kbd>Dash</div>
+              <div class="play-ctrl"><kbd class="play-key">ESC</kbd>Pause</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Mode selector overlay (hidden by default) -->
+        <div id="modePickerOverlay" class="mode-picker-overlay hidden">
+          <div class="mode-picker-backdrop"></div>
+          <div class="mode-picker-panel">
+            <div class="mode-picker-header">
+              <h2 class="mode-picker-title">SELECT MODE</h2>
+              <button id="modePickerCloseBtn" class="mode-picker-close">&times;</button>
+            </div>
+            <div class="mode-picker-grid">
+              <div class="mode-card" data-mode="classic">
+                <div class="mode-card-tag">STANDARD</div>
+                <div class="mode-card-icon">🌊</div>
+                <div class="mode-card-name">CLASSIC</div>
+                <div class="mode-card-desc">Fight through escalating waves, grab power-ups, unlock upgrades.</div>
+                <div class="mode-card-footer">
+                  <div class="mode-card-best" id="modeBest_classic">Best: —</div>
+                  <div class="mode-card-stat">Score</div>
+                </div>
+              </div>
+              <div class="mode-card" data-mode="timeattack">
+                <div class="mode-card-tag">TIMED</div>
+                <div class="mode-card-icon">⏱</div>
+                <div class="mode-card-name">TIME ATTACK</div>
+                <div class="mode-card-desc">3 minutes on the clock. Rack up kills before time runs out.</div>
+                <div class="mode-card-footer">
+                  <div class="mode-card-best" id="modeBest_timeattack">Best: —</div>
+                  <div class="mode-card-stat">Kills</div>
+                </div>
+              </div>
+              <div class="mode-card" data-mode="bossrush">
+                <div class="mode-card-tag">ENDLESS</div>
+                <div class="mode-card-icon">👹</div>
+                <div class="mode-card-name">BOSS RUSH</div>
+                <div class="mode-card-desc">No minions. Just bosses, back to back, getting harder each round.</div>
+                <div class="mode-card-footer">
+                  <div class="mode-card-best" id="modeBest_bossrush">Best: —</div>
+                  <div class="mode-card-stat">Bosses</div>
+                </div>
+              </div>
+              <div class="mode-card mode-card-ranked" data-mode="ranked">
+                <div class="mode-card-tag ranked-tag">RANKED</div>
+                <div class="mode-card-icon">⚔️</div>
+                <div class="mode-card-name">RANKED</div>
+                <div class="mode-card-desc">Climb the ladder from Bronze to Sovereign. Earn RP each wave.</div>
+                <div class="mode-card-footer">
+                  <div id="rankedModeBadge" class="mode-card-best">🥉 Bronze V</div>
+                  <div class="mode-card-stat">Rank</div>
+                </div>
+              </div>
             </div>
           </div>
         </div>

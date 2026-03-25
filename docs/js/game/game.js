@@ -9665,24 +9665,45 @@ document.querySelectorAll('.lnav-tab').forEach(btn => {
   btn.addEventListener('click', () => switchLobbyTab(btn.dataset.tab));
 });
 
-// ── Mode card selection in Play tab ─────────────────────────────
-document.querySelectorAll('#lobbyTab-play .mode-card').forEach(card => {
+// ── Mode picker overlay ──────────────────────────────────────────
+const _modeNames = { classic: 'CLASSIC', timeattack: 'TIME ATTACK', bossrush: 'BOSS RUSH', ranked: 'RANKED' };
+
+function _openModePicker() {
+  document.getElementById('modePickerOverlay')?.classList.remove('hidden');
+}
+function _closeModePicker() {
+  document.getElementById('modePickerOverlay')?.classList.add('hidden');
+}
+function _updateModeDisplay() {
+  const el = document.getElementById('playModeCurrentName');
+  if (el) {
+    el.textContent = _selectedMode ? _modeNames[_selectedMode] || _selectedMode.toUpperCase() : 'NONE';
+    el.classList.toggle('has-mode', !!_selectedMode);
+  }
+}
+
+document.getElementById('selectModeBtn')?.addEventListener('click', _openModePicker);
+document.getElementById('modePickerCloseBtn')?.addEventListener('click', _closeModePicker);
+document.querySelector('.mode-picker-backdrop')?.addEventListener('click', _closeModePicker);
+
+// Mode card selection inside picker
+document.querySelectorAll('#modePickerOverlay .mode-card').forEach(card => {
   card.addEventListener('click', () => {
-    document.querySelectorAll('#lobbyTab-play .mode-card').forEach(c => c.classList.remove('selected'));
+    document.querySelectorAll('#modePickerOverlay .mode-card').forEach(c => c.classList.remove('selected'));
     card.classList.add('selected');
     _selectedMode = card.dataset.mode;
+    _updateModeDisplay();
+    // Auto-close after short delay so user sees their selection
+    setTimeout(_closeModePicker, 300);
   });
 });
 
 // ── START GAME button in bottom bar ─────────────────────────────
 document.getElementById('lbarStartBtn')?.addEventListener('click', () => {
   if (!_selectedMode) {
-    // Flash mode cards to hint user should pick
+    // Open mode picker if no mode selected
     switchLobbyTab('play');
-    document.querySelectorAll('#lobbyTab-play .mode-card').forEach(c => {
-      c.classList.add('mode-card-flash');
-      setTimeout(() => c.classList.remove('mode-card-flash'), 600);
-    });
+    _openModePicker();
     return;
   }
   currentGameMode = _selectedMode;
