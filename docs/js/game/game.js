@@ -469,6 +469,7 @@ const defaultSettings = {
   damageNumbers: true,
   enemyHP: true,
   hudOpacity: 100,
+  chatPosition: 'all',
 };
 
 const gameSettings = Object.assign({}, defaultSettings,
@@ -7283,7 +7284,16 @@ function initSettingsUI(fromPause = false) {
     };
   });
 
-  // Chat button and visibility are fully managed by chat.js
+  // Chat position select
+  const chatPosSelect = document.getElementById('chatPositionSelect');
+  if (chatPosSelect) {
+    chatPosSelect.value = gameSettings.chatPosition || 'all';
+    chatPosSelect.onchange = () => {
+      gameSettings.chatPosition = chatPosSelect.value;
+      saveSettings();
+      if (typeof window.chatRefreshVisibility === 'function') window.chatRefreshVisibility();
+    };
+  }
 
   // If opened from pause menu, borrow settings DOM into overlay
   if (fromPause) {
@@ -9658,6 +9668,9 @@ function switchLobbyTab(tabName) {
 
   _activeLobbyTab = tabName;
   document.getElementById('lobbyContent').scrollTop = 0;
+
+  // Refresh chat visibility (respects per-tab chat setting)
+  if (typeof window.chatRefreshVisibility === 'function') window.chatRefreshVisibility();
 }
 
 // Wire navbar tabs
@@ -9698,17 +9711,18 @@ document.querySelectorAll('#modePickerOverlay .mode-card').forEach(card => {
   });
 });
 
-// ── START GAME button in bottom bar ─────────────────────────────
-document.getElementById('lbarStartBtn')?.addEventListener('click', () => {
+// ── START GAME buttons (bottom bar + play tab) ──────────────────
+function _handleStartGame() {
   if (!_selectedMode) {
-    // Open mode picker if no mode selected
     switchLobbyTab('play');
     _openModePicker();
     return;
   }
   currentGameMode = _selectedMode;
   startGame();
-});
+}
+document.getElementById('lbarStartBtn')?.addEventListener('click', _handleStartGame);
+document.getElementById('playTabStartBtn')?.addEventListener('click', _handleStartGame);
 
 // ── Locker tab lazy-init ─────────────────────────────────────────
 let _lockerInited = false;

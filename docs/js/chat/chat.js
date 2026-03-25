@@ -164,7 +164,14 @@
     if (!widgetEl) return;
     const homeEl      = document.getElementById('homeScreen');
     const homeVisible = homeEl && !homeEl.classList.contains('hidden');
-    const show = homeVisible && isLoggedIn() && isChatOptedIn();
+    const chatAllowed = homeVisible && isLoggedIn() && isChatOptedIn();
+
+    // Respect chat position setting (all tabs vs play tab only)
+    const chatPos = (typeof gameSettings !== 'undefined' && gameSettings.chatPosition) || 'all';
+    const activeTab = (typeof _activeLobbyTab !== 'undefined') ? _activeLobbyTab : 'play';
+    const tabOk = chatPos === 'all' || activeTab === chatPos;
+    const show = chatAllowed && tabOk;
+
     widgetEl.style.display = show ? '' : 'none';
     if (show) applyModeUI();
 
@@ -173,9 +180,14 @@
       setOptIn(true);
     }
 
-    // Show the entire chat setting row only when logged in
+    // Show chat setting rows only when logged in
+    const loggedIn = isLoggedIn();
     const settingRow = document.getElementById('chatSettingRow');
-    if (settingRow) settingRow.style.display = isLoggedIn() ? '' : 'none';
+    if (settingRow) settingRow.style.display = loggedIn ? '' : 'none';
+    const posRow = document.getElementById('chatPositionRow');
+    if (posRow) posRow.style.display = (loggedIn && isChatOptedIn()) ? '' : 'none';
+    const socialHdr = document.getElementById('socialCategoryHeader');
+    if (socialHdr) socialHdr.style.display = loggedIn ? '' : 'none';
 
     // Update the button and hint text
     const btnEl  = document.getElementById('chatOptInBtn');

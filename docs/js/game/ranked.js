@@ -743,8 +743,8 @@ function updateRankedBadge() {
 }
 
 /* ── Rank index grid population ─────────────────────────────── */
-function populateRankIndex() {
-  const grid = document.getElementById('rankIndexGrid');
+function renderRankIndex(gridId) {
+  const grid = document.getElementById(gridId);
   if (!grid) return;
 
   const tierLabels = {
@@ -769,6 +769,10 @@ function populateRankIndex() {
   }).join('');
 }
 
+function populateRankIndex() {
+  renderRankIndex('rankIndexGrid');
+}
+
 /* ── Auto-load profile on page ready ────────────────────────── */
 document.addEventListener('DOMContentLoaded', () => {
   // Small delay to ensure api-auth.js globals are set
@@ -788,6 +792,7 @@ window.getRankedProfile      = getRankedProfile;
 window.loadRankedProfile     = loadRankedProfile;
 window.rankedInit            = rankedInit;
 window.rankedOnWaveClear     = rankedOnWaveClear;
+window.renderRankIndex       = renderRankIndex;
 window.endRankedRun          = endRankedRun;
 window.rankedBossTypeForWave = rankedBossTypeForWave;
 window.rankedSpawnType       = rankedSpawnType;

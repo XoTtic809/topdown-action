@@ -521,6 +521,20 @@ canvas {
 .setting-name  { font-size: 14px; font-weight: 600; color: #dbe7ff; }
 .setting-desc  { font-size: 11px; color: var(--muted); margin-top: 1px; }
 
+.setting-select {
+  background: rgba(88,166,255,0.1);
+  border: 1px solid rgba(88,166,255,0.25);
+  border-radius: 6px;
+  padding: 6px 12px;
+  color: #dbe7ff;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  outline: none;
+}
+.setting-select:focus { border-color: var(--accent); }
+.setting-select option { background: #0d1525; color: #dbe7ff; }
+
 .settings-category-header {
   font-size: 11px;
   font-weight: 700;
@@ -2843,6 +2857,11 @@ canvas {
   text-shadow: 0 0 18px rgba(88,166,255,0.35);
   white-space: nowrap;
   flex-shrink: 0;
+  width: 180px;
+}
+.lnav-spacer {
+  width: 180px;
+  flex-shrink: 0;
 }
 
 .lnav-tabs {
@@ -3167,6 +3186,36 @@ canvas {
 }
 .play-select-mode-icon { font-size: 18px; }
 
+.play-hero-actions {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.play-start-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: linear-gradient(135deg, #5db5ff 0%, #3a8fff 45%, #1a6fe0 100%);
+  border: none;
+  border-radius: 10px;
+  padding: 14px 36px;
+  color: #fff;
+  font-family: var(--font-title);
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.25s;
+  box-shadow: 0 0 24px rgba(88,166,255,0.3), 0 4px 14px rgba(0,0,0,0.3);
+}
+.play-start-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 36px rgba(88,166,255,0.45), 0 6px 18px rgba(0,0,0,0.3);
+}
+.play-start-btn:active { transform: translateY(0); }
+.play-start-tri { font-size: 13px; }
+
 /* ── Play sidebar ──────────────────────────────────────────── */
 .play-sidebar {
   display: flex;
@@ -3484,6 +3533,7 @@ canvas {
 /* ── Responsive ──────────────────────────────────────────── */
 @media (max-width: 860px) {
   .lnav-brand { display: none; }
+  .lnav-spacer { display: none; }
   .lnav-tab { padding: 0 12px; font-size: 11px; }
   #lobbyContent { padding: 16px; }
   .play-hero { grid-template-columns: 1fr; min-height: auto; }
@@ -4521,7 +4571,7 @@ canvas {
 ═══════════════════════════════════════════════════ */
 .chat-widget {
   position: fixed;
-  bottom: 20px;
+  bottom: 90px;
   right: 20px;
   width: 300px;
   z-index: 500;

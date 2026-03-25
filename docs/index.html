@@ -89,6 +89,7 @@
         <button class="lnav-tab" data-tab="news"><span>📋</span> <span>NEWS</span></button>
         <button class="lnav-tab lnav-tab-icon" data-tab="settings" title="Settings">⚙️</button>
       </div>
+      <div class="lnav-spacer"></div>
     </nav>
 
     <!-- ── CONTENT AREA ── -->
@@ -121,10 +122,15 @@
                 <div class="play-mode-label">SELECTED MODE</div>
                 <div class="play-mode-current" id="playModeCurrentName">NONE</div>
               </div>
-              <button id="selectModeBtn" class="play-select-mode-btn">
-                <span class="play-select-mode-icon">🎯</span>
-                SELECT MODE
-              </button>
+              <div class="play-hero-actions">
+                <button id="selectModeBtn" class="play-select-mode-btn">
+                  <span class="play-select-mode-icon">🎯</span>
+                  SELECT MODE
+                </button>
+                <button id="playTabStartBtn" class="play-start-btn">
+                  <span class="play-start-tri">▶</span> START GAME
+                </button>
+              </div>
             </div>
           </div>
 
@@ -851,6 +857,19 @@
                 </div>
               </div>
               <button id="chatOptInBtn" class="admin-action-btn success" style="padding:6px 14px;font-size:11px;white-space:nowrap;">Request Access</button>
+            </div>
+            <div class="setting-row" id="chatPositionRow" style="display:none">
+              <div class="setting-label">
+                <span class="setting-icon">📍</span>
+                <div>
+                  <div class="setting-name">Chat Location</div>
+                  <div class="setting-desc">Where the chat widget appears</div>
+                </div>
+              </div>
+              <select id="chatPositionSelect" class="setting-select">
+                <option value="all">All Tabs</option>
+                <option value="play">Play Tab Only</option>
+              </select>
             </div>
           </div>
         </div>
