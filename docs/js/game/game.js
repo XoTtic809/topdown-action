@@ -7159,8 +7159,6 @@ function togglePause() {
 ======================= */
 
 function initSettingsUI(fromPause = false) {
-  const panel = document.getElementById('settingsPanel');
-
  // Sync toggles to current settings
   document.getElementById('masterSoundToggle').checked = gameSettings.masterSound;
   document.getElementById('shootSoundToggle').checked = gameSettings.shootSound;
@@ -7287,16 +7285,16 @@ function initSettingsUI(fromPause = false) {
 
   // Chat button and visibility are fully managed by chat.js
 
-  document.getElementById('settingsBackBtn').onclick = () => {
-    panel.classList.add('hidden');
-    if (fromPause) {
-      document.getElementById('pauseOverlay').classList.remove('hidden');
-    } else {
-      document.getElementById('homeScreen').classList.remove('hidden');
+  // If opened from pause menu, borrow settings DOM into overlay
+  if (fromPause) {
+    const settingsList = document.querySelector('#lobbySettingsWrap .settings-list');
+    const pauseWrap = document.getElementById('pauseSettingsWrap');
+    if (settingsList && pauseWrap) {
+      pauseWrap.querySelector('.pause-settings-body').appendChild(settingsList);
+      pauseWrap.classList.remove('hidden');
+      document.getElementById('pauseOverlay').classList.add('hidden');
     }
-  };
-
-  panel.classList.remove('hidden');
+  }
 }
 
 /* =======================
@@ -7588,7 +7586,7 @@ function initShopUI() {
   // Building 700+ animated skin cards while the tab is hidden bloats the DOM
   // and causes style-recalculation lag on every CSS hover/transition even on
   // the home screen.  The tab-click handler calls initInventoryTab() lazily.
-  const invTab  = document.getElementById('shopTab-inventory');
+  const invTab  = document.getElementById('lockerTab-inventory');
   const invGrid = document.getElementById('invGrid');
   if (invTab && !invTab.classList.contains('hidden')) {
     if (typeof initInventoryTab === 'function') initInventoryTab();
@@ -9044,6 +9042,8 @@ if (gameSettings.screenShake) screenShakeAmt = 1;
         if (finalScoreEl) finalScoreEl.textContent = score;
         document.getElementById('homeHighVal').textContent = high;
         document.getElementById('homeCoinsVal').textContent = playerCoins;
+        _syncLobbyBar();
+        switchLobbyTab('play');
         updateXPDisplay(); // Update XP display on home screen
       }, deathDelay);
     }
@@ -9454,6 +9454,8 @@ function showModeEndOverlay(title, sub, stats, newBest) {
     document.getElementById('buffsDisplay').innerHTML = '';
     activeBuffElements = {};
     comboEl.classList.add('hidden');
+    _syncLobbyBar();
+    switchLobbyTab('play');
   });
 }
 
@@ -9529,26 +9531,7 @@ async function endModeRun(reason) {
   }
 }
 
-// ── Mode card selection wiring (runs after DOM ready) ─────────
-document.addEventListener('DOMContentLoaded', () => {
-  document.querySelectorAll('.mode-card').forEach(card => {
-    card.addEventListener('click', () => {
-      document.querySelectorAll('.mode-card').forEach(c => c.classList.remove('mode-selected'));
-      card.classList.add('mode-selected');
-      currentGameMode = card.dataset.mode;
-      const playBtn = document.getElementById('modePlayBtn');
-      if (playBtn) {
-        playBtn.disabled = false;
-        playBtn.textContent = `▶ PLAY — ${card.querySelector('.mode-card-name').textContent}`;
-      }
-    });
-  });
-
-  document.getElementById('modePlayBtn')?.addEventListener('click', () => {
-    if (!currentGameMode) return;
-    startGame();
-  });
-});
+// Mode card selection is handled by switchLobbyTab system in the lobby wiring section
 
 /* =======================
    UI WIRING
@@ -9572,7 +9555,6 @@ function startGame() {
   initAudio();
   startMusic(currentGameMode);
   document.getElementById('homeScreen').classList.add('hidden');
-  document.getElementById('modeSelectPanel')?.classList.add('hidden');
   document.getElementById('gameOverMsg').classList.add('hidden');
   hideModeHUDs();
   player = new Player(canvas.width / 2, canvas.height / 2);
@@ -9645,63 +9627,124 @@ function startGame() {
   if (typeof achOnGameStart === 'function') achOnGameStart();
 }
 
-// Show the mode select panel instead of directly starting
-document.getElementById('startBtn').addEventListener('click', () => {
-  document.getElementById('homeScreen').classList.add('hidden');
-  const panel = document.getElementById('modeSelectPanel');
-  if (panel) {
-    populateModeSelectBests();
-    panel.classList.remove('hidden');
-  } else {
-    startGame();
+// ── Lobby bar sync ──────────────────────────────────────────────
+function _syncLobbyBar() {
+  const coinsEl = document.getElementById('lbarCoins');
+  if (coinsEl) coinsEl.textContent = playerCoins;
+  const lvlEl = document.getElementById('lbarLevel');
+  if (lvlEl) {
+    const xpLvl = document.getElementById('homeXPLevel');
+    if (xpLvl) lvlEl.textContent = xpLvl.textContent;
   }
+}
+
+// ── Lobby tab switching system ─────────────────────────────────
+let _activeLobbyTab = 'play';
+let _selectedMode = null;
+
+function switchLobbyTab(tabName) {
+  document.querySelectorAll('.ltab-content').forEach(el => el.classList.add('hidden'));
+  document.getElementById(`lobbyTab-${tabName}`)?.classList.remove('hidden');
+
+  document.querySelectorAll('.lnav-tab').forEach(t => t.classList.remove('active'));
+  document.querySelector(`.lnav-tab[data-tab="${tabName}"]`)?.classList.add('active');
+
+  // Lazy-init per tab
+  if (tabName === 'shop') initShopUI();
+  if (tabName === 'locker') _initLockerTab();
+  if (tabName === 'compete') _initCompeteTab();
+  if (tabName === 'settings') initSettingsUI(false);
+  if (tabName === 'play') populateModeSelectBests();
+
+  _activeLobbyTab = tabName;
+  document.getElementById('lobbyContent').scrollTop = 0;
+}
+
+// Wire navbar tabs
+document.querySelectorAll('.lnav-tab').forEach(btn => {
+  btn.addEventListener('click', () => switchLobbyTab(btn.dataset.tab));
 });
 
-document.getElementById('modeSelectBackBtn')?.addEventListener('click', () => {
-  document.getElementById('modeSelectPanel').classList.add('hidden');
-  document.getElementById('homeScreen').classList.remove('hidden');
+// ── Mode card selection in Play tab ─────────────────────────────
+document.querySelectorAll('#lobbyTab-play .mode-card').forEach(card => {
+  card.addEventListener('click', () => {
+    document.querySelectorAll('#lobbyTab-play .mode-card').forEach(c => c.classList.remove('selected'));
+    card.classList.add('selected');
+    _selectedMode = card.dataset.mode;
+  });
 });
 
-document.getElementById('settingsBtn').addEventListener('click', () => {
-  document.getElementById('homeScreen').classList.add('hidden');
-  initSettingsUI(false);
+// ── START GAME button in bottom bar ─────────────────────────────
+document.getElementById('lbarStartBtn')?.addEventListener('click', () => {
+  if (!_selectedMode) {
+    // Flash mode cards to hint user should pick
+    switchLobbyTab('play');
+    document.querySelectorAll('#lobbyTab-play .mode-card').forEach(c => {
+      c.classList.add('mode-card-flash');
+      setTimeout(() => c.classList.remove('mode-card-flash'), 600);
+    });
+    return;
+  }
+  currentGameMode = _selectedMode;
+  startGame();
 });
 
-document.getElementById('shopBtn').addEventListener('click', () => {
-  const home = document.getElementById('homeScreen');
-  const shop = document.getElementById('shopPanel');
-  home.classList.add('hs-exiting');
-  home.addEventListener('animationend', () => {
-    home.classList.add('hidden');
-    home.classList.remove('hs-exiting');
-    shop.classList.remove('hidden');
-    initShopUI();
-    shop.classList.add('panel-overlay-entering');
-    shop.addEventListener('animationend', () => {
-      shop.classList.remove('panel-overlay-entering');
-    }, { once: true });
-  }, { once: true });
-});
+// ── Locker tab lazy-init ─────────────────────────────────────────
+let _lockerInited = false;
+function _initLockerTab() {
+  // Wire sub-tab switching
+  if (!_lockerInited) {
+    document.querySelectorAll('.ltab-sub-tab[data-lockertab]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.ltab-sub-tab[data-lockertab]').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        document.querySelectorAll('.locker-tab-content').forEach(c => c.classList.add('hidden'));
+        document.getElementById(`lockerTab-${btn.dataset.lockertab}`)?.classList.remove('hidden');
 
-document.getElementById('shopBackBtn').addEventListener('click', () => {
-  const home = document.getElementById('homeScreen');
-  const shop = document.getElementById('shopPanel');
-  shop.classList.add('hs-exiting');
-  shop.addEventListener('animationend', () => {
-    shop.classList.add('hidden');
-    shop.classList.remove('hs-exiting');
-    home.classList.remove('hidden');
-    home.classList.add('panel-overlay-entering');
-    home.addEventListener('animationend', () => {
-      home.classList.remove('panel-overlay-entering');
-      document.getElementById('homeCoinsVal').textContent = playerCoins;
-    }, { once: true });
-  }, { once: true });
-});
+        if (btn.dataset.lockertab === 'inventory') initInventoryTab();
+        if (btn.dataset.lockertab === 'cosmetics' && typeof initCosmeticsTab === 'function') initCosmeticsTab();
+      });
+    });
+    // Profile button
+    document.getElementById('lockerProfileBtn')?.addEventListener('click', () => {
+      if (typeof openOwnProfileCard === 'function') openOwnProfileCard();
+    });
+    _lockerInited = true;
+  }
+  // Default: show inventory
+  const activeLockerTab = document.querySelector('.ltab-sub-tab[data-lockertab].active');
+  const tabName = activeLockerTab ? activeLockerTab.dataset.lockertab : 'inventory';
+  if (tabName === 'inventory') initInventoryTab();
+  if (tabName === 'cosmetics' && typeof initCosmeticsTab === 'function') initCosmeticsTab();
+}
+
+// ── Compete tab lazy-init ────────────────────────────────────────
+let _competeInited = false;
+let _activeCompeteTab = 'leaderboard';
+function _initCompeteTab() {
+  if (!_competeInited) {
+    document.querySelectorAll('.ltab-sub-tab[data-competetab]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.ltab-sub-tab[data-competetab]').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        document.querySelectorAll('.compete-tab-content').forEach(c => c.classList.add('hidden'));
+        document.getElementById(`competeTab-${btn.dataset.competetab}`)?.classList.remove('hidden');
+        _activeCompeteTab = btn.dataset.competetab;
+
+        if (btn.dataset.competetab === 'leaderboard') displayLeaderboard('allTime');
+        if (btn.dataset.competetab === 'achievements' && typeof renderAchievementsPanel === 'function') renderAchievementsPanel();
+        if (btn.dataset.competetab === 'ranks' && typeof renderRankIndex === 'function') renderRankIndex('competeRankIndexGrid');
+      });
+    });
+    _competeInited = true;
+  }
+  if (_activeCompeteTab === 'leaderboard') displayLeaderboard('allTime');
+  if (_activeCompeteTab === 'achievements' && typeof renderAchievementsPanel === 'function') renderAchievementsPanel();
+}
 
 // ── Two-level shop navigation (category → sub-tab) ──
 
-const _categoryLastTab = { collection: 'inventory', shop: 'crates', trading: 'marketplace' };
+const _categoryLastTab = { shop: 'crates', trading: 'marketplace' };
 
 function _activateShopSubTab(tabName) {
   // Hide all content, show target
@@ -9715,10 +9758,8 @@ function _activateShopSubTab(tabName) {
   if (btn) btn.classList.add('active');
 
   // Init content
-  if (tabName === 'inventory') initInventoryTab();
   if (tabName === 'crates' && typeof initCratesTab === 'function') initCratesTab();
   if (tabName === 'battlepass' && typeof initBattlePassTab === 'function') initBattlePassTab();
-  if (tabName === 'cosmetics' && typeof initCosmeticsTab === 'function') initCosmeticsTab();
   if (tabName === 'marketplace' && typeof openMarketplaceTab === 'function') openMarketplaceTab();
   if (tabName === 'trades' && typeof initTradesTab === 'function') initTradesTab();
   if (tabName === 'tradeup' && typeof initTradeUpTab === 'function') initTradeUpTab();
@@ -10177,7 +10218,8 @@ function stopTrySkin() {
 }
 
 function quickListSkin(skinId) {
-  // Switch to trading > marketplace
+  // Switch to shop tab > trading > marketplace
+  switchLobbyTab('shop');
   _activateShopCategory('trading');
   _categoryLastTab.trading = 'marketplace';
   _activateShopSubTab('marketplace');
@@ -10234,8 +10276,16 @@ document.getElementById('restartConfirmYes').addEventListener('click', () => {
 });
 
 document.getElementById('pauseSettingsBtn').addEventListener('click', () => {
-  document.getElementById('pauseOverlay').classList.add('hidden');
   initSettingsUI(true);
+});
+
+// Return settings DOM from pause overlay back to lobby
+document.getElementById('pauseSettingsBackBtn')?.addEventListener('click', () => {
+  const settingsList = document.querySelector('#pauseSettingsWrap .settings-list');
+  const lobbyWrap = document.getElementById('lobbySettingsWrap');
+  if (settingsList && lobbyWrap) lobbyWrap.appendChild(settingsList);
+  document.getElementById('pauseSettingsWrap').classList.add('hidden');
+  document.getElementById('pauseOverlay').classList.remove('hidden');
 });
 
 document.getElementById('menuBtn').addEventListener('click', () => {
@@ -10245,13 +10295,16 @@ document.getElementById('menuBtn').addEventListener('click', () => {
   }
   running = false;
   paused = false;
+  stopMusic();
   document.getElementById('pauseOverlay').classList.add('hidden');
   document.getElementById('homeScreen').classList.remove('hidden');
   document.getElementById('homeHighVal').textContent = high;
   document.getElementById('homeCoinsVal').textContent = playerCoins;
   document.getElementById('buffsDisplay').innerHTML = '';
-  activeBuffElements = {}; // Clear buff tracking
-  comboEl.classList.add('hidden'); // Hide combo when going to menu
+  activeBuffElements = {};
+  comboEl.classList.add('hidden');
+  _syncLobbyBar();
+  switchLobbyTab('play');
 });
 
 console.log('🎬 Starting animation loop...');

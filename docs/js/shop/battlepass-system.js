@@ -1144,7 +1144,7 @@ function loadBattlePassData() {
 }
 
 function initCosmeticsTab() {
-  const container = document.getElementById('shopTab-cosmetics');
+  const container = document.getElementById('lockerTab-cosmetics');
   if (!container) return;
 
   container.innerHTML = '';

@@ -77,93 +77,775 @@
       ☠ GAME OVER &nbsp;·&nbsp; Score: <span id="finalScore">0</span>
     </div>
 
-    <!-- Two-column layout -->
-    <div class="hs-layout">
+    <!-- ── TOP NAVBAR ── -->
+    <nav id="lobbyNav">
+      <div class="lnav-brand">TOPDOWN ACTION</div>
+      <div class="lnav-tabs">
+        <button class="lnav-tab active" data-tab="play"><span>🎯</span> <span>PLAY</span></button>
+        <button class="lnav-tab" data-tab="shop"><span>🛒</span> <span>SHOP</span></button>
+        <button class="lnav-tab" data-tab="locker"><span>🎒</span> <span>LOCKER</span></button>
+        <button class="lnav-tab" data-tab="compete"><span>🏆</span> <span>COMPETE</span></button>
+        <button class="lnav-tab" data-tab="support"><span>🆘</span> <span>SUPPORT</span></button>
+        <button class="lnav-tab" data-tab="news"><span>📋</span> <span>NEWS</span></button>
+        <button class="lnav-tab lnav-tab-icon" data-tab="settings" title="Settings">⚙️</button>
+      </div>
+    </nav>
 
-      <!-- ── LEFT: logo + navigation ── -->
-      <div class="hs-left">
+    <!-- ── CONTENT AREA ── -->
+    <div id="lobbyContent">
 
-        <div class="hs-logo">
-          <h1 class="hs-t1">TOPDOWN</h1>
-          <h1 class="hs-t2">ACTION</h1>
-          <div class="hs-rule"></div>
-          <p class="hs-sub">Survive · Upgrade · Dominate</p>
+      <!-- ═══ PLAY TAB ═══ -->
+      <div id="lobbyTab-play" class="ltab-content">
+        <!-- Guest auth prompt (hidden when logged in) -->
+        <div id="playGuestAuth" class="ltab-guest-prompt hidden">
+          <div style="font-size:24px;margin-bottom:12px;">🎮</div>
+          <div style="font-size:16px;color:#dbe7ff;font-weight:700;margin-bottom:6px;">Welcome to Topdown Action</div>
+          <div style="margin-bottom:16px;">Login for leaderboards, trading, and ranked mode — or jump straight in!</div>
+          <button id="playLoginBtn" style="margin-right:8px;">LOGIN</button>
+          <button id="playSignupBtn">SIGN UP</button>
+          <button id="lobbyGuestBtn" style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);margin-left:8px;">PLAY AS GUEST</button>
         </div>
 
-        <button id="startBtn" class="hs-play">
-          <span class="hs-play-tri">▶</span>
-          <span>START GAME</span>
-        </button>
+        <div class="play-grid">
+          <!-- Mode cards -->
+          <div class="play-modes">
+            <div class="mode-card" data-mode="classic">
+              <div class="mode-card-tag">STANDARD</div>
+              <div class="mode-card-icon">🌊</div>
+              <div class="mode-card-name">CLASSIC</div>
+              <div class="mode-card-desc">Fight through escalating waves, grab power-ups, unlock upgrades. Reach as far as you can.</div>
+              <div class="mode-card-footer">
+                <div class="mode-card-best" id="modeBest_classic">Best: —</div>
+                <div class="mode-card-stat">Score</div>
+              </div>
+            </div>
+            <div class="mode-card" data-mode="timeattack">
+              <div class="mode-card-tag">TIMED</div>
+              <div class="mode-card-icon">⏱</div>
+              <div class="mode-card-name">TIME ATTACK</div>
+              <div class="mode-card-desc">3 minutes on the clock. Rack up kills before time runs out. Every second counts.</div>
+              <div class="mode-card-footer">
+                <div class="mode-card-best" id="modeBest_timeattack">Best: —</div>
+                <div class="mode-card-stat">Kills</div>
+              </div>
+            </div>
+            <div class="mode-card" data-mode="bossrush">
+              <div class="mode-card-tag">ENDLESS</div>
+              <div class="mode-card-icon">👹</div>
+              <div class="mode-card-name">BOSS RUSH</div>
+              <div class="mode-card-desc">No minions. Just bosses, back to back, getting harder each round. How far can you go?</div>
+              <div class="mode-card-footer">
+                <div class="mode-card-best" id="modeBest_bossrush">Best: —</div>
+                <div class="mode-card-stat">Bosses</div>
+              </div>
+            </div>
+            <div class="mode-card mode-card-ranked" data-mode="ranked">
+              <div class="mode-card-tag ranked-tag">RANKED</div>
+              <div class="mode-card-icon">⚔️</div>
+              <div class="mode-card-name">RANKED</div>
+              <div class="mode-card-desc">Climb the ladder from Bronze to Sovereign. Earn RP each wave. Promote through divisions.</div>
+              <div class="mode-card-footer">
+                <div id="rankedModeBadge" class="mode-card-best">🥉 Bronze V</div>
+                <div class="mode-card-stat">Rank</div>
+              </div>
+            </div>
+          </div>
 
-        <div class="hs-nav">
-          <button id="shopBtn"          class="hs-nbtn">🛒 &nbsp;Shop</button>
-          <button id="leaderboardBtn"   class="hs-nbtn">📊 &nbsp;Leaderboard</button>
-          <button id="updateLogsBtn"    class="hs-nbtn">📋 &nbsp;Updates</button>
-          <button id="settingsBtn"      class="hs-nbtn">⚙ &nbsp;Settings</button>
-          <button id="achievementsBtn"  class="hs-nbtn">🏆 &nbsp;Achievements</button>
-          <button id="supportBtn"       class="hs-nbtn">🆘 &nbsp;Support</button>
+          <!-- Player sidebar -->
+          <div class="play-sidebar" id="playSidebar">
+            <div id="userStatus" class="hs-pcard">
+              <div class="hs-pstats">
+                <div class="hs-pstat">
+                  <div class="hs-pstat-lbl">BEST SCORE</div>
+                  <div class="hs-pstat-val" id="homeHighVal">0</div>
+                </div>
+                <div class="hs-pstat">
+                  <div class="hs-pstat-lbl">COINS</div>
+                  <div class="hs-pstat-val hs-val-gold" id="homeCoinsVal">0</div>
+                </div>
+              </div>
+              <div class="hs-xp">
+                <div class="hs-xp-hdr">
+                  <span class="hs-xp-lvl">LEVEL <strong id="homeXPLevel">1</strong></span>
+                  <span class="hs-xp-num"><span id="homeXPCurrent">0</span>&thinsp;/&thinsp;<span id="homeXPNeeded">100</span> XP</span>
+                </div>
+                <div class="hs-xp-track">
+                  <div class="hs-xp-fill" id="homeXPBar"></div>
+                </div>
+              </div>
+              <div class="hs-rank-row" id="homeRankRow" style="display:none;">
+                <div id="homeRankBadge" class="hs-rank-badge-wrap"></div>
+                <div class="hs-rank-info">
+                  <div class="hs-rank-lbl">RANKED</div>
+                  <div id="homeRankLabel" class="hs-rank-name">Unranked</div>
+                  <div id="homeRankRP" class="hs-rank-rp"></div>
+                </div>
+                <button id="viewRanksBtn" class="hs-view-ranks-btn" onclick="document.getElementById('rankIndexOverlay').classList.remove('hidden')">VIEW RANKS</button>
+              </div>
+              <button id="myProfileBtn" class="hs-btn hs-profile-btn" style="width:100%;margin-top:8px;">👤 My Profile</button>
+            </div>
+            <div class="hs-ctrls">
+              <div class="hs-ctrls-hdr">CONTROLS</div>
+              <div class="hs-ctrl"><kbd class="hs-key">WASD</kbd>Move</div>
+              <div class="hs-ctrl"><kbd class="hs-key">MOUSE</kbd>Aim &amp; Shoot</div>
+              <div class="hs-ctrl"><kbd class="hs-key">SPACE</kbd>Dash (invincible)</div>
+              <div class="hs-ctrl"><kbd class="hs-key">ESC</kbd>Pause</div>
+            </div>
+          </div>
         </div>
       </div>
 
-      <!-- ── RIGHT: player card + controls ── -->
-      <div class="hs-right">
+      <!-- ═══ SHOP TAB ═══ -->
+      <div id="lobbyTab-shop" class="ltab-content hidden">
+        <h2 class="panel-title">🛒 SHOP</h2>
+        <div class="shop-coins-bar">🪙 <span id="shopCoinsVal">0</span> coins available</div>
+        <p class="shop-hint">Earn coins by killing enemies and clearing waves</p>
 
-        <!-- Player card — revealed on login -->
-        <div id="userStatus" class="hs-pcard hidden">
-          <div class="hs-pcard-top">
-            <div class="hs-avatar" id="hsAvatarSkin">👤</div>
-            <div class="hs-pname-wrap">
-              <div id="usernameDisplay" class="hs-pname">Guest</div>
-            </div>
-            <button id="logoutBtn" class="hs-logout-btn">↩ LOGOUT</button>
-          </div>
-
-          <div class="hs-pstats">
-            <div class="hs-pstat">
-              <div class="hs-pstat-lbl">BEST SCORE</div>
-              <div class="hs-pstat-val" id="homeHighVal">0</div>
-            </div>
-            <div class="hs-pstat">
-              <div class="hs-pstat-lbl">COINS</div>
-              <div class="hs-pstat-val hs-val-gold" id="homeCoinsVal">0</div>
-            </div>
-          </div>
-
-          <div class="hs-xp">
-            <div class="hs-xp-hdr">
-              <span class="hs-xp-lvl">LEVEL <strong id="homeXPLevel">1</strong></span>
-              <span class="hs-xp-num"><span id="homeXPCurrent">0</span>&thinsp;/&thinsp;<span id="homeXPNeeded">100</span> XP</span>
-            </div>
-            <div class="hs-xp-track">
-              <div class="hs-xp-fill" id="homeXPBar"></div>
-            </div>
-          </div>
-
-          <div class="hs-rank-row" id="homeRankRow" style="display:none;">
-            <div id="homeRankBadge" class="hs-rank-badge-wrap"></div>
-            <div class="hs-rank-info">
-              <div class="hs-rank-lbl">RANKED</div>
-              <div id="homeRankLabel" class="hs-rank-name">Unranked</div>
-              <div id="homeRankRP"    class="hs-rank-rp"></div>
-            </div>
-            <button id="viewRanksBtn" class="hs-view-ranks-btn" onclick="document.getElementById('rankIndexOverlay').classList.remove('hidden')">VIEW RANKS</button>
-          </div>
-
-          <button id="adminBtn" class="hs-admin-btn hidden">⚠️ ADMIN PANEL</button>
-          <button id="myProfileBtn" class="hs-btn hs-profile-btn">👤 My Profile</button>
+        <!-- Category Tabs (Buy / Trading) -->
+        <div class="shop-categories">
+          <button class="shop-category active" data-category="shop">
+            <span class="shop-cat-icon">🛒</span> BUY
+          </button>
+          <button class="shop-category" data-category="trading">
+            <span class="shop-cat-icon">🤝</span> TRADING
+          </button>
         </div>
 
-        <!-- Controls card — always visible -->
-        <div class="hs-ctrls">
-          <div class="hs-ctrls-hdr">CONTROLS</div>
-          <div class="hs-ctrl"><kbd class="hs-key">WASD</kbd>Move</div>
-          <div class="hs-ctrl"><kbd class="hs-key">MOUSE</kbd>Aim &amp; Shoot</div>
-          <div class="hs-ctrl"><kbd class="hs-key">SPACE</kbd>Dash (invincible)</div>
-          <div class="hs-ctrl"><kbd class="hs-key">ESC</kbd>Pause</div>
+        <!-- Sub-tab bars -->
+        <div class="shop-sub-tabs" data-for="shop">
+          <button class="shop-sub-tab active" data-tab="crates">📦 Crates</button>
+          <button class="shop-sub-tab" data-tab="battlepass">🎫 Battle Pass</button>
+          <button class="shop-sub-tab" data-tab="tradeup">⬆️ Trade Up</button>
+        </div>
+        <div class="shop-sub-tabs hidden" data-for="trading">
+          <button class="shop-sub-tab active" data-tab="marketplace">🏪 Marketplace</button>
+          <button class="shop-sub-tab" data-tab="trades">🤝 Trades <span id="tradeBadge" class="trade-tab-badge" style="display:none">0</span></button>
         </div>
 
+        <!-- Crates Tab Content -->
+        <div id="shopTab-crates" class="shop-tab-content">
+          <div id="crateInventorySection"></div>
+          <div class="crates-info">
+            <p>🎁 Each crate gives you 1 item • Duplicates stack in your inventory</p>
+          </div>
+          <div id="cratesGrid" class="crates-grid"></div>
+        </div>
+
+        <!-- Battle Pass Tab Content -->
+        <div id="shopTab-battlepass" class="shop-tab-content hidden"></div>
+
+        <!-- Trade-Up Tab Content -->
+        <div id="shopTab-tradeup" class="shop-tab-content hidden">
+          <div class="tu-container">
+            <div class="tu-header">
+              <div class="tu-title">TRADE UP</div>
+              <div class="tu-subtitle">Sacrifice 10 skins of the same rarity for 1 skin of the next tier</div>
+            </div>
+            <div class="tu-rarity-row">
+              <span class="tu-rarity-label">INPUT RARITY</span>
+              <div class="tu-rarity-btns" id="tuRarityBtns">
+                <button class="tu-rarity-btn active" data-rarity="common">COMMON</button>
+                <button class="tu-rarity-btn" data-rarity="uncommon">UNCOMMON</button>
+                <button class="tu-rarity-btn" data-rarity="rare">RARE</button>
+                <button class="tu-rarity-btn" data-rarity="epic">EPIC</button>
+                <button class="tu-rarity-btn" data-rarity="legendary">LEGENDARY</button>
+              </div>
+            </div>
+            <div class="tu-slots" id="tuSlots"></div>
+            <div class="tu-mutation-bar" id="tuMutationBar">
+              <span class="tu-mutation-label">MUTATION BOOST</span>
+              <div class="tu-mutation-track">
+                <div class="tu-mutation-fill" id="tuMutationFill" style="width:0%"></div>
+              </div>
+              <span class="tu-mutation-pct" id="tuMutationPct">+0%</span>
+            </div>
+            <div class="tu-output">
+              <div class="tu-output-label">POSSIBLE OUTPUT</div>
+              <div class="tu-output-tier" id="tuOutputTier">→ 1 RANDOM <span id="tuOutputRarity">UNCOMMON</span> SKIN</div>
+            </div>
+            <button class="tu-btn" id="tuBtn" disabled>SELECT 10 SKINS</button>
+            <div class="tu-msg" id="tuMsg"></div>
+          </div>
+          <div id="tuPickerOverlay" class="tu-picker-overlay hidden">
+            <div class="tu-picker-box">
+              <div class="tu-picker-header">
+                <span class="tu-picker-title">SELECT A SKIN</span>
+                <button class="tu-picker-close" id="tuPickerClose">✕</button>
+              </div>
+              <div class="tu-picker-grid" id="tuPickerGrid"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Marketplace Tab Content -->
+        <div id="shopTab-marketplace" class="shop-tab-content hidden">
+          <div id="mpLocked" class="mp-locked hidden">
+            <div class="mp-locked-icon">🔒</div>
+            <div class="mp-locked-title">MARKETPLACE LOCKED</div>
+            <div id="mpLockedReason" class="mp-locked-reason"></div>
+          </div>
+          <div id="mpContent">
+            <div class="mp-topbar">
+              <div class="mp-coins">🪙 <span id="mpCoinsDisplay">0</span></div>
+              <div class="mp-topbar-right">
+                <button class="mp-sort-btn active" data-sort="price_asc">Price ↑</button>
+                <button class="mp-sort-btn" data-sort="price_desc">Price ↓</button>
+                <button id="mpRefreshBtn" class="mp-refresh-btn">REFRESH</button>
+              </div>
+            </div>
+            <div class="mp-controls">
+              <button class="mp-filter-btn active" data-rarity="all">All</button>
+              <button class="mp-filter-btn" data-rarity="crate" style="border-color: rgba(255,167,38,0.3)">Crates</button>
+              <button class="mp-filter-btn" data-rarity="icon" style="border-color: rgba(0,229,255,0.3)">Icon</button>
+              <button class="mp-filter-btn" data-rarity="mythic" style="border-color: rgba(255,105,255,0.3)">Mythic</button>
+              <button class="mp-filter-btn" data-rarity="legendary" style="border-color: rgba(255,215,0,0.3)">Legendary</button>
+              <button class="mp-filter-btn" data-rarity="epic" style="border-color: rgba(255,157,71,0.3)">Epic</button>
+              <button class="mp-filter-btn" data-rarity="rare" style="border-color: rgba(255,120,183,0.3)">Rare</button>
+              <button class="mp-filter-btn" data-rarity="common" style="border-color: rgba(120,183,255,0.3)">Common</button>
+              <span id="mpListingCount" class="mp-listing-count"></span>
+            </div>
+            <input id="mpSearchInput" class="mp-search-input" type="text" placeholder="🔍  Search by skin or seller name…" autocomplete="off" />
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:6px;">
+              <input id="mpPriceMin" type="number" min="0" placeholder="Min price" style="background:rgba(255,255,255,0.06);border:1px solid #333;color:#ccc;padding:6px 10px;border-radius:6px;width:110px;font-family:inherit;font-size:12px;" />
+              <span style="color:#666;font-size:12px;">–</span>
+              <input id="mpPriceMax" type="number" min="0" placeholder="Max price" style="background:rgba(255,255,255,0.06);border:1px solid #333;color:#ccc;padding:6px 10px;border-radius:6px;width:110px;font-family:inherit;font-size:12px;" />
+              <button id="mpTrendingFilterBtn" class="mp-filter-btn" style="border-color:rgba(107,255,123,0.4);font-size:11px;">🔥 Trending</button>
+            </div>
+            <div id="mpMessage" class="mp-message hidden"></div>
+            <div id="mpListingsGrid" class="mp-listings-grid">
+              <div class="mp-loading">Click REFRESH to load listings</div>
+            </div>
+            <button id="mpLoadMoreBtn" class="mp-load-more-btn hidden">LOAD MORE</button>
+            <div class="mp-recent-section">
+              <div class="mp-recent-header">RECENT SALES</div>
+              <div id="mpRecentTrades"><div class="mp-recent-loading">Loading…</div></div>
+            </div>
+            <div class="mp-my-section">
+              <div class="mp-my-header">
+                <div class="mp-my-title">MY LISTINGS</div>
+                <button id="mpSellBtn" class="mp-sell-btn">+ SELL SKIN</button>
+              </div>
+              <div id="mpMyListings"><div class="mp-my-empty">You have no active listings</div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Trades Tab Content -->
+        <div id="shopTab-trades" class="shop-tab-content hidden">
+          <div id="tradesLoginGate" class="hidden">Sign in to use the trading system.</div>
+          <div id="tradesMain" class="hidden">
+            <div class="trade-sub-tabs">
+              <button class="trade-sub-tab active" data-sub="notifications" onclick="_switchTradeSubTab('notifications'); _loadTradeNotifications()">🔔 Alerts</button>
+              <button class="trade-sub-tab" data-sub="find" onclick="_switchTradeSubTab('find'); loadOnlineUsers()">🔍 Find Players</button>
+              <button class="trade-sub-tab" data-sub="live" onclick="_switchTradeSubTab('live')">⚔️ Live Trade</button>
+              <button class="trade-sub-tab" data-sub="inbox" onclick="_switchTradeSubTab('inbox'); loadTradeInbox()">📬 Inbox</button>
+              <button class="trade-sub-tab" data-sub="sent" onclick="_switchTradeSubTab('sent'); loadTradeSent()">📤 Sent</button>
+              <button class="trade-sub-tab" data-sub="history" onclick="_switchTradeSubTab('history'); loadTradeHistory()">📋 History</button>
+            </div>
+            <div class="trade-sub-content trade-list-area" data-sub="notifications">
+              <div class="trade-section-header">
+                <span class="trade-section-title">Pending Requests &amp; Offers</span>
+                <button class="trade-btn trade-btn-sm" onclick="_loadTradeNotifications()">↻ Refresh</button>
+              </div>
+              <div id="tradeNotifList"><div class="trade-loading">Loading...</div></div>
+            </div>
+            <div class="trade-sub-content trade-list-area hidden" data-sub="find">
+              <div class="trade-search-bar">
+                <input type="text" id="tradeSearchInput" class="trade-search-input" placeholder="Search username..." onkeydown="if(event.key==='Enter')searchTradePlayer()" />
+                <button class="trade-btn trade-btn-primary" onclick="searchTradePlayer()">Search</button>
+              </div>
+              <div id="tradeSearchResult"></div>
+              <div class="trade-section-header" style="margin-top:10px">
+                <span class="trade-section-title">Online Now</span>
+                <button class="trade-btn trade-btn-sm" onclick="loadOnlineUsers()">↻ Refresh</button>
+              </div>
+              <div id="tradeOnlineList"><div class="trade-loading">Loading...</div></div>
+            </div>
+            <div class="trade-sub-content hidden" data-sub="live">
+              <div id="tradeLivePanel"><div class="trade-empty">No active trade session.<br>Find a player to start a live trade.</div></div>
+            </div>
+            <div class="trade-sub-content trade-list-area hidden" data-sub="inbox">
+              <div class="trade-section-header">
+                <span class="trade-section-title">Received Offers</span>
+                <button class="trade-btn trade-btn-sm" onclick="loadTradeInbox()">↻ Refresh</button>
+              </div>
+              <div id="tradeInboxList"><div class="trade-loading">Loading...</div></div>
+            </div>
+            <div class="trade-sub-content trade-list-area hidden" data-sub="sent">
+              <div class="trade-section-header">
+                <span class="trade-section-title">Sent Offers</span>
+                <button class="trade-btn trade-btn-sm" onclick="loadTradeSent()">↻ Refresh</button>
+              </div>
+              <div id="tradeSentList"><div class="trade-loading">Loading...</div></div>
+            </div>
+            <div class="trade-sub-content trade-list-area hidden" data-sub="history">
+              <div class="trade-section-header">
+                <span class="trade-section-title">Trade History</span>
+                <button class="trade-btn trade-btn-sm" onclick="loadTradeHistory()">↻ Refresh</button>
+              </div>
+              <div id="tradeHistoryList"><div class="trade-loading">Loading...</div></div>
+            </div>
+          </div>
+        </div>
+
+        <div id="tradeToast" class="trade-toast hidden"></div>
+        <div id="crateMessage" class="crate-message hidden"></div>
+      </div>
+
+      <!-- ═══ LOCKER TAB ═══ -->
+      <div id="lobbyTab-locker" class="ltab-content hidden">
+        <h2 class="panel-title">🎒 LOCKER</h2>
+
+        <!-- Locker sub-tabs -->
+        <div class="ltab-sub-tabs">
+          <button class="ltab-sub-tab active" data-lockertab="inventory">🎒 Inventory</button>
+          <button class="ltab-sub-tab" data-lockertab="cosmetics">✨ Cosmetics</button>
+          <button class="ltab-sub-tab" data-lockertab="profile">👤 Profile</button>
+        </div>
+
+        <!-- Inventory sub-tab -->
+        <div id="lockerTab-inventory" class="locker-tab-content">
+          <div class="inv-toolbar">
+            <div class="inv-stats">
+              <span id="invTotalCount" class="inv-stat">0 skins</span>
+              <span id="invMutatedCount" class="inv-stat inv-stat-mut" style="display:none">0 mutated</span>
+            </div>
+            <div class="inv-filters">
+              <button class="inv-filter active" data-filter="all">ALL</button>
+              <button class="inv-filter" data-filter="common">COMMON</button>
+              <button class="inv-filter" data-filter="rare">RARE</button>
+              <button class="inv-filter" data-filter="epic">EPIC</button>
+              <button class="inv-filter" data-filter="legendary">LEGENDARY</button>
+              <button class="inv-filter" data-filter="mythic">MYTHIC</button>
+              <button class="inv-filter" data-filter="icon">ICON</button>
+              <button class="inv-filter" data-filter="mutated">✦ MUTATED</button>
+            </div>
+            <div class="inv-sort-row">
+              <span class="inv-sort-label">SORT</span>
+              <select id="invSortSelect" class="inv-sort-select">
+                <option value="rarity-desc">Rarity ↓ (High first)</option>
+                <option value="rarity-asc">Rarity ↑ (Low first)</option>
+                <option value="name-asc">Name A → Z</option>
+                <option value="name-desc">Name Z → A</option>
+                <option value="value-desc">Value ↓ (Most valuable)</option>
+                <option value="value-asc">Value ↑ (Least valuable)</option>
+                <option value="count-desc">Count ↓ (Most copies)</option>
+              </select>
+            </div>
+          </div>
+          <div id="invGrid" class="inv-grid"></div>
+          <div id="invEmpty" class="inv-empty hidden">
+            <div>No skins match this filter.</div>
+            <div style="margin-top:8px;font-size:11px;opacity:0.5">Open crates or buy from the Marketplace to get more!</div>
+          </div>
+          <div id="trySkinBanner" class="try-skin-banner hidden">
+            <div class="try-skin-info">
+              <span class="try-skin-dot"></span>
+              TRYING: <strong id="trySkinLabel"></strong>
+            </div>
+            <button class="try-skin-stop" onclick="stopTrySkin()">✕ Stop</button>
+          </div>
+        </div>
+
+        <!-- Cosmetics sub-tab -->
+        <div id="lockerTab-cosmetics" class="locker-tab-content hidden">
+          <!-- Populated by initCosmeticsTab() -->
+        </div>
+
+        <!-- Profile sub-tab -->
+        <div id="lockerTab-profile" class="locker-tab-content hidden">
+          <div style="text-align:center;padding:32px 16px;">
+            <div style="font-size:48px;margin-bottom:12px;">👤</div>
+            <div style="font-size:16px;color:#dbe7ff;font-weight:700;margin-bottom:8px;">Your Profile</div>
+            <div style="font-size:13px;color:var(--muted);margin-bottom:20px;">View and customize your public profile card</div>
+            <button id="lockerProfileBtn" class="home-btn primary" style="font-size:14px;padding:12px 28px;">Open Profile Card</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ COMPETE TAB ═══ -->
+      <div id="lobbyTab-compete" class="ltab-content hidden">
+        <h2 class="panel-title">🏆 COMPETE</h2>
+
+        <!-- Compete sub-tabs -->
+        <div class="ltab-sub-tabs">
+          <button class="ltab-sub-tab active" data-competetab="leaderboard">🏆 Leaderboard</button>
+          <button class="ltab-sub-tab" data-competetab="achievements">🎖️ Achievements</button>
+          <button class="ltab-sub-tab" data-competetab="ranks">⚔️ Rank Index</button>
+        </div>
+
+        <!-- Leaderboard sub-tab -->
+        <div id="competeTab-leaderboard" class="compete-tab-content">
+          <div class="leaderboard-filters">
+            <button class="filter-btn active" data-filter="allTime">🏆 Scores</button>
+            <button class="filter-btn" data-filter="coins">🪙 Coins</button>
+            <button class="filter-btn" data-filter="level">⭐ Level</button>
+            <button class="filter-btn" data-filter="timeattack">⏱ Time Attack</button>
+            <button class="filter-btn" data-filter="bossrush">👹 Boss Rush</button>
+            <button class="filter-btn" data-filter="ranked">⚔️ Ranked</button>
+          </div>
+          <div id="leaderboardList" class="leaderboard-list">
+            <div class="loading-spinner">Loading...</div>
+          </div>
+        </div>
+
+        <!-- Achievements sub-tab -->
+        <div id="competeTab-achievements" class="compete-tab-content hidden">
+          <div id="achGrandReward" class="ach-grand-reward">
+            <div class="ach-grand-icon">✨</div>
+            <div class="ach-grand-info">
+              <div class="ach-grand-name">TRANSCENDENCE SKIN</div>
+              <div id="achGrandStatus" class="ach-grand-sub">Complete all achievements to unlock</div>
+            </div>
+            <div id="achProgressCount" class="ach-progress-count">0 / 12</div>
+          </div>
+          <div id="achievementsGrid" class="ach-grid"></div>
+        </div>
+
+        <!-- Rank Index sub-tab -->
+        <div id="competeTab-ranks" class="compete-tab-content hidden">
+          <div id="competeRankIndexGrid" class="rank-index-grid"></div>
+        </div>
+      </div>
+
+      <!-- ═══ SUPPORT TAB ═══ -->
+      <div id="lobbyTab-support" class="ltab-content hidden">
+        <h2 class="panel-title">🆘 SUPPORT &amp; REPORTS</h2>
+        <div style="max-width:520px;">
+          <div style="background:rgba(255,71,87,0.08);border:1px solid rgba(255,71,87,0.3);border-radius:10px;padding:14px 16px;margin-bottom:14px;">
+            <div style="font-size:12px;font-weight:700;color:#ff6b7a;letter-spacing:0.5px;margin-bottom:5px;">⚠️ MISUSE WARNING</div>
+            <div style="font-size:12px;color:rgba(255,255,255,0.7);line-height:1.6;">Do not use this to troll, spam, or submit fake reports. Abusing the report system will result in a permanent ban.</div>
+          </div>
+          <div style="background:rgba(255,255,255,0.04);border-radius:10px;padding:14px 16px;margin-bottom:16px;font-size:12px;color:rgba(255,255,255,0.6);line-height:1.7;">
+            <strong style="color:rgba(255,255,255,0.85);display:block;margin-bottom:8px;">📝 How to write a good report:</strong>
+            <div>• <strong style="color:rgba(255,255,255,0.8);">Bug reports:</strong> Describe what happened, what you expected, and how to reproduce it.</div>
+            <div>• <strong style="color:rgba(255,255,255,0.8);">Cheater reports:</strong> Include the player's username and suspicious behavior.</div>
+            <div>• <strong style="color:rgba(255,255,255,0.8);">Suggestions:</strong> Be specific about what you'd like changed or added.</div>
+            <div style="margin-top:8px;color:rgba(255,200,0,0.7);">⏱ You may submit up to 3 reports per 24 hours.</div>
+          </div>
+          <div id="supportAuthWarning" class="hidden" style="text-align:center;padding:24px 16px;color:var(--muted);font-size:13px;line-height:1.6;">
+            You must be <strong style="color:#dbe7ff">logged in</strong> to submit a report.
+          </div>
+          <form id="supportForm">
+            <div style="margin-bottom:12px;">
+              <label style="font-size:11px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;display:block;margin-bottom:6px;">Report Type</label>
+              <select id="reportType" class="auth-input" style="width:100%;box-sizing:border-box;">
+                <option value="bug">🐛 Bug Report</option>
+                <option value="cheater">🚩 Cheater Report</option>
+                <option value="abuse">⚠️ Abuse / Harassment</option>
+                <option value="suggestion">💡 Suggestion</option>
+                <option value="other">📌 Other</option>
+              </select>
+            </div>
+            <div style="margin-bottom:12px;">
+              <label style="font-size:11px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;display:block;margin-bottom:6px;">Subject <span style="color:var(--muted);font-size:10px;">(max 100 chars)</span></label>
+              <input type="text" id="reportSubject" class="auth-input" placeholder="Brief description of the issue" maxlength="100" style="width:100%;box-sizing:border-box;" aria-label="Report subject">
+            </div>
+            <div style="margin-bottom:16px;">
+              <label style="font-size:11px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;display:block;margin-bottom:6px;">Details <span style="color:var(--muted);font-size:10px;">(max 1000 chars)</span></label>
+              <textarea id="reportDescription" class="auth-input" placeholder="Explain the issue in as much detail as possible..." maxlength="1000" rows="5" style="width:100%;box-sizing:border-box;resize:vertical;font-family:inherit;"></textarea>
+            </div>
+            <div id="supportMsg" class="hidden" style="font-size:12px;margin-bottom:10px;padding:8px 12px;border-radius:6px;border:1px solid transparent;text-align:center;"></div>
+            <button type="submit" id="submitReportBtn" class="home-btn" style="width:100%;">📨 SUBMIT REPORT</button>
+          </form>
+        </div>
+      </div>
+
+      <!-- ═══ NEWS TAB ═══ -->
+      <div id="lobbyTab-news" class="ltab-content hidden">
+        <h2 class="panel-title">📋 UPDATE LOGS</h2>
+
+        <!-- Version 4.1.0 -->
+        <div class="update-entry">
+          <div class="update-header"><div class="update-version">v4.1.0 - SHOP REVAMP &amp; ECONOMY UPDATE</div></div>
+          <div><span class="update-category new">NEW</span><span class="update-category improved">IMPROVED</span><span class="update-category fixed">FIXED</span></div>
+          <div class="update-content"><ul>
+            <li><strong>🏆 Champion Skins Section:</strong> Gold, Silver, and Bronze Champion skins now have their own dedicated section in the Skins tab with rank labels and gold-border styling. They are clearly marked as Leaderboard Exclusive and non-tradeable.</li>
+            <li><strong>⛔ Champion Trading Restriction:</strong> Champion skins are permanently blocked from the Marketplace at three independent security layers — client pre-check, server eligibility, and atomic Firestore transaction. No exploit can bypass all three.</li>
+            <li><strong>🛒 Shop Access — Legacy Accounts:</strong> Existing accounts created before this update now have immediate Marketplace access. New accounts registered after v4.1.0 still wait the standard 7 days.</li>
+            <li><strong>🎨 Oblivion Crate:</strong> Price updated to 15,000 coins. All 10 Oblivion skins now display correctly in the shop with unique dark gradient previews (previously appeared invisible).</li>
+            <li><strong>💰 Economy Rebalance:</strong> Enemy coin values increased (fast/basic: 1→2, tanks: 4→5, enforcers: 6→8, minibosses: 10→14). Wave clear bonus formula improved (was wave×2.5, now wave×4+15 so Wave 1 gives 19 coins instead of 2). Boss kill rewards increased ~25% at all tiers.</li>
+            <li><strong>⚡ XP Progression:</strong> Battle Pass XP rates buffed — perKill 5→6, perWave 22→26, match completion 35→50. Boss and elite kill XP multipliers improved. All 50 free track tier coin rewards increased 30–40%.</li>
+            <li><strong>🏪 Marketplace Pricing Fixed:</strong> Icon skins were incorrectly priced at 25,000 coin floor on the Marketplace (same as Mythic) despite coming from a 1,000 coin crate — fixed to 500–4,000 range. Duplicate `icon` key bug in RARITY_PRICING removed. Shop skin tier thresholds corrected so Diamond maps to Epic and Celestial Nexus to Mythic.</li>
+            <li><strong>🔧 Admin Panel:</strong> New Trade Restriction controls let admins block/unblock any skin from the Marketplace and view all active restrictions. New Skin Price Editor adjusts shop skin prices live without a deploy. New Crate Price Editor adjusts crate costs live. All changes are logged to Firestore for audit.</li>
+          </ul></div>
+        </div>
+
+        <!-- Version 4.0.0 -->
+        <div class="update-entry">
+          <div class="update-header"><div class="update-version">v4.0.0 - THE EVERYTHING UPDATE</div></div>
+          <div><span class="update-category new">NEW</span><span class="update-category improved">IMPROVED</span><span class="update-category fixed">FIXED</span></div>
+          <div class="update-content"><ul>
+            <li><strong>🎫 BATTLE PASS SEASON 1:</strong> 50-tier progression system with free and premium tracks! Earn XP from kills (5 XP), waves (22 XP), and match completions (35 XP) with boss kill multipliers. Premium Pass available for 2,500 coins</li>
+            <li><strong>🎨 7 Battle Pass Exclusive Skins:</strong> Striker (Tier 5), Guardian (Tier 10), Phantom (Tier 20), Tempest (Tier 30), Eclipse (Tier 40), Sovereign (Tier 45), and the legendary Apex Predator (Tier 50)</li>
+            <li><strong>📦 CRATE SYSTEM:</strong> 5 crate types with CS2-style spinning reel animations, tick sounds, and rarity-based landing effects</li>
+            <li><strong>🎰 40+ Crate-Exclusive Skins:</strong> 6 rarity tiers from Common to Mythic. Duplicates convert to coins based on rarity</li>
+            <li><strong>👤 Icon Skins Collection:</strong> 10 special friend-themed skins obtainable only from Icon Crates</li>
+            <li><strong>💨 DASH ABILITY:</strong> Press Spacebar for a burst of speed (6x movement for 0.15s). 3-second cooldown with visual indicator</li>
+            <li><strong>⚔️ Enforcer Enemy:</strong> New elite enemy type spawning on wave 16+ with a telegraphed dash attack</li>
+            <li><strong>🔥 Combo System:</strong> Chain kills within 3 seconds to build combos</li>
+            <li><strong>🌈 Cosmetics Tab:</strong> Equip trails and death effects earned from the Battle Pass</li>
+            <li><strong>🛡️ Anti-Cheat v2:</strong> Advanced score validation with plausibility checks, kill rate analysis, and automatic bans</li>
+            <li><strong>💾 Smart Save System:</strong> Intelligent save throttling with 30-second minimum intervals and automatic retry</li>
+          </ul></div>
+        </div>
+
+        <!-- Version 3.0.0 -->
+        <div class="update-entry">
+          <div class="update-header"><div class="update-version">v3.0.0 - MASSIVE UPDATE</div></div>
+          <div><span class="update-category new">NEW</span><span class="update-category improved">IMPROVED</span><span class="update-category fixed">BALANCE</span></div>
+          <div class="update-content"><ul>
+            <li><strong>🏆 EXCLUSIVE CHAMPION SKINS:</strong> Top 3 leaderboard players automatically receive divine animated skins</li>
+            <li><strong>🪙 Coins Leaderboard:</strong> New separate leaderboard tracking total coins earned</li>
+            <li><strong>💀 Legendary Boss (0.1%):</strong> Ultra-rare Legendary Destroyer with 5 difficulty phases and massive rewards</li>
+            <li><strong>Permanent Upgrades System:</strong> Weapon, Max HP, and Speed upgrades (all 12% drop rate)</li>
+            <li><strong>Quantum Flux Skin ⚛️:</strong> 10,000 coin skin with chromatic aberration and reality-bending effects</li>
+            <li><strong>Admin Panel:</strong> Full moderation tools (ban, manage scores, view activity logs, dev console)</li>
+            <li><strong>Cloud Saves:</strong> Progress automatically saves to Firebase for logged-in users</li>
+          </ul></div>
+        </div>
+
+        <!-- Version 2.1.0 -->
+        <div class="update-entry">
+          <div class="update-header"><div class="update-version">v2.1.0 - Enhanced Cursor</div></div>
+          <div><span class="update-category new">NEW</span><span class="update-category improved">IMPROVED</span></div>
+          <div class="update-content"><ul>
+            <li><strong>Custom Cursor:</strong> Bright, glowing crosshair cursor for better visibility</li>
+            <li><strong>Cursor Visibility:</strong> Cursor stays visible when hovering over buttons and UI</li>
+          </ul></div>
+        </div>
+
+        <!-- Version 2.0.0 -->
+        <div class="update-entry">
+          <div class="update-header"><div class="update-version">v2.0.0 - Firebase Integration</div></div>
+          <div><span class="update-category new">NEW</span><span class="update-category improved">IMPROVED</span></div>
+          <div class="update-content"><ul>
+            <li><strong>User Accounts:</strong> Firebase authentication with login and signup</li>
+            <li><strong>Global Leaderboard:</strong> Online leaderboard with rankings</li>
+            <li><strong>Admin Panel:</strong> Complete admin tools for user management</li>
+            <li><strong>Cloud Save:</strong> Progress saves to the cloud automatically</li>
+            <li><strong>Guest Mode:</strong> Play without signing up (local save only)</li>
+          </ul></div>
+        </div>
+
+        <!-- Version 1.5.0 -->
+        <div class="update-entry">
+          <div class="update-header"><div class="update-version">v1.5.0 - Shop System</div></div>
+          <div><span class="update-category new">NEW</span></div>
+          <div class="update-content"><ul>
+            <li><strong>Shop:</strong> Unlock character skins with coins</li>
+            <li><strong>Coin System:</strong> Earn coins by killing enemies and clearing waves</li>
+            <li><strong>Skins:</strong> Multiple unique character skins to collect</li>
+          </ul></div>
+        </div>
+
+        <!-- Older versions -->
+        <div class="update-entry">
+          <div class="update-header"><div class="update-version">v1.4.0 - Polish Update</div></div>
+          <div><span class="update-category improved">IMPROVED</span><span class="update-category fixed">FIXED</span></div>
+          <div class="update-content"><ul>
+            <li><strong>UI Redesign:</strong> Modern glassmorphism UI with better visual hierarchy</li>
+            <li><strong>Settings Panel:</strong> Toggle sound, particles, screen shake, and more</li>
+            <li><strong>Performance:</strong> Optimized particle system and collision detection</li>
+          </ul></div>
+        </div>
+
+        <div class="update-entry">
+          <div class="update-header"><div class="update-version">v1.3.0 - Boss Battles</div></div>
+          <div><span class="update-category new">NEW</span></div>
+          <div class="update-content"><ul>
+            <li><strong>Boss Fights:</strong> Epic boss battles every 5 waves</li>
+            <li><strong>Mini-Bosses:</strong> Rare purple elite enemies with special attacks</li>
+          </ul></div>
+        </div>
+
+        <div class="update-entry">
+          <div class="update-header"><div class="update-version">v1.2.0 - Power-Ups</div></div>
+          <div><span class="update-category new">NEW</span></div>
+          <div class="update-content"><ul>
+            <li><strong>Power-Up System:</strong> Health, Rapid Fire, Speed Boost, Shield, and Weapon Upgrades</li>
+            <li><strong>Weapon Progression:</strong> Upgrade from single → double → triple shot</li>
+          </ul></div>
+        </div>
+
+        <div class="update-entry">
+          <div class="update-header"><div class="update-version">v1.1.0 - Abilities &amp; Combat</div></div>
+          <div><span class="update-category new">NEW</span></div>
+          <div class="update-content"><ul>
+            <li><strong>Dash Ability:</strong> Invulnerable dash with 3-second cooldown</li>
+            <li><strong>Enemy Variety:</strong> Normal, Fast, Tank, and Shooter enemy types</li>
+            <li><strong>Combo System:</strong> Chain kills for bonus points</li>
+          </ul></div>
+        </div>
+
+        <div class="update-entry">
+          <div class="update-header"><div class="update-version">v1.0.0 - Initial Release</div></div>
+          <div><span class="update-category new">NEW</span></div>
+          <div class="update-content"><ul>
+            <li><strong>Core Gameplay:</strong> Wave-based survival shooter with WASD + mouse controls</li>
+          </ul></div>
+        </div>
+      </div>
+
+      <!-- ═══ SETTINGS TAB ═══ -->
+      <div id="lobbyTab-settings" class="ltab-content hidden">
+        <h2 class="panel-title">⚙ SETTINGS</h2>
+        <div style="max-width:520px;" id="lobbySettingsWrap">
+          <div class="settings-list">
+            <!-- ── AUDIO ── -->
+            <div class="settings-category-header">🔊 AUDIO</div>
+            <div class="setting-row">
+              <div class="setting-label">
+                <span class="setting-icon">🔊</span>
+                <div><div class="setting-name">Master Sound</div><div class="setting-desc">All game audio on/off</div></div>
+              </div>
+              <label class="toggle"><input type="checkbox" id="masterSoundToggle" checked><span class="slider"></span></label>
+            </div>
+            <div class="setting-row">
+              <div class="setting-label">
+                <span class="setting-icon">🔫</span>
+                <div><div class="setting-name">Shoot Sound</div><div class="setting-desc">Player shooting sound only</div></div>
+              </div>
+              <label class="toggle"><input type="checkbox" id="shootSoundToggle" checked><span class="slider"></span></label>
+            </div>
+            <div class="setting-row">
+              <div class="setting-label">
+                <span class="setting-icon">🎵</span>
+                <div><div class="setting-name">Music</div><div class="setting-desc">Background music during gameplay</div></div>
+              </div>
+              <label class="toggle"><input type="checkbox" id="musicEnabledToggle" checked><span class="slider"></span></label>
+            </div>
+            <div class="setting-row">
+              <div class="setting-label">
+                <span class="setting-icon">🎚️</span>
+                <div><div class="setting-name">Music Volume</div><div class="setting-desc">Adjust background music level</div></div>
+              </div>
+              <input type="range" id="musicVolumeSlider" min="0" max="100" value="50" class="volume-slider" style="width:100px;accent-color:#00d4ff;">
+            </div>
+            <div class="setting-row">
+              <div class="setting-label">
+                <span class="setting-icon">🔉</span>
+                <div><div class="setting-name">SFX Volume</div><div class="setting-desc">Sound effects volume</div></div>
+              </div>
+              <input type="range" id="sfxVolumeSlider" min="0" max="100" value="80" class="volume-slider" style="width:100px;accent-color:#00d4ff;">
+            </div>
+
+            <!-- ── GAMEPLAY ── -->
+            <div class="settings-category-header">🎮 GAMEPLAY</div>
+            <div class="setting-row">
+              <div class="setting-label">
+                <span class="setting-icon">🎯</span>
+                <div><div class="setting-name">Auto-Shoot</div><div class="setting-desc">Automatically fire (for trackpads)</div></div>
+              </div>
+              <label class="toggle"><input type="checkbox" id="autoShootToggle"><span class="slider"></span></label>
+            </div>
+            <div class="setting-row">
+              <div class="setting-label">
+                <span class="setting-icon">📳</span>
+                <div><div class="setting-name">Screen Shake</div><div class="setting-desc">Camera shake on damage</div></div>
+              </div>
+              <label class="toggle"><input type="checkbox" id="screenShakeToggle" checked><span class="slider"></span></label>
+            </div>
+            <div class="setting-row">
+              <div class="setting-label">
+                <span class="setting-icon">💥</span>
+                <div><div class="setting-name">Damage Numbers</div><div class="setting-desc">Show floating damage text on hits</div></div>
+              </div>
+              <label class="toggle"><input type="checkbox" id="damageNumbersToggle" checked><span class="slider"></span></label>
+            </div>
+            <div class="setting-row">
+              <div class="setting-label">
+                <span class="setting-icon">❤️</span>
+                <div><div class="setting-name">Enemy Health Bars</div><div class="setting-desc">Show HP bars above enemies</div></div>
+              </div>
+              <label class="toggle"><input type="checkbox" id="enemyHPToggle" checked><span class="slider"></span></label>
+            </div>
+
+            <!-- ── DISPLAY ── -->
+            <div class="settings-category-header">🖥️ DISPLAY</div>
+            <div class="setting-row">
+              <div class="setting-label">
+                <span class="setting-icon">✨</span>
+                <div><div class="setting-name">Particles</div><div class="setting-desc">Explosion effects</div></div>
+              </div>
+              <label class="toggle"><input type="checkbox" id="particlesToggle" checked><span class="slider"></span></label>
+            </div>
+            <div class="setting-row">
+              <div class="setting-label">
+                <span class="setting-icon">📊</span>
+                <div><div class="setting-name">Show FPS</div><div class="setting-desc">Frames-per-second counter</div></div>
+              </div>
+              <label class="toggle"><input type="checkbox" id="showFPSToggle"><span class="slider"></span></label>
+            </div>
+            <div class="setting-row">
+              <div class="setting-label">
+                <span class="setting-icon">⚡</span>
+                <div><div class="setting-name">Performance Mode</div><div class="setting-desc">Disables glow effects &amp; limits particles — recommended for Chromebooks</div></div>
+              </div>
+              <label class="toggle"><input type="checkbox" id="perfModeToggle"><span class="slider"></span></label>
+            </div>
+            <div class="setting-row">
+              <div class="setting-label">
+                <span class="setting-icon">👁️</span>
+                <div><div class="setting-name">HUD Opacity</div><div class="setting-desc">Transparency of score, HP, and wave display</div></div>
+              </div>
+              <input type="range" id="hudOpacitySlider" min="30" max="100" value="100" class="volume-slider" style="width:100px;accent-color:#00d4ff;">
+            </div>
+
+            <!-- ── CONTROLS ── -->
+            <div class="settings-category-header">🎯 CONTROLS</div>
+            <div class="setting-row">
+              <div class="setting-label">
+                <span class="setting-icon">🖱️</span>
+                <div><div class="setting-name">Cursor Color</div><div class="setting-desc">Crosshair color</div></div>
+              </div>
+              <div class="cursor-color-options" id="cursorColorOptions">
+                <button class="cursor-color-btn" data-color="#58a6ff" style="background:#58a6ff" title="Blue"></button>
+                <button class="cursor-color-btn" data-color="#ff4757" style="background:#ff4757" title="Red"></button>
+                <button class="cursor-color-btn" data-color="#2ed573" style="background:#2ed573" title="Green"></button>
+                <button class="cursor-color-btn" data-color="#ffd700" style="background:#ffd700" title="Gold"></button>
+                <button class="cursor-color-btn" data-color="#ff69ff" style="background:#ff69ff" title="Pink"></button>
+                <button class="cursor-color-btn" data-color="#ffffff" style="background:#ffffff" title="White"></button>
+              </div>
+            </div>
+
+            <!-- ── SOCIAL ── -->
+            <div class="settings-category-header" id="socialCategoryHeader" style="display:none">💬 SOCIAL</div>
+            <div class="setting-row" id="chatSettingRow" style="display:none">
+              <div class="setting-label">
+                <span class="setting-icon">💬</span>
+                <div>
+                  <div class="setting-name">Global Chat</div>
+                  <div class="setting-desc" id="chatOptInHint">Request access to join the live chat</div>
+                </div>
+              </div>
+              <button id="chatOptInBtn" class="admin-action-btn success" style="padding:6px 14px;font-size:11px;white-space:nowrap;">Request Access</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ── BOTTOM BAR ── -->
+    <div id="lobbyBar">
+      <div class="lbar-player">
+        <div class="lbar-avatar" id="lbarAvatarSkin">👤</div>
+        <div class="lbar-info">
+          <div class="lbar-name" id="lbarUsername">Guest</div>
+          <div class="lbar-level">Lv.<span id="lbarLevel">1</span></div>
+        </div>
+        <div class="lbar-coins">🪙 <span id="lbarCoins">0</span></div>
+      </div>
+      <div class="lbar-actions">
+        <button id="adminBtn" class="lbar-admin-btn hidden">⚠️ ADMIN</button>
+        <button id="logoutBtn" class="lbar-logout-btn">↩</button>
+        <button id="lbarStartBtn" class="lbar-start-btn">
+          <span class="lbar-start-tri">▶</span> START GAME
+        </button>
       </div>
     </div>
+
   </div>
 
   <!-- ─── RANK INDEX OVERLAY ─── -->
@@ -179,626 +861,109 @@
   </div>
 
   <!-- ─── SUPPORT PANEL ─── -->
-  <div id="supportPanel" class="hidden panel-overlay">
-    <div class="panel-box">
-      <h2 class="panel-title">🆘 SUPPORT &amp; REPORTS</h2>
+  <!-- supportPanel removed — content moved to lobbyTab-support -->
 
-      <div style="background:rgba(255,71,87,0.08);border:1px solid rgba(255,71,87,0.3);border-radius:10px;padding:14px 16px;margin-bottom:14px;">
-        <div style="font-size:12px;font-weight:700;color:#ff6b7a;letter-spacing:0.5px;margin-bottom:5px;">⚠️ MISUSE WARNING</div>
-        <div style="font-size:12px;color:rgba(255,255,255,0.7);line-height:1.6;">Do not use this to troll, spam, or submit fake reports. Abusing the report system will result in a permanent ban.</div>
+  <!-- settingsPanel removed — content moved to lobbyTab-settings -->
+
+  <!-- shopPanel removed — content moved to lobbyTab-shop and lobbyTab-locker -->
+
+  <!-- Trade/Shop modals (standalone overlays) -->
+  <div id="tradeViewInventoryModal" class="trade-modal-overlay hidden" onclick="if(event.target===this)closeTradeViewInventory()">
+    <div class="trade-modal-box">
+      <div class="trade-modal-title" id="tradeViewInventoryTitle">Inventory</div>
+      <div class="trade-modal-body">
+        <div id="tradeViewInventoryGrid" class="trade-inv-grid"></div>
       </div>
-
-      <div style="background:rgba(255,255,255,0.04);border-radius:10px;padding:14px 16px;margin-bottom:16px;font-size:12px;color:rgba(255,255,255,0.6);line-height:1.7;">
-        <strong style="color:rgba(255,255,255,0.85);display:block;margin-bottom:8px;">📝 How to write a good report:</strong>
-        <div>• <strong style="color:rgba(255,255,255,0.8);">Bug reports:</strong> Describe what happened, what you expected, and how to reproduce it.</div>
-        <div>• <strong style="color:rgba(255,255,255,0.8);">Cheater reports:</strong> Include the player's username and suspicious behavior.</div>
-        <div>• <strong style="color:rgba(255,255,255,0.8);">Suggestions:</strong> Be specific about what you'd like changed or added.</div>
-        <div style="margin-top:8px;color:rgba(255,200,0,0.7);">⏱ You may submit up to 3 reports per 24 hours.</div>
+      <div class="trade-modal-footer">
+        <button id="tradeViewLiveBtn" class="trade-btn trade-btn-primary" style="display:none">⚔️ Live Trade</button>
+        <button id="tradeViewOfferBtn" class="trade-btn trade-btn-accept">📬 Send Offer</button>
+        <button class="trade-btn" onclick="closeTradeViewInventory()">Close</button>
       </div>
-
-      <div id="supportAuthWarning" class="hidden" style="text-align:center;padding:24px 16px;color:var(--muted);font-size:13px;line-height:1.6;">
-        You must be <strong style="color:#dbe7ff">logged in</strong> to submit a report.
-      </div>
-
-      <form id="supportForm">
-        <div style="margin-bottom:12px;">
-          <label style="font-size:11px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;display:block;margin-bottom:6px;">Report Type</label>
-          <select id="reportType" class="auth-input" style="width:100%;box-sizing:border-box;">
-            <option value="bug">🐛 Bug Report</option>
-            <option value="cheater">🚩 Cheater Report</option>
-            <option value="abuse">⚠️ Abuse / Harassment</option>
-            <option value="suggestion">💡 Suggestion</option>
-            <option value="other">📌 Other</option>
-          </select>
-        </div>
-        <div style="margin-bottom:12px;">
-          <label style="font-size:11px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;display:block;margin-bottom:6px;">Subject <span style="color:var(--muted);font-size:10px;">(max 100 chars)</span></label>
-          <input type="text" id="reportSubject" class="auth-input" placeholder="Brief description of the issue" maxlength="100" style="width:100%;box-sizing:border-box;" aria-label="Report subject">
-        </div>
-        <div style="margin-bottom:16px;">
-          <label style="font-size:11px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;display:block;margin-bottom:6px;">Details <span style="color:var(--muted);font-size:10px;">(max 1000 chars)</span></label>
-          <textarea id="reportDescription" class="auth-input" placeholder="Explain the issue in as much detail as possible..." maxlength="1000" rows="5" style="width:100%;box-sizing:border-box;resize:vertical;font-family:inherit;"></textarea>
-        </div>
-        <div id="supportMsg" class="hidden" style="font-size:12px;margin-bottom:10px;padding:8px 12px;border-radius:6px;border:1px solid transparent;text-align:center;"></div>
-        <button type="submit" id="submitReportBtn" class="home-btn" style="width:100%;">📨 SUBMIT REPORT</button>
-      </form>
-
-      <button class="panel-back-btn" id="supportBackBtn">← BACK</button>
     </div>
   </div>
 
-  <!-- ─── SETTINGS PANEL ─── -->
-  <div id="settingsPanel" class="hidden panel-overlay">
-    <div class="panel-box">
-      <h2 class="panel-title">⚙ SETTINGS</h2>
-      <div class="settings-list">
-        <!-- ── AUDIO ── -->
-        <div class="settings-category-header">🔊 AUDIO</div>
-        <div class="setting-row">
-          <div class="setting-label">
-            <span class="setting-icon">🔊</span>
-            <div><div class="setting-name">Master Sound</div><div class="setting-desc">All game audio on/off</div></div>
-          </div>
-          <label class="toggle"><input type="checkbox" id="masterSoundToggle" checked><span class="slider"></span></label>
-        </div>
-        <div class="setting-row">
-          <div class="setting-label">
-            <span class="setting-icon">🔫</span>
-            <div><div class="setting-name">Shoot Sound</div><div class="setting-desc">Player shooting sound only</div></div>
-          </div>
-          <label class="toggle"><input type="checkbox" id="shootSoundToggle" checked><span class="slider"></span></label>
-        </div>
-        <div class="setting-row">
-          <div class="setting-label">
-            <span class="setting-icon">🎵</span>
-            <div><div class="setting-name">Music</div><div class="setting-desc">Background music during gameplay</div></div>
-          </div>
-          <label class="toggle"><input type="checkbox" id="musicEnabledToggle" checked><span class="slider"></span></label>
-        </div>
-        <div class="setting-row">
-          <div class="setting-label">
-            <span class="setting-icon">🎚️</span>
-            <div><div class="setting-name">Music Volume</div><div class="setting-desc">Adjust background music level</div></div>
-          </div>
-          <input type="range" id="musicVolumeSlider" min="0" max="100" value="50" class="volume-slider" style="width:100px;accent-color:#00d4ff;">
-        </div>
-        <div class="setting-row">
-          <div class="setting-label">
-            <span class="setting-icon">🔉</span>
-            <div><div class="setting-name">SFX Volume</div><div class="setting-desc">Sound effects volume</div></div>
-          </div>
-          <input type="range" id="sfxVolumeSlider" min="0" max="100" value="80" class="volume-slider" style="width:100px;accent-color:#00d4ff;">
-        </div>
-
-        <!-- ── GAMEPLAY ── -->
-        <div class="settings-category-header">🎮 GAMEPLAY</div>
-        <div class="setting-row">
-          <div class="setting-label">
-            <span class="setting-icon">🎯</span>
-            <div><div class="setting-name">Auto-Shoot</div><div class="setting-desc">Automatically fire (for trackpads)</div></div>
-          </div>
-          <label class="toggle"><input type="checkbox" id="autoShootToggle"><span class="slider"></span></label>
-        </div>
-        <div class="setting-row">
-          <div class="setting-label">
-            <span class="setting-icon">📳</span>
-            <div><div class="setting-name">Screen Shake</div><div class="setting-desc">Camera shake on damage</div></div>
-          </div>
-          <label class="toggle"><input type="checkbox" id="screenShakeToggle" checked><span class="slider"></span></label>
-        </div>
-        <div class="setting-row">
-          <div class="setting-label">
-            <span class="setting-icon">💥</span>
-            <div><div class="setting-name">Damage Numbers</div><div class="setting-desc">Show floating damage text on hits</div></div>
-          </div>
-          <label class="toggle"><input type="checkbox" id="damageNumbersToggle" checked><span class="slider"></span></label>
-        </div>
-        <div class="setting-row">
-          <div class="setting-label">
-            <span class="setting-icon">❤️</span>
-            <div><div class="setting-name">Enemy Health Bars</div><div class="setting-desc">Show HP bars above enemies</div></div>
-          </div>
-          <label class="toggle"><input type="checkbox" id="enemyHPToggle" checked><span class="slider"></span></label>
-        </div>
-
-        <!-- ── DISPLAY ── -->
-        <div class="settings-category-header">🖥️ DISPLAY</div>
-        <div class="setting-row">
-          <div class="setting-label">
-            <span class="setting-icon">✨</span>
-            <div><div class="setting-name">Particles</div><div class="setting-desc">Explosion effects</div></div>
-          </div>
-          <label class="toggle"><input type="checkbox" id="particlesToggle" checked><span class="slider"></span></label>
-        </div>
-        <div class="setting-row">
-          <div class="setting-label">
-            <span class="setting-icon">📊</span>
-            <div><div class="setting-name">Show FPS</div><div class="setting-desc">Frames-per-second counter</div></div>
-          </div>
-          <label class="toggle"><input type="checkbox" id="showFPSToggle"><span class="slider"></span></label>
-        </div>
-        <div class="setting-row">
-          <div class="setting-label">
-            <span class="setting-icon">⚡</span>
-            <div><div class="setting-name">Performance Mode</div><div class="setting-desc">Disables glow effects &amp; limits particles — recommended for Chromebooks</div></div>
-          </div>
-          <label class="toggle"><input type="checkbox" id="perfModeToggle"><span class="slider"></span></label>
-        </div>
-        <div class="setting-row">
-          <div class="setting-label">
-            <span class="setting-icon">👁️</span>
-            <div><div class="setting-name">HUD Opacity</div><div class="setting-desc">Transparency of score, HP, and wave display</div></div>
-          </div>
-          <input type="range" id="hudOpacitySlider" min="30" max="100" value="100" class="volume-slider" style="width:100px;accent-color:#00d4ff;">
-        </div>
-
-        <!-- ── CONTROLS ── -->
-        <div class="settings-category-header">🎯 CONTROLS</div>
-        <div class="setting-row">
-          <div class="setting-label">
-            <span class="setting-icon">🖱️</span>
-            <div><div class="setting-name">Cursor Color</div><div class="setting-desc">Crosshair color</div></div>
-          </div>
-          <div class="cursor-color-options" id="cursorColorOptions">
-            <button class="cursor-color-btn" data-color="#58a6ff" style="background:#58a6ff" title="Blue"></button>
-            <button class="cursor-color-btn" data-color="#ff4757" style="background:#ff4757" title="Red"></button>
-            <button class="cursor-color-btn" data-color="#2ed573" style="background:#2ed573" title="Green"></button>
-            <button class="cursor-color-btn" data-color="#ffd700" style="background:#ffd700" title="Gold"></button>
-            <button class="cursor-color-btn" data-color="#ff69ff" style="background:#ff69ff" title="Pink"></button>
-            <button class="cursor-color-btn" data-color="#ffffff" style="background:#ffffff" title="White"></button>
-          </div>
-        </div>
-
-        <!-- ── SOCIAL ── -->
-        <div class="settings-category-header" id="socialCategoryHeader" style="display:none">💬 SOCIAL</div>
-        <div class="setting-row" id="chatSettingRow" style="display:none">
-          <div class="setting-label">
-            <span class="setting-icon">💬</span>
-            <div>
-              <div class="setting-name">Global Chat</div>
-              <div class="setting-desc" id="chatOptInHint">Request access to join the live chat</div>
+  <div id="tradeSendOfferModal" class="trade-modal-overlay hidden" onclick="if(event.target===this)closeTradeOfferModal()">
+    <div class="trade-modal-box" style="max-width:600px">
+      <div class="trade-modal-title" id="tradeSendOfferTitle">Send Offer</div>
+      <input type="hidden" id="tradeSendOfferReceiverId" />
+      <input type="hidden" id="tradeSendOfferReceiverName" />
+      <div class="trade-modal-body">
+        <div class="trade-offer-form">
+          <div class="trade-offer-split">
+            <div class="trade-offer-col">
+              <div class="trade-offer-col-title">You Give</div>
+              <div class="trade-offer-checks" id="tradeSendMySkinsChecks"></div>
+              <div class="trade-offer-checks" id="tradeSendMyCratesChecks"></div>
+              <input type="number" id="tradeSendMyCoins" class="trade-coins-input" placeholder="Your coins (optional)" min="0" max="100000" />
+            </div>
+            <div class="trade-offer-col">
+              <div class="trade-offer-col-title">You Want</div>
+              <div class="trade-offer-checks" id="tradeSendTheirSkinsChecks"></div>
+              <div class="trade-offer-checks" id="tradeSendTheirCratesChecks"></div>
+              <input type="number" id="tradeSendTheirCoins" class="trade-coins-input" placeholder="Their coins (optional)" min="0" max="100000" />
             </div>
           </div>
-          <button id="chatOptInBtn" class="admin-action-btn success" style="padding:6px 14px;font-size:11px;white-space:nowrap;">Request Access</button>
+          <textarea id="tradeSendMessage" class="trade-message-input" rows="2" placeholder="Optional message to recipient..."></textarea>
         </div>
       </div>
-      <button class="panel-back-btn" id="settingsBackBtn">← BACK</button>
+      <div class="trade-modal-footer">
+        <button id="tradeSendOfferSubmitBtn" class="trade-btn trade-btn-accept" onclick="submitSendOffer()">Send Offer</button>
+        <button class="trade-btn" onclick="closeTradeOfferModal()">Cancel</button>
+      </div>
     </div>
   </div>
 
-  <!-- ─── SHOP PANEL ─── -->
-  <div id="shopPanel" class="hidden panel-overlay">
-    <div class="panel-box shop-box">
-      <h2 class="panel-title">🛒 SHOP</h2>
-      <div class="shop-coins-bar">🪙 <span id="shopCoinsVal">0</span> coins available</div>
-      <p class="shop-hint">Earn coins by killing enemies and clearing waves</p>
-      
-      <!-- Shop Tabs -->
-      <!-- Category Tabs -->
-      <div class="shop-categories">
-        <button class="shop-category active" data-category="collection">
-          <span class="shop-cat-icon">🎒</span> MY COLLECTION
-        </button>
-        <button class="shop-category" data-category="shop">
-          <span class="shop-cat-icon">🛒</span> SHOP
-        </button>
-        <button class="shop-category" data-category="trading">
-          <span class="shop-cat-icon">🤝</span> TRADING
-        </button>
+  <div id="mpSellModal" class="mp-sell-modal hidden">
+    <div class="mp-sell-box">
+      <div class="mp-sell-title">LIST SKIN FOR SALE</div>
+      <div class="mp-sell-field">
+        <label class="mp-sell-label">Select Skin</label>
+        <select id="mpSellSkinSelect" class="mp-sell-select"><option value="">-- Select a skin --</option></select>
       </div>
+      <div class="mp-sell-field">
+        <label class="mp-sell-label">Set Price (coins)</label>
+        <input type="number" id="mpSellPrice" class="mp-sell-input" placeholder="Enter price" min="100" max="100000">
+        <div id="mpSellPriceHint" class="mp-sell-hint">Select a skin first</div>
+      </div>
+      <div id="mpSellTax" class="mp-sell-tax"></div>
+      <div id="mpSellError" class="mp-sell-error hidden"></div>
+      <div class="mp-sell-actions">
+        <button id="mpSellConfirmBtn" class="mp-sell-confirm-btn">LIST FOR SALE</button>
+        <button id="mpSellModalClose" class="mp-sell-cancel-btn">CANCEL</button>
+      </div>
+    </div>
+  </div>
 
-      <!-- Sub-tab bars (one per category) -->
-      <div class="shop-sub-tabs" data-for="collection">
-        <button class="shop-sub-tab active" data-tab="inventory">🎒 Inventory</button>
-        <button class="shop-sub-tab" data-tab="cosmetics">✨ Cosmetics</button>
-      </div>
-      <div class="shop-sub-tabs hidden" data-for="shop">
-        <button class="shop-sub-tab active" data-tab="crates">📦 Crates</button>
-        <button class="shop-sub-tab" data-tab="battlepass">🎫 Battle Pass</button>
-        <button class="shop-sub-tab" data-tab="tradeup">⬆️ Trade Up</button>
-      </div>
-      <div class="shop-sub-tabs hidden" data-for="trading">
-        <button class="shop-sub-tab active" data-tab="marketplace">🏪 Marketplace</button>
-        <button class="shop-sub-tab" data-tab="trades">🤝 Trades <span id="tradeBadge" class="trade-tab-badge" style="display:none">0</span></button>
-      </div>
-      
-      <!-- Inventory Tab Content -->
-      <div id="shopTab-inventory" class="shop-tab-content">
-        <div class="inv-toolbar">
-          <div class="inv-stats">
-            <span id="invTotalCount" class="inv-stat">0 skins</span>
-            <span id="invMutatedCount" class="inv-stat inv-stat-mut" style="display:none">0 mutated</span>
-          </div>
-          <div class="inv-filters">
-            <button class="inv-filter active" data-filter="all">ALL</button>
-            <button class="inv-filter" data-filter="common">COMMON</button>
-            <button class="inv-filter" data-filter="rare">RARE</button>
-            <button class="inv-filter" data-filter="epic">EPIC</button>
-            <button class="inv-filter" data-filter="legendary">LEGENDARY</button>
-            <button class="inv-filter" data-filter="mythic">MYTHIC</button>
-            <button class="inv-filter" data-filter="icon">ICON</button>
-            <button class="inv-filter" data-filter="mutated">✦ MUTATED</button>
-          </div>
-          <div class="inv-sort-row">
-            <span class="inv-sort-label">SORT</span>
-            <select id="invSortSelect" class="inv-sort-select">
-              <option value="rarity-desc">Rarity ↓ (High first)</option>
-              <option value="rarity-asc">Rarity ↑ (Low first)</option>
-              <option value="name-asc">Name A → Z</option>
-              <option value="name-desc">Name Z → A</option>
-              <option value="value-desc">Value ↓ (Most valuable)</option>
-              <option value="value-asc">Value ↑ (Least valuable)</option>
-              <option value="count-desc">Count ↓ (Most copies)</option>
-            </select>
-          </div>
-        </div>
-        <div id="invGrid" class="inv-grid"></div>
-        <div id="invEmpty" class="inv-empty hidden">
-          <div>No skins match this filter.</div>
-          <div style="margin-top:8px;font-size:11px;opacity:0.5">Open crates or buy from the Marketplace to get more!</div>
-        </div>
-        <!-- Try skin floating banner -->
-        <div id="trySkinBanner" class="try-skin-banner hidden">
-          <div class="try-skin-info">
-            <span class="try-skin-dot"></span>
-            TRYING: <strong id="trySkinLabel"></strong>
-          </div>
-          <button class="try-skin-stop" onclick="stopTrySkin()">✕ Stop</button>
+  <div id="mpBuyModal" class="mp-sell-modal hidden">
+    <div class="mp-sell-box" style="max-width:320px;">
+      <div class="mp-sell-title">CONFIRM PURCHASE</div>
+      <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px;">
+        <div id="mpBuyModalPreview" style="flex-shrink:0;"></div>
+        <div>
+          <div id="mpBuyModalSkinName" style="font-family:var(--font-title);font-size:15px;font-weight:700;color:#dbe7ff;"></div>
+          <div id="mpBuyModalRarity" style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-top:3px;"></div>
+          <div style="font-size:11px;color:var(--muted);margin-top:2px;">Sold by <span id="mpBuyModalSeller"></span></div>
         </div>
       </div>
-      
-      <!-- Crates Tab Content -->
-      <div id="shopTab-crates" class="shop-tab-content hidden">
-        <div id="crateInventorySection"></div>
-        <div class="crates-info">
-          <p>🎁 Each crate gives you 1 item • Duplicates stack in your inventory</p>
+      <div style="background:rgba(0,0,0,0.3);border:1px solid rgba(88,166,255,0.15);border-radius:8px;padding:12px;margin-bottom:16px;">
+        <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px;">
+          <span style="color:var(--muted);">Price</span>
+          <span style="color:var(--gold);font-weight:700;">🪙 <span id="mpBuyModalPrice"></span></span>
         </div>
-        <div id="cratesGrid" class="crates-grid"></div>
-      </div>
-
-      <!-- Battle Pass Tab Content -->
-      <div id="shopTab-battlepass" class="shop-tab-content hidden">
-        <!-- Populated by initBattlePassTab() -->
-      </div>
-
-      <!-- Cosmetics Tab Content -->
-      <div id="shopTab-cosmetics" class="shop-tab-content hidden">
-        <!-- Populated by initCosmeticsTab() -->
-      </div>
-
-      <!-- Marketplace Tab Content -->
-      <div id="shopTab-marketplace" class="shop-tab-content hidden">
-
-        <!-- Locked State (not eligible) -->
-        <div id="mpLocked" class="mp-locked hidden">
-          <div class="mp-locked-icon">🔒</div>
-          <div class="mp-locked-title">MARKETPLACE LOCKED</div>
-          <div id="mpLockedReason" class="mp-locked-reason"></div>
+        <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:6px;">
+          <span style="color:var(--muted);">Tax (10%)</span>
+          <span style="color:var(--danger);">−<span id="mpBuyModalTax"></span></span>
         </div>
-
-        <!-- Main Content (visible when eligible) -->
-        <div id="mpContent">
-          <!-- Top Bar: Coins + Sort + Refresh -->
-          <div class="mp-topbar">
-            <div class="mp-coins">🪙 <span id="mpCoinsDisplay">0</span></div>
-            <div class="mp-topbar-right">
-              <button class="mp-sort-btn active" data-sort="price_asc">Price ↑</button>
-              <button class="mp-sort-btn" data-sort="price_desc">Price ↓</button>
-              <button id="mpRefreshBtn" class="mp-refresh-btn">REFRESH</button>
-            </div>
-          </div>
-
-          <!-- Filters -->
-          <div class="mp-controls">
-            <button class="mp-filter-btn active" data-rarity="all">All</button>
-            <button class="mp-filter-btn" data-rarity="crate" style="border-color: rgba(255,167,38,0.3)">Crates</button>
-            <button class="mp-filter-btn" data-rarity="icon" style="border-color: rgba(0,229,255,0.3)">Icon</button>
-            <button class="mp-filter-btn" data-rarity="mythic" style="border-color: rgba(255,105,255,0.3)">Mythic</button>
-            <button class="mp-filter-btn" data-rarity="legendary" style="border-color: rgba(255,215,0,0.3)">Legendary</button>
-            <button class="mp-filter-btn" data-rarity="epic" style="border-color: rgba(255,157,71,0.3)">Epic</button>
-            <button class="mp-filter-btn" data-rarity="rare" style="border-color: rgba(255,120,183,0.3)">Rare</button>
-            <button class="mp-filter-btn" data-rarity="common" style="border-color: rgba(120,183,255,0.3)">Common</button>
-            <span id="mpListingCount" class="mp-listing-count"></span>
-          </div>
-
-          <!-- Search -->
-          <input id="mpSearchInput" class="mp-search-input" type="text"
-                 placeholder="🔍  Search by skin or seller name…" autocomplete="off" />
-
-          <!-- Price range + trending filter -->
-          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:6px;">
-            <input id="mpPriceMin" type="number" min="0" placeholder="Min price"
-              style="background:rgba(255,255,255,0.06);border:1px solid #333;color:#ccc;
-                     padding:6px 10px;border-radius:6px;width:110px;font-family:inherit;font-size:12px;" />
-            <span style="color:#666;font-size:12px;">–</span>
-            <input id="mpPriceMax" type="number" min="0" placeholder="Max price"
-              style="background:rgba(255,255,255,0.06);border:1px solid #333;color:#ccc;
-                     padding:6px 10px;border-radius:6px;width:110px;font-family:inherit;font-size:12px;" />
-            <button id="mpTrendingFilterBtn" class="mp-filter-btn"
-              style="border-color:rgba(107,255,123,0.4);font-size:11px;">
-              🔥 Trending
-            </button>
-          </div>
-
-          <!-- Message Bar -->
-          <div id="mpMessage" class="mp-message hidden"></div>
-
-          <!-- Listings Grid -->
-          <div id="mpListingsGrid" class="mp-listings-grid">
-            <div class="mp-loading">Click REFRESH to load listings</div>
-          </div>
-
-          <!-- Load More -->
-          <button id="mpLoadMoreBtn" class="mp-load-more-btn hidden">LOAD MORE</button>
-
-          <!-- Recent Trades -->
-          <div class="mp-recent-section">
-            <div class="mp-recent-header">RECENT SALES</div>
-            <div id="mpRecentTrades">
-              <div class="mp-recent-loading">Loading…</div>
-            </div>
-          </div>
-
-          <!-- My Listings Section -->
-          <div class="mp-my-section">
-            <div class="mp-my-header">
-              <div class="mp-my-title">MY LISTINGS</div>
-              <button id="mpSellBtn" class="mp-sell-btn">+ SELL SKIN</button>
-            </div>
-            <div id="mpMyListings">
-              <div class="mp-my-empty">You have no active listings</div>
-            </div>
-          </div>
+        <div style="height:1px;background:rgba(255,255,255,0.07);margin:8px 0;"></div>
+        <div style="display:flex;justify-content:space-between;font-size:12px;">
+          <span style="color:var(--muted);">Balance after</span>
+          <span style="font-weight:700;color:#dbe7ff;">🪙 <span id="mpBuyModalAfter"></span></span>
         </div>
       </div>
-
-      <!-- Trade-Up Tab Content -->
-      <div id="shopTab-tradeup" class="shop-tab-content hidden">
-        <div class="tu-container">
-          <div class="tu-header">
-            <div class="tu-title">TRADE UP</div>
-            <div class="tu-subtitle">Sacrifice 10 skins of the same rarity for 1 skin of the next tier</div>
-          </div>
-
-          <!-- Rarity selector -->
-          <div class="tu-rarity-row">
-            <span class="tu-rarity-label">INPUT RARITY</span>
-            <div class="tu-rarity-btns" id="tuRarityBtns">
-              <button class="tu-rarity-btn active" data-rarity="common">COMMON</button>
-              <button class="tu-rarity-btn" data-rarity="uncommon">UNCOMMON</button>
-              <button class="tu-rarity-btn" data-rarity="rare">RARE</button>
-              <button class="tu-rarity-btn" data-rarity="epic">EPIC</button>
-              <button class="tu-rarity-btn" data-rarity="legendary">LEGENDARY</button>
-            </div>
-          </div>
-
-          <!-- 10 input slots -->
-          <div class="tu-slots" id="tuSlots"></div>
-
-          <!-- Mutation boost bar -->
-          <div class="tu-mutation-bar" id="tuMutationBar">
-            <span class="tu-mutation-label">MUTATION BOOST</span>
-            <div class="tu-mutation-track">
-              <div class="tu-mutation-fill" id="tuMutationFill" style="width:0%"></div>
-            </div>
-            <span class="tu-mutation-pct" id="tuMutationPct">+0%</span>
-          </div>
-
-          <!-- Output preview -->
-          <div class="tu-output">
-            <div class="tu-output-label">POSSIBLE OUTPUT</div>
-            <div class="tu-output-tier" id="tuOutputTier">→ 1 RANDOM <span id="tuOutputRarity">UNCOMMON</span> SKIN</div>
-          </div>
-
-          <!-- Trade Up button -->
-          <button class="tu-btn" id="tuBtn" disabled>SELECT 10 SKINS</button>
-          <div class="tu-msg" id="tuMsg"></div>
-        </div>
-
-        <!-- Skin picker modal -->
-        <div id="tuPickerOverlay" class="tu-picker-overlay hidden">
-          <div class="tu-picker-box">
-            <div class="tu-picker-header">
-              <span class="tu-picker-title">SELECT A SKIN</span>
-              <button class="tu-picker-close" id="tuPickerClose">✕</button>
-            </div>
-            <div class="tu-picker-grid" id="tuPickerGrid"></div>
-          </div>
-        </div>
+      <div class="mp-sell-actions">
+        <button id="mpBuyConfirmBtn" class="mp-sell-confirm-btn" style="color:#6bff7b;border-color:rgba(107,255,123,0.35);">✓ BUY NOW</button>
+        <button id="mpBuyModalCancelBtn" class="mp-sell-cancel-btn">CANCEL</button>
       </div>
-
-      <!-- Trades Tab Content -->
-      <div id="shopTab-trades" class="shop-tab-content hidden">
-        <!-- Login gate -->
-        <div id="tradesLoginGate" class="hidden">
-          Sign in to use the trading system.
-        </div>
-
-        <!-- Main trades UI -->
-        <div id="tradesMain" class="hidden">
-          <!-- Sub-tab bar -->
-          <div class="trade-sub-tabs">
-            <button class="trade-sub-tab active" data-sub="notifications" onclick="_switchTradeSubTab('notifications'); _loadTradeNotifications()">🔔 Alerts</button>
-            <button class="trade-sub-tab" data-sub="find" onclick="_switchTradeSubTab('find'); loadOnlineUsers()">🔍 Find Players</button>
-            <button class="trade-sub-tab" data-sub="live" onclick="_switchTradeSubTab('live')">⚔️ Live Trade</button>
-            <button class="trade-sub-tab" data-sub="inbox" onclick="_switchTradeSubTab('inbox'); loadTradeInbox()">📬 Inbox</button>
-            <button class="trade-sub-tab" data-sub="sent" onclick="_switchTradeSubTab('sent'); loadTradeSent()">📤 Sent</button>
-            <button class="trade-sub-tab" data-sub="history" onclick="_switchTradeSubTab('history'); loadTradeHistory()">📋 History</button>
-          </div>
-
-          <!-- Notifications sub-tab -->
-          <div class="trade-sub-content trade-list-area" data-sub="notifications">
-            <div class="trade-section-header">
-              <span class="trade-section-title">Pending Requests &amp; Offers</span>
-              <button class="trade-btn trade-btn-sm" onclick="_loadTradeNotifications()">↻ Refresh</button>
-            </div>
-            <div id="tradeNotifList"><div class="trade-loading">Loading...</div></div>
-          </div>
-
-          <!-- Find Players sub-tab -->
-          <div class="trade-sub-content trade-list-area hidden" data-sub="find">
-            <div class="trade-search-bar">
-              <input type="text" id="tradeSearchInput" class="trade-search-input" placeholder="Search username..." onkeydown="if(event.key==='Enter')searchTradePlayer()" />
-              <button class="trade-btn trade-btn-primary" onclick="searchTradePlayer()">Search</button>
-            </div>
-            <div id="tradeSearchResult"></div>
-            <div class="trade-section-header" style="margin-top:10px">
-              <span class="trade-section-title">Online Now</span>
-              <button class="trade-btn trade-btn-sm" onclick="loadOnlineUsers()">↻ Refresh</button>
-            </div>
-            <div id="tradeOnlineList"><div class="trade-loading">Loading...</div></div>
-          </div>
-
-          <!-- Live trade sub-tab -->
-          <div class="trade-sub-content hidden" data-sub="live">
-            <div id="tradeLivePanel">
-              <div class="trade-empty">No active trade session.<br>Find a player to start a live trade.</div>
-            </div>
-          </div>
-
-          <!-- Inbox sub-tab -->
-          <div class="trade-sub-content trade-list-area hidden" data-sub="inbox">
-            <div class="trade-section-header">
-              <span class="trade-section-title">Received Offers</span>
-              <button class="trade-btn trade-btn-sm" onclick="loadTradeInbox()">↻ Refresh</button>
-            </div>
-            <div id="tradeInboxList"><div class="trade-loading">Loading...</div></div>
-          </div>
-
-          <!-- Sent sub-tab -->
-          <div class="trade-sub-content trade-list-area hidden" data-sub="sent">
-            <div class="trade-section-header">
-              <span class="trade-section-title">Sent Offers</span>
-              <button class="trade-btn trade-btn-sm" onclick="loadTradeSent()">↻ Refresh</button>
-            </div>
-            <div id="tradeSentList"><div class="trade-loading">Loading...</div></div>
-          </div>
-
-          <!-- History sub-tab -->
-          <div class="trade-sub-content trade-list-area hidden" data-sub="history">
-            <div class="trade-section-header">
-              <span class="trade-section-title">Trade History</span>
-              <button class="trade-btn trade-btn-sm" onclick="loadTradeHistory()">↻ Refresh</button>
-            </div>
-            <div id="tradeHistoryList"><div class="trade-loading">Loading...</div></div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Trade toast -->
-      <div id="tradeToast" class="trade-toast hidden"></div>
-
-      <!-- View player inventory modal -->
-      <div id="tradeViewInventoryModal" class="trade-modal-overlay hidden" onclick="if(event.target===this)closeTradeViewInventory()">
-        <div class="trade-modal-box">
-          <div class="trade-modal-title" id="tradeViewInventoryTitle">Inventory</div>
-          <div class="trade-modal-body">
-            <div id="tradeViewInventoryGrid" class="trade-inv-grid"></div>
-          </div>
-          <div class="trade-modal-footer">
-            <button id="tradeViewLiveBtn" class="trade-btn trade-btn-primary" style="display:none">⚔️ Live Trade</button>
-            <button id="tradeViewOfferBtn" class="trade-btn trade-btn-accept">📬 Send Offer</button>
-            <button class="trade-btn" onclick="closeTradeViewInventory()">Close</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Send offline offer modal -->
-      <div id="tradeSendOfferModal" class="trade-modal-overlay hidden" onclick="if(event.target===this)closeTradeOfferModal()">
-        <div class="trade-modal-box" style="max-width:600px">
-          <div class="trade-modal-title" id="tradeSendOfferTitle">Send Offer</div>
-          <input type="hidden" id="tradeSendOfferReceiverId" />
-          <input type="hidden" id="tradeSendOfferReceiverName" />
-          <div class="trade-modal-body">
-            <div class="trade-offer-form">
-              <div class="trade-offer-split">
-                <div class="trade-offer-col">
-                  <div class="trade-offer-col-title">You Give</div>
-                  <div class="trade-offer-checks" id="tradeSendMySkinsChecks"></div>
-                  <div class="trade-offer-checks" id="tradeSendMyCratesChecks"></div>
-                  <input type="number" id="tradeSendMyCoins" class="trade-coins-input" placeholder="Your coins (optional)" min="0" max="100000" />
-                </div>
-                <div class="trade-offer-col">
-                  <div class="trade-offer-col-title">You Want</div>
-                  <div class="trade-offer-checks" id="tradeSendTheirSkinsChecks"></div>
-                  <div class="trade-offer-checks" id="tradeSendTheirCratesChecks"></div>
-                  <input type="number" id="tradeSendTheirCoins" class="trade-coins-input" placeholder="Their coins (optional)" min="0" max="100000" />
-                </div>
-              </div>
-              <textarea id="tradeSendMessage" class="trade-message-input" rows="2" placeholder="Optional message to recipient..."></textarea>
-            </div>
-          </div>
-          <div class="trade-modal-footer">
-            <button id="tradeSendOfferSubmitBtn" class="trade-btn trade-btn-accept" onclick="submitSendOffer()">Send Offer</button>
-            <button class="trade-btn" onclick="closeTradeOfferModal()">Cancel</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Sell Modal (overlays everything) -->
-      <div id="mpSellModal" class="mp-sell-modal hidden">
-        <div class="mp-sell-box">
-          <div class="mp-sell-title">LIST SKIN FOR SALE</div>
-
-          <div class="mp-sell-field">
-            <label class="mp-sell-label">Select Skin</label>
-            <select id="mpSellSkinSelect" class="mp-sell-select">
-              <option value="">-- Select a skin --</option>
-            </select>
-          </div>
-
-          <div class="mp-sell-field">
-            <label class="mp-sell-label">Set Price (coins)</label>
-            <input type="number" id="mpSellPrice" class="mp-sell-input" placeholder="Enter price" min="100" max="100000">
-            <div id="mpSellPriceHint" class="mp-sell-hint">Select a skin first</div>
-          </div>
-
-          <div id="mpSellTax" class="mp-sell-tax"></div>
-          <div id="mpSellError" class="mp-sell-error hidden"></div>
-
-          <div class="mp-sell-actions">
-            <button id="mpSellConfirmBtn" class="mp-sell-confirm-btn">LIST FOR SALE</button>
-            <button id="mpSellModalClose" class="mp-sell-cancel-btn">CANCEL</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Marketplace buy confirmation modal (used by marketplace-ui.js openBuyModal) -->
-      <div id="mpBuyModal" class="mp-sell-modal hidden">
-        <div class="mp-sell-box" style="max-width:320px;">
-          <div class="mp-sell-title">CONFIRM PURCHASE</div>
-          <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px;">
-            <div id="mpBuyModalPreview" style="flex-shrink:0;"></div>
-            <div>
-              <div id="mpBuyModalSkinName" style="font-family:var(--font-title);font-size:15px;font-weight:700;color:#dbe7ff;"></div>
-              <div id="mpBuyModalRarity" style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-top:3px;"></div>
-              <div style="font-size:11px;color:var(--muted);margin-top:2px;">Sold by <span id="mpBuyModalSeller"></span></div>
-            </div>
-          </div>
-          <div style="background:rgba(0,0,0,0.3);border:1px solid rgba(88,166,255,0.15);border-radius:8px;padding:12px;margin-bottom:16px;">
-            <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px;">
-              <span style="color:var(--muted);">Price</span>
-              <span style="color:var(--gold);font-weight:700;">🪙 <span id="mpBuyModalPrice"></span></span>
-            </div>
-            <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:6px;">
-              <span style="color:var(--muted);">Tax (10%)</span>
-              <span style="color:var(--danger);">−<span id="mpBuyModalTax"></span></span>
-            </div>
-            <div style="height:1px;background:rgba(255,255,255,0.07);margin:8px 0;"></div>
-            <div style="display:flex;justify-content:space-between;font-size:12px;">
-              <span style="color:var(--muted);">Balance after</span>
-              <span style="font-weight:700;color:#dbe7ff;">🪙 <span id="mpBuyModalAfter"></span></span>
-            </div>
-          </div>
-          <div class="mp-sell-actions">
-            <button id="mpBuyConfirmBtn" class="mp-sell-confirm-btn" style="color:#6bff7b;border-color:rgba(107,255,123,0.35);">✓ BUY NOW</button>
-            <button id="mpBuyModalCancelBtn" class="mp-sell-cancel-btn">CANCEL</button>
-          </div>
-        </div>
-      </div>
-
-      <div id="crateMessage" class="crate-message hidden"></div>
-      <button class="panel-back-btn" id="shopBackBtn">← BACK</button>
     </div>
   </div>
   
@@ -892,6 +1057,17 @@
     </div>
   </div>
 
+  <!-- ─── PAUSE SETTINGS OVERLAY ─── -->
+  <div id="pauseSettingsWrap" class="hidden panel-overlay" style="z-index:120;">
+    <div class="panel-box" style="max-width:520px;">
+      <h2 class="panel-title">⚙ SETTINGS</h2>
+      <div class="pause-settings-body">
+        <!-- Settings DOM gets borrowed here from lobbySettingsWrap -->
+      </div>
+      <button class="panel-back-btn" id="pauseSettingsBackBtn">← BACK TO PAUSE</button>
+    </div>
+  </div>
+
   <!-- ─── LOGIN/SIGNUP MODAL ─── -->
   <div id="authModal" class="panel-overlay hidden">
     <div class="panel-box auth-box">
@@ -931,357 +1107,9 @@
     </div>
   </div>
 
-  <!-- ─── MODE SELECT PANEL ─── -->
-  <div id="modeSelectPanel" class="hidden panel-overlay">
-    <div class="panel-box mode-select-box">
-      <h2 class="panel-title">⚔ SELECT MODE</h2>
-      <div class="mode-grid">
+  <!-- modeSelectPanel + leaderboardPanel removed — content moved to lobby tabs -->
 
-        <div class="mode-card" data-mode="classic">
-          <div class="mode-card-tag">STANDARD</div>
-          <div class="mode-card-icon">🌊</div>
-          <div class="mode-card-name">CLASSIC</div>
-          <div class="mode-card-desc">Fight through escalating waves, grab power-ups, unlock upgrades. Reach as far as you can.</div>
-          <div class="mode-card-footer">
-            <div class="mode-card-best" id="modeBest_classic">Best: —</div>
-            <div class="mode-card-stat">Score</div>
-          </div>
-        </div>
-
-        <div class="mode-card" data-mode="timeattack">
-          <div class="mode-card-tag">TIMED</div>
-          <div class="mode-card-icon">⏱</div>
-          <div class="mode-card-name">TIME ATTACK</div>
-          <div class="mode-card-desc">3 minutes on the clock. Rack up kills before time runs out. Every second counts.</div>
-          <div class="mode-card-footer">
-            <div class="mode-card-best" id="modeBest_timeattack">Best: —</div>
-            <div class="mode-card-stat">Kills</div>
-          </div>
-        </div>
-
-        <div class="mode-card" data-mode="bossrush">
-          <div class="mode-card-tag">ENDLESS</div>
-          <div class="mode-card-icon">👹</div>
-          <div class="mode-card-name">BOSS RUSH</div>
-          <div class="mode-card-desc">No minions. Just bosses, back to back, getting harder each round. How far can you go?</div>
-          <div class="mode-card-footer">
-            <div class="mode-card-best" id="modeBest_bossrush">Best: —</div>
-            <div class="mode-card-stat">Bosses</div>
-          </div>
-        </div>
-
-
-        <div class="mode-card mode-card-ranked" data-mode="ranked">
-          <div class="mode-card-tag ranked-tag">RANKED</div>
-          <div class="mode-card-icon">⚔️</div>
-          <div class="mode-card-name">RANKED</div>
-          <div class="mode-card-desc">Climb the ladder from Bronze to Sovereign. Earn RP each wave. Promote through divisions.</div>
-          <div class="mode-card-footer">
-            <div id="rankedModeBadge" class="mode-card-best">🥉 Bronze V</div>
-            <div class="mode-card-stat">Rank</div>
-          </div>
-        </div>
-
-
-      </div>
-
-      <button id="modePlayBtn" class="home-btn primary" disabled style="margin-bottom:10px;">▶ PLAY SELECTED MODE</button>
-      <button class="panel-back-btn" id="modeSelectBackBtn">← BACK</button>
-    </div>
-  </div>
-
-  <!-- ─── LEADERBOARD PANEL ─── -->
-  <div id="leaderboardPanel" class="hidden panel-overlay">
-    <div class="panel-box leaderboard-box">
-      <h2 class="panel-title">🏆 LEADERBOARD</h2>
-      <div class="leaderboard-filters">
-        <button class="filter-btn active" data-filter="allTime">🏆 Scores</button>
-        <button class="filter-btn" data-filter="coins">🪙 Coins</button>
-        <button class="filter-btn" data-filter="level">⭐ Level</button>
-        <button class="filter-btn" data-filter="timeattack">⏱ Time Attack</button>
-        <button class="filter-btn" data-filter="bossrush">👹 Boss Rush</button>
-        <button class="filter-btn" data-filter="ranked">⚔️ Ranked</button>
-      </div>
-      <div id="leaderboardList" class="leaderboard-list">
-        <div class="loading-spinner">Loading...</div>
-      </div>
-      <button class="panel-back-btn" id="leaderboardBackBtn">← BACK</button>
-    </div>
-  </div>
-
-  <!-- ─── UPDATE LOGS PANEL ─── -->
-  <div id="updateLogsPanel" class="hidden panel-overlay">
-    <div class="panel-box updates-box">
-      <h2 class="panel-title">📋 UPDATE LOGS</h2>
-
-      <!-- Version 4.1.0 - SHOP REVAMP & ECONOMY UPDATE -->
-      <div class="update-entry">
-        <div class="update-header">
-          <div class="update-version">v4.1.0 - SHOP REVAMP &amp; ECONOMY UPDATE</div>
-        </div>
-        <div>
-          <span class="update-category new">NEW</span>
-          <span class="update-category improved">IMPROVED</span>
-          <span class="update-category fixed">FIXED</span>
-        </div>
-        <div class="update-content">
-          <ul>
-            <li><strong>🏆 Champion Skins Section:</strong> Gold, Silver, and Bronze Champion skins now have their own dedicated section in the Skins tab with rank labels and gold-border styling. They are clearly marked as Leaderboard Exclusive and non-tradeable.</li>
-            <li><strong>⛔ Champion Trading Restriction:</strong> Champion skins are permanently blocked from the Marketplace at three independent security layers — client pre-check, server eligibility, and atomic Firestore transaction. No exploit can bypass all three.</li>
-            <li><strong>🛒 Shop Access — Legacy Accounts:</strong> Existing accounts created before this update now have immediate Marketplace access. New accounts registered after v4.1.0 still wait the standard 7 days.</li>
-            <li><strong>🎨 Oblivion Crate:</strong> Price updated to 15,000 coins. All 10 Oblivion skins now display correctly in the shop with unique dark gradient previews (previously appeared invisible).</li>
-            <li><strong>💰 Economy Rebalance:</strong> Enemy coin values increased (fast/basic: 1→2, tanks: 4→5, enforcers: 6→8, minibosses: 10→14). Wave clear bonus formula improved (was wave×2.5, now wave×4+15 so Wave 1 gives 19 coins instead of 2). Boss kill rewards increased ~25% at all tiers.</li>
-            <li><strong>⚡ XP Progression:</strong> Battle Pass XP rates buffed — perKill 5→6, perWave 22→26, match completion 35→50. Boss and elite kill XP multipliers improved. All 50 free track tier coin rewards increased 30–40%.</li>
-            <li><strong>🏪 Marketplace Pricing Fixed:</strong> Icon skins were incorrectly priced at 25,000 coin floor on the Marketplace (same as Mythic) despite coming from a 1,000 coin crate — fixed to 500–4,000 range. Duplicate `icon` key bug in RARITY_PRICING removed. Shop skin tier thresholds corrected so Diamond maps to Epic and Celestial Nexus to Mythic.</li>
-            <li><strong>🔧 Admin Panel:</strong> New Trade Restriction controls let admins block/unblock any skin from the Marketplace and view all active restrictions. New Skin Price Editor adjusts shop skin prices live without a deploy. New Crate Price Editor adjusts crate costs live. All changes are logged to Firestore for audit.</li>
-          </ul>
-        </div>
-      </div>
-
-      <!-- Version 4.0.0 - THE EVERYTHING UPDATE -->
-      <div class="update-entry">
-        <div class="update-header">
-          <div class="update-version">v4.0.0 - THE EVERYTHING UPDATE</div>
-        </div>
-        <div>
-          <span class="update-category new">NEW</span>
-          <span class="update-category improved">IMPROVED</span>
-          <span class="update-category fixed">FIXED</span>
-        </div>
-        <div class="update-content">
-          <ul>
-            <li><strong>🎫 BATTLE PASS SEASON 1:</strong> 50-tier progression system with free and premium tracks! Earn XP from kills (5 XP), waves (22 XP), and match completions (35 XP) with boss kill multipliers. Premium Pass available for 2,500 coins</li>
-            <li><strong>🎨 7 Battle Pass Exclusive Skins:</strong> Striker (Tier 5), Guardian (Tier 10), Phantom (Tier 20), Tempest (Tier 30), Eclipse (Tier 40), Sovereign (Tier 45), and the legendary Apex Predator (Tier 50)</li>
-            <li><strong>📦 CRATE SYSTEM:</strong> 5 crate types — Common (500), Rare (1,200), Epic (2,500), Legendary (5,000), and Icon Skins (1,000) — with CS2-style spinning reel animations, tick sounds, and rarity-based landing effects</li>
-            <li><strong>🎰 40+ Crate-Exclusive Skins:</strong> 6 rarity tiers from Common to Mythic — including Omnichrome, Singularity, God Mode, Rift, and more. Duplicates convert to coins based on rarity</li>
-            <li><strong>👤 Icon Skins Collection:</strong> 10 special friend-themed skins obtainable only from Icon Crates — Noah, Keegan, Dpoe, Evan, Gavin, Carter, Brody, Sterling, Justin, and the ultra-rare THE CREATOR (0.5% drop rate)</li>
-            <li><strong>🔎 Crate Index Browser:</strong> Browse all possible drops from any crate before opening — see drop chances, rarity tiers, and which skins you already own</li>
-            <li><strong>✨ Celestial Nexus Skin:</strong> New ultimate shop skin for 25,000 coins with 80-second cosmic color cycles through deep purple, cyan nebula, and golden energy phases</li>
-            <li><strong>💨 DASH ABILITY:</strong> Press Spacebar for a burst of speed (6x movement for 0.15s). 3-second cooldown with visual indicator, expanding rings, and cyan trail particles</li>
-            <li><strong>⚔️ Enforcer Enemy:</strong> New elite enemy type spawning on wave 16+ with a telegraphed dash attack. Watch for the cyan charge-up glow!</li>
-            <li><strong>🔥 Combo System:</strong> Chain kills within 3 seconds to build combos. Hit 5+ kills for an animated combo counter with gold glow effects</li>
-            <li><strong>🌊 Wave Announcements:</strong> Large animated "WAVE #" banner with bounce-in animation at the start of each wave</li>
-            <li><strong>🌈 Cosmetics Tab:</strong> New shop tab for equipping trails and death effects earned from the Battle Pass</li>
-            <li><strong>☄️ Trail Effects (4 Types):</strong> Comet (cyan), Lightning (yellow), Flame (orange), and Void (purple) — particle trails that follow your player</li>
-            <li><strong>💀 Death Effects (2 Types):</strong> Starburst (100 rainbow particles) and Supernova (200 particles with shockwave) — triggered on player death</li>
-            <li><strong>🏅 Titles & Badges:</strong> Earn "Battle Born", "Season Warrior", and "Elite Operative" titles plus profile badges through Battle Pass progression</li>
-            <li><strong>⭐ Level Leaderboard:</strong> New separate leaderboard tracking Battle Pass level progression — compete beyond just high scores</li>
-            <li><strong>📢 Announcements System:</strong> In-game announcements from admins with priority levels (normal/high/urgent), expiry dates, and seen tracking</li>
-            <li><strong>🛡️ Anti-Cheat v2:</strong> Advanced score validation with plausibility checks, kill rate analysis, submission rate limiting, session tracking, and automatic bans for impossible scores</li>
-            <li><strong>🚫 Username Filter:</strong> Smart filtering with leet speak normalization, duplicate letter compression, and content filtering on signup</li>
-            <li><strong>🎯 FPS Counter:</strong> Toggleable FPS display in settings — color-coded green/yellow/red based on performance</li>
-            <li><strong>💾 Smart Save System:</strong> Intelligent save throttling with 30-second minimum intervals, 5-second batching, critical event priority (game over, purchases, level-ups), and automatic retry with exponential backoff on failure</li>
-            <li><strong>🔧 Admin Flagged Scores:</strong> Admin panel now shows flagged suspicious scores with severity levels, kill rates, and ban/dismiss actions</li>
-            <li><strong>🐛 Leaderboard Fix:</strong> Fixed leaderboard entries not rendering correctly due to CSS class mismatch — top 3 now properly highlighted with gold, silver, and bronze styling</li>
-            <li><strong>⚡ Performance:</strong> Particle cap (500 max) prevents lag on high waves, optimized Firebase reads with stats caching, admin pagination, and reduced redundant announcement fetches</li>
-          </ul>
-        </div>
-      </div>
-
-      <!-- Version 3.0.0 - MASSIVE UPDATE -->
-      <div class="update-entry">
-        <div class="update-header">
-          <div class="update-version">v3.0.0 - MASSIVE UPDATE</div>
-        </div>
-        <div>
-          <span class="update-category new">NEW</span>
-          <span class="update-category improved">IMPROVED</span>
-          <span class="update-category fixed">BALANCE</span>
-        </div>
-        <div class="update-content">
-          <ul>
-            <li><strong>🏆 EXCLUSIVE CHAMPION SKINS:</strong> Top 3 leaderboard players automatically receive divine animated skins - Gold Champion (1st), Silver Champion (2nd), Bronze Champion (3rd) - featuring multi-layered visual effects beyond even Quantum Flux!</li>
-            <li><strong>🪙 Coins Leaderboard:</strong> New separate leaderboard tracking total coins earned. Compete in BOTH score and coins!</li>
-            <li><strong>💀 Legendary Boss (0.1%):</strong> Ultra-rare Legendary Destroyer with 0.1% spawn chance after wave 3. Features 5 difficulty phases, complex attack patterns (lava eruptions, plasma arcs, prismatic coronas), and massive rewards (5,500+ points, 550+ coins, 24 power-ups)</li>
-            <li><strong>Permanent Upgrades System:</strong> Three types of permanent upgrades - Weapon, Max HP, and Speed (all 12% drop rate)</li>
-            <li><strong>Max HP Upgrade ♥:</strong> Increase maximum health by +20 HP per level (up to 160 HP total)</li>
-            <li><strong>Speed Upgrade ⟫:</strong> Boost movement speed by +15% per level (up to 45% faster)</li>
-            <li><strong>Quantum Flux Skin ⚛️:</strong> New legendary 10,000 coin skin with chromatic aberration, orbiting particles, and reality-bending glitch effects</li>
-            <li><strong>Global Leaderboard:</strong> Compete worldwide with daily, weekly, and all-time rankings</li>
-            <li><strong>Admin Panel:</strong> Full moderation tools (ban users, manage scores, view activity logs, dev console)</li>
-            <li><strong>Update Logs Panel:</strong> Track all game changes in one place</li>
-            <li><strong>Boss Balance:</strong> Wave 15+ MEGA BOSS slightly easier (reduced phase 3 bullet density), Wave 5-10 Boss slightly harder (faster movement)</li>
-            <li><strong>Cloud Saves:</strong> Progress automatically saves to Firebase for logged-in users</li>
-            <li><strong>Dev Console:</strong> In-game developer tools for admins (press ~ during gameplay)</li>
-            <li><strong>Auto Champion System:</strong> Champion skins automatically granted and revoked in real-time based on leaderboard position</li>
-          </ul>
-        </div>
-      </div>
-
-      <!-- Version 2.1.0 -->
-      <div class="update-entry">
-        <div class="update-header">
-          <div class="update-version">v2.1.0 - Enhanced Cursor</div>
-        </div>
-        <div>
-          <span class="update-category new">NEW</span>
-          <span class="update-category improved">IMPROVED</span>
-        </div>
-        <div class="update-content">
-          <ul>
-            <li><strong>Custom Cursor:</strong> Bright, glowing crosshair cursor for better visibility on all displays</li>
-            <li><strong>Cursor Visibility:</strong> Cursor stays visible when hovering over buttons and UI elements</li>
-            <li><strong>Update Logs:</strong> This panel to track game changes</li>
-          </ul>
-        </div>
-      </div>
-
-      <!-- Version 2.0.0 -->
-      <div class="update-entry">
-        <div class="update-header">
-          <div class="update-version">v2.0.0 - Firebase Integration</div>
-        </div>
-        <div>
-          <span class="update-category new">NEW</span>
-          <span class="update-category improved">IMPROVED</span>
-        </div>
-        <div class="update-content">
-          <ul>
-            <li><strong>User Accounts:</strong> Firebase authentication with login and signup</li>
-            <li><strong>Global Leaderboard:</strong> Online leaderboard with rankings</li>
-            <li><strong>Admin Panel:</strong> Complete admin tools for user management</li>
-            <li><strong>Cloud Save:</strong> Progress saves to the cloud automatically</li>
-            <li><strong>Guest Mode:</strong> Play without signing up (local save only)</li>
-          </ul>
-        </div>
-      </div>
-
-      <!-- Version 1.5.0 -->
-      <div class="update-entry">
-        <div class="update-header">
-          <div class="update-version">v1.5.0 - Shop System</div>
-        </div>
-        <div>
-          <span class="update-category new">NEW</span>
-        </div>
-        <div class="update-content">
-          <ul>
-            <li><strong>Shop:</strong> Unlock character skins with coins</li>
-            <li><strong>Coin System:</strong> Earn coins by killing enemies and clearing waves</li>
-            <li><strong>Skins:</strong> Multiple unique character skins to collect</li>
-            <li><strong>Skin Preview:</strong> See skins before purchasing</li>
-          </ul>
-        </div>
-      </div>
-
-      <!-- Version 1.4.0 -->
-      <div class="update-entry">
-        <div class="update-header">
-          <div class="update-version">v1.4.0 - Polish Update</div>
-        </div>
-        <div>
-          <span class="update-category improved">IMPROVED</span>
-          <span class="update-category fixed">FIXED</span>
-        </div>
-        <div class="update-content">
-          <ul>
-            <li><strong>UI Redesign:</strong> Modern glassmorphism UI with better visual hierarchy</li>
-            <li><strong>Settings Panel:</strong> Toggle sound, particles, screen shake, and more</li>
-            <li><strong>Active Buffs Display:</strong> Visual indicators for all active power-ups</li>
-            <li><strong>Performance:</strong> Optimized particle system and collision detection</li>
-            <li><strong>Bug Fixes:</strong> Fixed boss spawn timing and power-up drop rates</li>
-          </ul>
-        </div>
-      </div>
-
-      <!-- Version 1.3.0 -->
-      <div class="update-entry">
-        <div class="update-header">
-          <div class="update-version">v1.3.0 - Boss Battles</div>
-        </div>
-        <div>
-          <span class="update-category new">NEW</span>
-        </div>
-        <div class="update-content">
-          <ul>
-            <li><strong>Boss Fights:</strong> Epic boss battles every 5 waves</li>
-            <li><strong>Boss Patterns:</strong> Rotating bullet patterns that increase in complexity</li>
-            <li><strong>Mini-Bosses:</strong> Rare purple elite enemies with special attacks</li>
-            <li><strong>Wave Announcements:</strong> Dramatic wave transition animations</li>
-          </ul>
-        </div>
-      </div>
-
-      <!-- Version 1.2.0 -->
-      <div class="update-entry">
-        <div class="update-header">
-          <div class="update-version">v1.2.0 - Power-Ups</div>
-        </div>
-        <div>
-          <span class="update-category new">NEW</span>
-        </div>
-        <div class="update-content">
-          <ul>
-            <li><strong>Power-Up System:</strong> Health, Rapid Fire, Speed Boost, Shield, and Weapon Upgrades</li>
-            <li><strong>Drop Mechanics:</strong> 20% chance to drop from enemies</li>
-            <li><strong>Visual Effects:</strong> Glowing power-up orbs with pulsing animations</li>
-            <li><strong>Weapon Progression:</strong> Upgrade from single → double → triple shot</li>
-          </ul>
-        </div>
-      </div>
-
-      <!-- Version 1.1.0 -->
-      <div class="update-entry">
-        <div class="update-header">
-          <div class="update-version">v1.1.0 - Abilities & Combat</div>
-        </div>
-        <div>
-          <span class="update-category new">NEW</span>
-        </div>
-        <div class="update-content">
-          <ul>
-            <li><strong>Dash Ability:</strong> Invulnerable dash with 3-second cooldown</li>
-            <li><strong>Enemy Variety:</strong> Normal, Fast, Tank, and Shooter enemy types</li>
-            <li><strong>Combo System:</strong> Chain kills for bonus points (10% per level)</li>
-            <li><strong>Particle Effects:</strong> Explosions and visual feedback</li>
-          </ul>
-        </div>
-      </div>
-
-      <!-- Version 1.0.0 -->
-      <div class="update-entry">
-        <div class="update-header">
-          <div class="update-version">v1.0.0 - Initial Release</div>
-        </div>
-        <div>
-          <span class="update-category new">NEW</span>
-        </div>
-        <div class="update-content">
-          <ul>
-            <li><strong>Core Gameplay:</strong> Wave-based survival shooter</li>
-            <li><strong>Player Movement:</strong> WASD controls with mouse aiming</li>
-            <li><strong>Basic Enemies:</strong> Standard red enemy spawns</li>
-            <li><strong>Shooting:</strong> Click to shoot, auto-fire when holding</li>
-            <li><strong>High Score:</strong> Local storage persistence</li>
-          </ul>
-        </div>
-      </div>
-
-      <button class="panel-back-btn" id="updateLogsBackBtn">← BACK</button>
-    </div>
-  </div>
-
-  <!-- ─── ACHIEVEMENTS PANEL ─── -->
-  <div id="achievementsPanel" class="hidden panel-overlay">
-    <div class="panel-box ach-panel-box">
-      <h2 class="panel-title">🏆 ACHIEVEMENTS</h2>
-
-      <!-- Grand reward -->
-      <div id="achGrandReward" class="ach-grand-reward">
-        <div class="ach-grand-icon">✨</div>
-        <div class="ach-grand-info">
-          <div class="ach-grand-name">TRANSCENDENCE SKIN</div>
-          <div id="achGrandStatus" class="ach-grand-sub">Complete all achievements to unlock</div>
-        </div>
-        <div id="achProgressCount" class="ach-progress-count">0 / 12</div>
-      </div>
-
-      <!-- Achievement grid -->
-      <div id="achievementsGrid" class="ach-grid"></div>
-
-      <button class="panel-back-btn" id="achievementsBackBtn">← BACK</button>
-    </div>
-  </div>
+  <!-- updateLogsPanel + achievementsPanel removed — content moved to lobby tabs -->
 
   <!-- ─── ADMIN PANEL ─── -->
   <div id="adminPanel" class="hidden panel-overlay">

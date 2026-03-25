@@ -678,6 +678,8 @@ function showRankedEndOverlay({ rpDelta, won, result, wavesCleared, targetWaves 
     document.getElementById('homeCoinsVal').textContent  = typeof playerCoins !== 'undefined' ? playerCoins : '';
     if (typeof updateXPDisplay === 'function') updateXPDisplay();
     updateRankedBadge();
+    if (typeof _syncLobbyBar === 'function') _syncLobbyBar();
+    if (typeof switchLobbyTab === 'function') switchLobbyTab('play');
   });
 }
 

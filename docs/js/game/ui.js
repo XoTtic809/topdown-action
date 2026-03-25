@@ -16,17 +16,27 @@ function hideAuthModal() {
 function updateUIForLoggedInUser() {
   hideAuthModal();
   const userStatus      = document.getElementById('userStatus');
-  const usernameDisplay = document.getElementById('usernameDisplay');
   const adminBtn        = document.getElementById('adminBtn');
 
   if (userStatus)      userStatus.classList.remove('hidden');
-  if (usernameDisplay) usernameDisplay.textContent = currentUser.displayName || currentUser.email;
   if (adminBtn)        adminBtn.classList.toggle('hidden', !isAdmin);
+
+  // Update lobby bar
+  const name = currentUser.displayName || currentUser.email;
+  const lbarName = document.getElementById('lbarUsername');
+  if (lbarName) lbarName.textContent = name;
+  const lbarCoins = document.getElementById('lbarCoins');
+  if (lbarCoins) lbarCoins.textContent = playerCoins;
+
+  // Hide guest auth prompt in play tab, show sidebar
+  document.getElementById('playGuestAuth')?.classList.add('hidden');
+  document.getElementById('playSidebar')?.classList.remove('hidden');
 
   // Render equipped skin as avatar
   _renderHomeAvatar();
 
   document.getElementById('homeScreen')?.classList.remove('hidden');
+  if (typeof switchLobbyTab === 'function') switchLobbyTab('play');
   // Refresh chat widget visibility now that the user is logged in
   if (typeof window.chatRefreshVisibility === 'function') window.chatRefreshVisibility();
 }
@@ -36,12 +46,9 @@ function updateUIForGuest() {
   isGuest = true;
 
   document.getElementById('userStatus')?.classList.add('hidden');
-  document.getElementById('leaderboardBtn')?.classList.add('hidden');
   document.getElementById('adminBtn')?.classList.add('hidden');
 
   // Restore guest data from localStorage so returning guests keep their progress.
-  // Do NOT reset to 0 — game.js already read these on page load; reassigning here
-  // would wipe any data that was saved from a previous guest session.
   high        = Number(localStorage.getItem('highscore')  || 0);
   playerCoins = Number(localStorage.getItem('playerCoins') || 0);
   ownedSkins  = JSON.parse(localStorage.getItem('ownedSkins')  || '["agent"]');
@@ -49,7 +56,18 @@ function updateUIForGuest() {
 
   document.getElementById('homeHighVal').textContent  = high;
   document.getElementById('homeCoinsVal').textContent = playerCoins;
+
+  // Update lobby bar for guest
+  const lbarName = document.getElementById('lbarUsername');
+  if (lbarName) lbarName.textContent = 'Guest';
+  const lbarCoins = document.getElementById('lbarCoins');
+  if (lbarCoins) lbarCoins.textContent = playerCoins;
+
+  // Show guest auth prompt in play tab, hide sidebar stats
+  document.getElementById('playGuestAuth')?.classList.remove('hidden');
+
   document.getElementById('homeScreen')?.classList.remove('hidden');
+  if (typeof switchLobbyTab === 'function') switchLobbyTab('play');
   // Hide chat setting row — guests cannot access chat
   if (typeof window.chatRefreshVisibility === 'function') window.chatRefreshVisibility();
 }
@@ -127,10 +145,33 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // ── Guest ───────────────────────────────────────────────────
+  // ── Guest (auth modal) ────────────────────────────────────
   document.getElementById('playGuestBtn')?.addEventListener('click', () => {
     updateUIForGuest();
     setTimeout(checkForNewAnnouncements, 800);
+  });
+
+  // ── Guest (lobby play tab prompt) ─────────────────────────
+  document.getElementById('lobbyGuestBtn')?.addEventListener('click', () => {
+    updateUIForGuest();
+    setTimeout(checkForNewAnnouncements, 800);
+  });
+
+  // ── Login/signup from lobby play tab ──────────────────────
+  document.getElementById('playLoginBtn')?.addEventListener('click', () => {
+    showAuthModal();
+    // Switch to login tab
+    document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+    document.querySelector('.auth-tab[data-tab="login"]')?.classList.add('active');
+    document.getElementById('loginForm')?.classList.remove('hidden');
+    document.getElementById('signupForm')?.classList.add('hidden');
+  });
+  document.getElementById('playSignupBtn')?.addEventListener('click', () => {
+    showAuthModal();
+    document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+    document.querySelector('.auth-tab[data-tab="signup"]')?.classList.add('active');
+    document.getElementById('loginForm')?.classList.add('hidden');
+    document.getElementById('signupForm')?.classList.remove('hidden');
   });
 
   // ── Local dev tools (localhost only) ───────────────────────
@@ -145,7 +186,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!email) { if (msgEl) { msgEl.textContent = 'Enter your account email first.'; msgEl.style.color = '#ff6b7a'; } return; }
 
       btn.disabled    = true;
-      btn.textContent = 'Promoting…';
+      btn.textContent = 'Promoting\u2026';
       if (msgEl) { msgEl.textContent = ''; }
 
       try {
@@ -156,16 +197,16 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         const data = await res.json();
         if (data.success) {
-          if (msgEl) { msgEl.textContent = `✅ ${data.username} is now admin. Log in to activate.`; msgEl.style.color = '#6bff7b'; }
+          if (msgEl) { msgEl.textContent = `\u2705 ${data.username} is now admin. Log in to activate.`; msgEl.style.color = '#6bff7b'; }
         } else {
-          if (msgEl) { msgEl.textContent = `❌ ${data.error}`; msgEl.style.color = '#ff6b7a'; }
+          if (msgEl) { msgEl.textContent = `\u274c ${data.error}`; msgEl.style.color = '#ff6b7a'; }
         }
       } catch (e) {
-        if (msgEl) { msgEl.textContent = '❌ Could not reach local server.'; msgEl.style.color = '#ff6b7a'; }
+        if (msgEl) { msgEl.textContent = '\u274c Could not reach local server.'; msgEl.style.color = '#ff6b7a'; }
       }
 
       btn.disabled    = false;
-      btn.textContent = '⚡ MAKE ADMIN (local only)';
+      btn.textContent = '\u26a1 MAKE ADMIN (local only)';
     });
   }
 
@@ -178,49 +219,16 @@ document.addEventListener('DOMContentLoaded', () => {
     showAuthModal();
   });
 
-  // ── Leaderboard ─────────────────────────────────────────────
-  let _activeLeaderboardFilter = 'allTime';
-
-  document.getElementById('leaderboardBtn')?.addEventListener('click', () => {
-    document.getElementById('homeScreen')?.classList.add('hidden');
-    document.getElementById('leaderboardPanel')?.classList.remove('hidden');
-    // Restore the last-viewed tab
-    document.querySelectorAll('.filter-btn').forEach(b => {
-      b.classList.toggle('active', b.dataset.filter === _activeLeaderboardFilter);
-    });
-    displayLeaderboard(_activeLeaderboardFilter);
-  });
-
-  document.getElementById('leaderboardBackBtn')?.addEventListener('click', () => {
-    document.getElementById('leaderboardPanel')?.classList.add('hidden');
-    document.getElementById('homeScreen')?.classList.remove('hidden');
-  });
-
+  // ── Leaderboard filter buttons (inside compete tab) ────────
   document.querySelectorAll('.filter-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
-      _activeLeaderboardFilter = btn.dataset.filter;
       displayLeaderboard(btn.dataset.filter);
     });
   });
 
-  // ── Support ──────────────────────────────────────────────────
-  document.getElementById('supportBtn')?.addEventListener('click', () => {
-    document.getElementById('homeScreen')?.classList.add('hidden');
-    document.getElementById('supportPanel')?.classList.remove('hidden');
-    const authWarning = document.getElementById('supportAuthWarning');
-    const form        = document.getElementById('supportForm');
-    const isLoggedIn  = !isGuest && currentUser;
-    authWarning?.classList.toggle('hidden', isLoggedIn);
-    form?.classList.toggle('hidden', !isLoggedIn);
-  });
-
-  document.getElementById('supportBackBtn')?.addEventListener('click', () => {
-    document.getElementById('supportPanel')?.classList.add('hidden');
-    document.getElementById('homeScreen')?.classList.remove('hidden');
-  });
-
+  // ── Support form ───────────────────────────────────────────
   document.getElementById('supportForm')?.addEventListener('submit', async (e) => {
     e.preventDefault();
     const type        = document.getElementById('reportType').value;
@@ -249,39 +257,37 @@ document.addEventListener('DOMContentLoaded', () => {
     const result = await submitReport(type, subject, description);
 
     if (result.success) {
-      showSupportMsg('✅ Report submitted! We review every report.', true);
+      showSupportMsg('\u2705 Report submitted! We review every report.', true);
       document.getElementById('reportSubject').value     = '';
       document.getElementById('reportDescription').value = '';
     } else {
       showSupportMsg(result.error || 'Failed to submit. Please try again.', false);
     }
 
-    btn.textContent = '📨 SUBMIT REPORT';
+    btn.textContent = '\ud83d\udce8 SUBMIT REPORT';
     btn.disabled    = false;
   });
 
-  // ── Update logs ─────────────────────────────────────────────
-  document.getElementById('updateLogsBtn')?.addEventListener('click', () => {
-    document.getElementById('homeScreen')?.classList.add('hidden');
-    document.getElementById('updateLogsPanel')?.classList.remove('hidden');
+  // ── Support tab auth check ─────────────────────────────────
+  // When switching to support tab, show/hide form vs auth warning
+  const _origSwitchLobbyTab = typeof switchLobbyTab === 'function' ? switchLobbyTab : null;
+  if (_origSwitchLobbyTab) {
+    const _patchedSwitch = window.switchLobbyTab;
+    // We'll use a MutationObserver or just check on tab show
+  }
+  // Simpler: check on form visibility when support tab becomes visible
+  const supportObserver = new MutationObserver(() => {
+    const supportTab = document.getElementById('lobbyTab-support');
+    if (supportTab && !supportTab.classList.contains('hidden')) {
+      const authWarning = document.getElementById('supportAuthWarning');
+      const form        = document.getElementById('supportForm');
+      const isLoggedIn  = !isGuest && typeof currentUser !== 'undefined' && currentUser;
+      authWarning?.classList.toggle('hidden', !!isLoggedIn);
+      form?.classList.toggle('hidden', !isLoggedIn);
+    }
   });
-
-  document.getElementById('updateLogsBackBtn')?.addEventListener('click', () => {
-    document.getElementById('updateLogsPanel')?.classList.add('hidden');
-    document.getElementById('homeScreen')?.classList.remove('hidden');
-  });
-
-  // ── Achievements ─────────────────────────────────────────────
-  document.getElementById('achievementsBtn')?.addEventListener('click', () => {
-    document.getElementById('homeScreen')?.classList.add('hidden');
-    document.getElementById('achievementsPanel')?.classList.remove('hidden');
-    if (typeof renderAchievementsPanel === 'function') renderAchievementsPanel();
-  });
-
-  document.getElementById('achievementsBackBtn')?.addEventListener('click', () => {
-    document.getElementById('achievementsPanel')?.classList.add('hidden');
-    document.getElementById('homeScreen')?.classList.remove('hidden');
-  });
+  const supportTab = document.getElementById('lobbyTab-support');
+  if (supportTab) supportObserver.observe(supportTab, { attributes: true, attributeFilter: ['class'] });
 
   // ── Admin panel ─────────────────────────────────────────────
   document.getElementById('myProfileBtn')?.addEventListener('click', () => {
@@ -290,14 +296,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
   document.getElementById('adminBtn')?.addEventListener('click', () => {
     if (!isAdmin) return;
-    document.getElementById('homeScreen')?.classList.add('hidden');
     document.getElementById('adminPanel')?.classList.remove('hidden');
     displayBannedUsers();
   });
 
   document.getElementById('adminBackBtn')?.addEventListener('click', () => {
     document.getElementById('adminPanel')?.classList.add('hidden');
-    document.getElementById('homeScreen')?.classList.remove('hidden');
   });
 
   document.querySelectorAll('.admin-tab').forEach(tab => {
@@ -352,9 +356,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
 });
 
-// ── Home screen avatar skin preview ──────────────────────────
+// ── Lobby bar avatar skin preview ───────────────────────────
 function _renderHomeAvatar() {
-  const el = document.getElementById('hsAvatarSkin');
+  const el = document.getElementById('lbarAvatarSkin');
   if (!el) return;
   const skin = typeof activeSkin !== 'undefined' ? activeSkin : 'agent';
   if (typeof applyRichSkinPreview === 'function') {
@@ -365,4 +369,4 @@ function _renderHomeAvatar() {
   }
 }
 
-console.log('✅ ui.js loaded');
+console.log('\u2705 ui.js loaded');

@@ -379,8 +379,7 @@ canvas {
 #homeScreen {
   position: absolute; inset: 0;
   display: flex;
-  align-items: center;
-  justify-content: center;
+  flex-direction: column;
   z-index: 50;
   overflow: hidden;
   background: radial-gradient(ellipse 120% 80% at 25% 45%, #091830 0%, #060c18 65%);
@@ -2803,6 +2802,367 @@ canvas {
 .leaderboard-box::-webkit-scrollbar-thumb {
   background: rgba(88,166,255,0.3);
   border-radius: 4px;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   LOBBY LAYOUT  (lnav-, lbar-, ltab- prefixes)
+   ═══════════════════════════════════════════════════════════ */
+
+/* ── Top Navbar ───────────────────────────────────────────── */
+#lobbyNav {
+  position: relative;
+  z-index: 2;
+  height: 52px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: stretch;
+  background: rgba(8,16,32,0.92);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(88,166,255,0.15);
+  user-select: none;
+}
+
+.lnav-brand {
+  display: flex;
+  align-items: center;
+  padding: 0 22px;
+  font-family: var(--font-title);
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  color: var(--accent);
+  text-shadow: 0 0 18px rgba(88,166,255,0.35);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.lnav-tabs {
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  flex: 1;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.lnav-tabs::-webkit-scrollbar { display: none; }
+
+.lnav-tab {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 20px;
+  color: var(--muted);
+  font-weight: 600;
+  font-size: 12.5px;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  background: none;
+  border: none;
+  border-bottom: 3px solid transparent;
+  cursor: pointer;
+  transition: color 0.2s, border-color 0.25s, background 0.2s;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.lnav-tab:hover {
+  color: var(--accent2);
+  background: rgba(88,166,255,0.05);
+}
+
+.lnav-tab.active {
+  color: #fff;
+  border-bottom-color: var(--accent);
+  text-shadow: 0 0 12px rgba(88,166,255,0.35);
+}
+
+.lnav-tab-icon {
+  font-size: 16px;
+  padding: 0 16px;
+}
+
+/* ── Content Area ─────────────────────────────────────────── */
+#lobbyContent {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  position: relative;
+  z-index: 1;
+  padding: 24px 32px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(88,166,255,0.3) transparent;
+}
+#lobbyContent::-webkit-scrollbar { width: 6px; }
+#lobbyContent::-webkit-scrollbar-track { background: transparent; }
+#lobbyContent::-webkit-scrollbar-thumb { background: rgba(88,166,255,0.3); border-radius: 4px; }
+
+.ltab-content {
+  max-width: 1100px;
+  margin: 0 auto;
+  width: 100%;
+  animation: fadeIn 0.18s ease;
+}
+
+/* ── Bottom Bar ───────────────────────────────────────────── */
+#lobbyBar {
+  position: relative;
+  z-index: 2;
+  height: 64px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  background: rgba(8,16,32,0.95);
+  backdrop-filter: blur(16px);
+  border-top: 1px solid rgba(88,166,255,0.15);
+}
+
+.lbar-player {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.lbar-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: rgba(88,166,255,0.1);
+  border: 2px solid rgba(88,166,255,0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.lbar-info {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.lbar-name {
+  font-weight: 700;
+  font-size: 13px;
+  color: #dbe7ff;
+}
+
+.lbar-level {
+  font-size: 11px;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.lbar-coins {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--gold);
+  margin-left: 8px;
+}
+
+.lbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.lbar-logout-btn {
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 8px;
+  padding: 8px 14px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.lbar-logout-btn:hover {
+  background: rgba(255,71,87,0.15);
+  border-color: rgba(255,71,87,0.4);
+  color: var(--danger);
+}
+
+.lbar-admin-btn {
+  background: rgba(255,165,0,0.1);
+  border: 1px solid rgba(255,165,0,0.3);
+  border-radius: 8px;
+  padding: 8px 14px;
+  color: #ffa500;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.lbar-admin-btn:hover {
+  background: rgba(255,165,0,0.2);
+  border-color: rgba(255,165,0,0.5);
+}
+
+.lbar-start-btn {
+  background: linear-gradient(135deg, #5db5ff 0%, #3a8fff 45%, #1a6fe0 100%);
+  border: none;
+  border-radius: 10px;
+  padding: 10px 32px;
+  color: #fff;
+  font-family: var(--font-title);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.25s;
+  box-shadow: 0 0 20px rgba(88,166,255,0.3), 0 4px 12px rgba(0,0,0,0.3);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.lbar-start-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 0 30px rgba(88,166,255,0.45), 0 6px 16px rgba(0,0,0,0.3);
+}
+.lbar-start-btn:active {
+  transform: translateY(0);
+}
+
+.lbar-start-tri {
+  font-size: 12px;
+}
+
+/* ── PLAY tab layout ─────────────────────────────────────── */
+.play-grid {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 24px;
+  align-items: start;
+}
+
+.play-modes {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+}
+
+.play-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* ── LOCKER / COMPETE sub-tabs ───────────────────────────── */
+.ltab-sub-tabs {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 20px;
+  border-bottom: 1px solid rgba(88,166,255,0.15);
+  padding-bottom: 12px;
+}
+
+.ltab-sub-tab {
+  background: rgba(88,166,255,0.08);
+  border: 1px solid rgba(88,166,255,0.2);
+  border-radius: 20px;
+  padding: 7px 18px;
+  color: var(--muted);
+  font-weight: 600;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.25s;
+}
+.ltab-sub-tab:hover {
+  background: rgba(88,166,255,0.15);
+  border-color: rgba(88,166,255,0.4);
+  color: var(--accent2);
+}
+.ltab-sub-tab.active {
+  background: linear-gradient(135deg, rgba(88,166,255,0.3), rgba(88,166,255,0.15));
+  border-color: var(--accent);
+  color: #fff;
+  box-shadow: 0 0 8px rgba(88,166,255,0.2);
+}
+
+/* ── Mode card selection ──────────────────────────────────── */
+.mode-card.selected {
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 16px rgba(88,166,255,0.35), inset 0 0 30px rgba(88,166,255,0.08);
+}
+.mode-card.selected::after {
+  content: '\2713';
+  position: absolute;
+  top: 10px; right: 12px;
+  font-size: 18px;
+  color: var(--accent);
+  font-weight: 700;
+}
+@keyframes mode-card-flash {
+  0%, 100% { border-color: rgba(88,166,255,0.15); }
+  50% { border-color: var(--accent); box-shadow: 0 0 20px rgba(88,166,255,0.4); }
+}
+.mode-card-flash { animation: mode-card-flash 0.3s ease 2; }
+
+/* ── Locker / Compete tab content containers ─────────────── */
+.locker-tab-content, .compete-tab-content { /* shown/hidden via .hidden class */ }
+
+/* ── Guest auth prompt (shown inside tabs for guests) ───── */
+.ltab-guest-prompt {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--muted);
+  font-size: 14px;
+}
+.ltab-guest-prompt button {
+  margin-top: 16px;
+  background: linear-gradient(135deg, #5db5ff, #3a8fff);
+  border: none;
+  border-radius: 8px;
+  padding: 10px 28px;
+  color: #fff;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+/* ── Pause settings overlay (borrows settings DOM) ──────── */
+#pauseSettingsWrap {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(6,12,24,0.85);
+  backdrop-filter: blur(20px);
+  z-index: 55;
+}
+#pauseSettingsWrap .pause-settings-box {
+  background: rgba(13,21,37,0.95);
+  border: 1px solid rgba(88,166,255,0.2);
+  border-radius: 18px;
+  padding: 32px 36px;
+  max-width: 440px;
+  width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+/* ── Responsive ──────────────────────────────────────────── */
+@media (max-width: 860px) {
+  .lnav-brand { display: none; }
+  .lnav-tab { padding: 0 12px; font-size: 11px; }
+  #lobbyContent { padding: 16px; }
+  .play-grid { grid-template-columns: 1fr; }
+  .play-sidebar { order: -1; }
+  #lobbyBar { padding: 0 12px; height: 58px; }
+  .lbar-start-btn { padding: 8px 20px; font-size: 12px; }
+}
+
+@media (max-width: 600px) {
+  .lnav-tab span { display: none; }
+  .lnav-tab { padding: 0 10px; font-size: 14px; }
+  .play-modes { grid-template-columns: 1fr; }
+  .lbar-coins { display: none; }
+  .lbar-level { display: none; }
 }
 
 /* ═══════════════════════════════════════════════════════════
