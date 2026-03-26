@@ -446,125 +446,19 @@ function _createCrateListingCard(listing) {
   return card;
 }
 
-// Returns rich CSS style values for any skin ID — gradients, glows, animations.
-// Matches the visual quality of the crates/skins tabs.
+// Delegates to single source of truth in skin-previews.js
 function getSkinPreviewStyle(skinId) {
-  const S = {
-    // ── Special shop skins ──────────────────────────────────────────────────
-    rainbow:    { bg: 'conic-gradient(red,orange,yellow,green,cyan,blue,violet,red)', sh: '0 0 22px rgba(255,150,0,0.7)', an: 'quantumSpin 3s linear infinite' },
-    galaxy:     { bg: 'linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%)', sh: '0 0 25px #764ba2', an: 'galaxyShimmer 2s ease-in-out infinite' },
-    void:       { bg: 'radial-gradient(circle at 40% 40%, #1a0033 0%, #0d001a 40%, #000000 100%)', sh: '0 0 35px #9900ff, 0 0 60px rgba(153,0,255,0.5)', an: 'voidPulse 3s ease-in-out infinite' },
-    sunset:     { bg: 'linear-gradient(135deg, #ff6b6b 0%, #ffd93d 50%, #ff69b4 100%)', sh: '0 0 20px #ff8c00' },
-    phoenix:    { bg: 'radial-gradient(circle, #ff4500 0%, #ff6347 50%, #ffa500 100%)', sh: '0 0 22px #ff4500', an: 'voidPulse 2s ease-in-out infinite' },
-    diamond:    { bg: 'radial-gradient(circle at 35% 35%, #ffffff 0%, #f0f8ff 20%, #ffe6f0 40%, #fff5e6 60%, #f0f0ff 80%, #ffffff 100%)', sh: '0 0 40px rgba(255,255,255,1), 0 0 70px rgba(255,255,255,0.7)', an: 'diamondShine 2.5s ease-in-out infinite' },
-    quantum:    { bg: 'conic-gradient(from 0deg, #ff0080, #00ffff, #8000ff, #ffff00, #ff0080)', sh: '0 0 35px rgba(255,0,255,0.8)', an: 'quantumSpin 3s linear infinite' },
-    celestial:  { bg: 'radial-gradient(circle at 30% 40%, #b794f6 0%, #4a90e2 30%, #50c9ce 50%, #ffd700 70%, #b794f6 100%)', sh: '0 0 45px rgba(183,148,246,1)', an: 'celestialGlow 4s ease-in-out infinite' },
-    // ── Champion skins ──────────────────────────────────────────────────────
-    'gold-champion':   { bg: 'radial-gradient(circle, #ffd700 0%, #ffed4e 40%, #ffffff 60%, #ffd700 100%)', sh: '0 0 30px #ffd700', an: 'championPulse 2s ease-in-out infinite' },
-    'silver-champion': { bg: 'radial-gradient(circle, #c0c0c0 0%, #e8e8e8 40%, #ffffff 60%, #c0c0c0 100%)', sh: '0 0 30px #c0c0c0', an: 'championPulse 2.2s ease-in-out infinite' },
-    'bronze-champion': { bg: 'radial-gradient(circle, #cd7f32 0%, #e8a87c 40%, #f5d0a9 60%, #cd7f32 100%)', sh: '0 0 30px #cd7f32', an: 'championPulse 2.4s ease-in-out infinite' },
-    // ── Icon skins ──────────────────────────────────────────────────────────
-    icon_noah_brown:      { bg: 'radial-gradient(circle, #9a6033 0%, #6b4423 50%, #3a2010 100%)', sh: '0 0 18px #6b4423' },
-    icon_keegan_baseball: { bg: 'radial-gradient(circle, #f5f5f5 0%, #e0e0d0 50%, #c8c8b0 100%)', sh: '0 0 14px #ddd' },
-    icon_dpoe_fade:       { bg: 'linear-gradient(135deg, #ff69b4 0%, #ff9ec4 50%, #89cff0 100%)', sh: '0 0 22px #ff9ec4' },
-    icon_evan_watermelon: { bg: 'radial-gradient(circle, #ff6b9d 0%, #ff4466 30%, #ff1744 50%, #4caf50 70%, #2e7d32 100%)', sh: '0 0 20px #ff4466' },
-    icon_gavin_tzl:       { bg: 'linear-gradient(135deg, #dc143c 0%, #ffffff 50%, #0047ab 100%)', sh: '0 0 25px #0047ab' },
-    icon_carter_cosmic:   { bg: 'radial-gradient(circle, #ff2020 0%, #cc0000 40%, #660000 70%, #1a0000 100%)', sh: '0 0 25px #cc0000' },
-    icon_brody_flag:      { bg: 'repeating-linear-gradient(to bottom, #b22234 0px, #b22234 8%, #fff 8%, #fff 16%)', sh: '0 0 22px #3c3b6e' },
-    icon_sterling:        { bg: 'radial-gradient(circle at 30% 30%, #0064ff 0%, #0050cc 30%, #003399 60%, #000000 100%)', sh: '0 0 25px #0064ff, 0 0 40px rgba(0,100,255,0.5)' },
-    icon_profe_spain:     { bg: 'linear-gradient(to bottom, #c60b1e 0%, #c60b1e 25%, #ffc400 25%, #ffc400 75%, #c60b1e 75%, #c60b1e 100%)', sh: '0 0 25px #c60b1e, 0 0 40px rgba(255,196,0,0.6)' },
-    icon_kayden_duck:     { bg: 'conic-gradient(from 20deg, #5a6b2a, #c4a265, #3d2b0e, #7a5c28, #5a6b2a)', sh: '0 0 18px rgba(90,107,42,0.7)' },
-    icon_troy_puck:       { bg: 'radial-gradient(circle at 35% 35%, #3a3a3a 0%, #1a1a1a 50%, #050505 100%)', sh: '0 0 20px rgba(200,232,255,0.5)' },
-    icon_justin_clover:   { bg: 'radial-gradient(circle, #39ff14 0%, #1a8c2e 40%, #0d5c1a 70%, #042b0a 100%)', sh: '0 0 25px #39ff14' },
-    icon_the_creator:     { bg: 'conic-gradient(from 0deg, #ff0080, #00ffff, #8000ff, #ffff00, #ff0080)', sh: '0 0 45px white, 0 0 80px rgba(255,215,0,0.6)', an: 'quantumSpin 1.5s linear infinite' },
-    // ── BP Season 1 ─────────────────────────────────────────────────────────
-    bp1_striker:    { bg: 'radial-gradient(circle, #ff8050 0%, #ff6b35 50%, #883010 100%)', sh: '0 0 18px #ff6b35' },
-    bp1_guardian:   { bg: 'radial-gradient(circle, #70ffee 0%, #4ecdc4 50%, #1a6060 100%)', sh: '0 0 18px #4ecdc4' },
-    bp1_phantom:    { bg: 'radial-gradient(circle, #cc88ff 0%, #9b59b6 50%, #4a1a66 100%)', sh: '0 0 20px #9b59b6' },
-    bp1_tempest:    { bg: 'radial-gradient(circle, #80aaff 0%, #3498db 50%, #103055 100%)', sh: '0 0 20px #3498db' },
-    bp1_eclipse:    { bg: 'radial-gradient(circle, #404060 0%, #2c3e50 50%, #0d1520 100%)', sh: '0 0 18px #2c3e50' },
-    bp1_sovereign:  { bg: 'radial-gradient(circle, #ffd060 0%, #f39c12 50%, #6a3a00 100%)', sh: '0 0 22px #f39c12', an: 'celestialGlow 3s ease-in-out infinite' },
-    bp1_apex:       { bg: 'radial-gradient(circle, #ff8888 0%, #e74c3c 40%, #660000 100%)', sh: '0 0 28px #e74c3c', an: 'voidPulse 2s ease-in-out infinite' },
-    // ── Achievement ─────────────────────────────────────────────────────────
-    transcendence:  { bg: 'conic-gradient(from 0deg, #ff0080, #00ffff, #8000ff, #ffff00, #ff0080)', sh: '0 0 55px white, 0 0 90px rgba(255,255,255,0.6)', an: 'quantumSpin 2s linear infinite' },
-    // ── Crate-exclusive (c_) skins ──────────────────────────────────────────
-    c_static:     { bg: 'radial-gradient(circle, #c8c8dc 0%, #808090 60%, #404050 100%)', sh: '0 0 10px #b8b8cc' },
-    c_rust:       { bg: 'radial-gradient(circle, #c06030 0%, #8b4513 55%, #4a2008 100%)', sh: '0 0 12px #8b4513' },
-    c_slate:      { bg: 'radial-gradient(circle, #8090a0 0%, #607080 55%, #303840 100%)', sh: '0 0 10px #708090' },
-    c_olive:      { bg: 'radial-gradient(circle, #9ab040 0%, #6b8e23 55%, #344010 100%)', sh: '0 0 12px #6b8e23' },
-    c_maroon:     { bg: 'radial-gradient(circle, #cc3050 0%, #9b2335 55%, #4a0f1a 100%)', sh: '0 0 12px #9b2335' },
-    c_cobalt:     { bg: 'radial-gradient(circle, #3080ff 0%, #0047ab 55%, #001a60 100%)', sh: '0 0 18px #3080ff' },
-    c_teal:       { bg: 'radial-gradient(circle, #00c8b0 0%, #00897b 55%, #003830 100%)', sh: '0 0 18px #00c8b0' },
-    c_coral:      { bg: 'radial-gradient(circle, #ff9080 0%, #ff6f61 55%, #a02010 100%)', sh: '0 0 18px #ff6f61' },
-    c_sand:       { bg: 'radial-gradient(circle, #e0c870 0%, #c2a25a 55%, #6a5020 100%)', sh: '0 0 16px #c2a25a' },
-    c_chrome:     { bg: 'linear-gradient(135deg, #666 0%, #ddd 25%, #999 50%, #fff 75%, #888 100%)', sh: '0 0 22px #ccc', an: 'quantumSpin 3s linear infinite' },
-    c_prism:      { bg: 'conic-gradient(red,orange,yellow,green,cyan,blue,violet,red)', sh: '0 0 28px white', an: 'quantumSpin 2s linear infinite' },
-    c_aurora:     { bg: 'linear-gradient(180deg, #00ff99 0%, #00aaff 40%, #9900cc 100%)', sh: '0 0 28px #00ff99', an: 'galaxyShimmer 2.5s ease-in-out infinite' },
-    c_lava:       { bg: 'radial-gradient(circle, #ffcc00 0%, #ff4500 45%, #cc0000 75%, #440000 100%)', sh: '0 0 28px #ff4500', an: 'voidPulse 1.5s ease-in-out infinite' },
-    c_storm:      { bg: 'radial-gradient(circle, #c0d8ff 0%, #4080ff 35%, #0020a0 65%, #000820 100%)', sh: '0 0 28px #4080ff', an: 'voidPulse 2s ease-in-out infinite' },
-    c_neon:       { bg: 'linear-gradient(135deg, #ff00cc 0%, #00ffff 50%, #ff00cc 100%)', sh: '0 0 28px #ff00cc, 0 0 50px rgba(0,255,255,0.5)', an: 'quantumSpin 3s linear infinite' },
-    c_glitch:     { bg: 'conic-gradient(#ff0080,#00ffff,#ff0000,#00ff00,#ff00ff,#0000ff,#ff0080)', sh: '0 0 35px #ff0080, 0 0 60px rgba(0,255,255,0.5)', an: 'quantumSpin 0.6s linear infinite' },
-    c_nebula:     { bg: 'radial-gradient(circle at 40% 35%, #ff80cc 0%, #9922cc 35%, #220066 65%, #110033 100%)', sh: '0 0 35px #9922cc', an: 'galaxyShimmer 2s ease-in-out infinite' },
-    c_biohazard:  { bg: 'radial-gradient(circle, #ccff00 0%, #39ff14 30%, #006600 65%, #001a00 100%)', sh: '0 0 35px #39ff14', an: 'voidPulse 1.2s ease-in-out infinite' },
-    c_arctic:     { bg: 'radial-gradient(circle, #ffffff 0%, #aaeeff 25%, #00c8ff 55%, #004466 100%)', sh: '0 0 35px #00e5ff', an: 'galaxyShimmer 3s ease-in-out infinite' },
-    c_wildfire:   { bg: 'radial-gradient(circle, #ffffff 0%, #ffff00 20%, #ff6600 50%, #cc0000 75%, #300000 100%)', sh: '0 0 35px #ff6600', an: 'voidPulse 0.9s ease-in-out infinite' },
-    c_spectre:    { bg: 'radial-gradient(circle, rgba(255,255,255,0.95) 0%, rgba(180,180,255,0.8) 35%, rgba(80,80,200,0.5) 65%, rgba(20,20,80,0.3) 100%)', sh: '0 0 35px rgba(160,160,255,0.9)', an: 'voidPulse 2.5s ease-in-out infinite' },
-    c_supernova:  { bg: 'conic-gradient(white,yellow,orange,red,magenta,blue,cyan,white)', sh: '0 0 45px white, 0 0 80px rgba(255,200,0,0.6)', an: 'quantumSpin 1.5s linear infinite' },
-    c_wraith:     { bg: 'radial-gradient(circle, #8800ff 0%, #440088 30%, #1a0033 60%, #000000 100%)', sh: '0 0 45px #8800ff, 0 0 80px rgba(100,0,255,0.5)', an: 'voidPulse 2s ease-in-out infinite' },
-    c_titan:      { bg: 'radial-gradient(circle, #ffe080 0%, #f5a623 30%, #b87333 60%, #3c1a00 100%)', sh: '0 0 45px #f5a623', an: 'celestialGlow 2.5s ease-in-out infinite' },
-    c_astral:     { bg: 'linear-gradient(135deg, #00e5ff 0%, #7b2ff7 35%, #ff00aa 65%, #00e5ff 100%)', sh: '0 0 45px #7b2ff7', an: 'quantumSpin 4s linear infinite' },
-    c_omnichrome: { bg: 'conic-gradient(red,orange,yellow,lime,cyan,blue,violet,magenta,red)', sh: '0 0 55px white, 0 0 90px rgba(255,255,255,0.7)', an: 'quantumSpin 0.7s linear infinite' },
-    c_singularity:{ bg: 'conic-gradient(#ff0080,#00ffff,#8000ff,#ff0080)', sh: '0 0 55px #7700ff', an: 'quantumSpin 2s linear infinite', fi: 'brightness(0.3) contrast(3)' },
-    c_ultraviolet:{ bg: 'radial-gradient(circle, #ff88ff 0%, #cc00ff 30%, #6600cc 60%, #200033 100%)', sh: '0 0 55px #cc00ff', an: 'voidPulse 1.5s ease-in-out infinite' },
-    c_godmode:    { bg: 'radial-gradient(circle, #ffffff 0%, #fffdd0 20%, #fff59d 50%, #ffd700 80%, #fff 100%)', sh: '0 0 55px white, 0 0 90px rgba(255,215,0,0.8)', an: 'diamondShine 1.8s ease-in-out infinite' },
-    c_rift:       { bg: 'linear-gradient(135deg, #000 0%, #1a0044 25%, #ff00aa 50%, #00ffff 75%, #000 100%)', sh: '0 0 55px #ff00aa', an: 'quantumSpin 2.5s linear infinite' },
-    // ── Oblivion skins ──────────────────────────────────────────────────────
-    ob_duskblade:   { bg: 'radial-gradient(circle, #9055ff 0%, #5a2d8c 40%, #1a0a2e 100%)', sh: '0 0 20px rgba(144,85,255,0.5)', an: 'voidPulse 2s ease-in-out infinite' },
-    ob_voidborn:    { bg: 'radial-gradient(circle, #3355cc 0%, #1a2266 40%, #060618 100%)', sh: '0 0 20px rgba(51,85,204,0.5)', an: 'voidPulse 2.5s ease-in-out infinite' },
-    ob_ashwalker:   { bg: 'radial-gradient(circle, #8a6040 0%, #4a3020 40%, #1a0f08 100%)', sh: '0 0 18px rgba(138,96,64,0.4)' },
-    ob_soulreaper:  { bg: 'radial-gradient(circle, #ff3366 0%, #991133 35%, #330011 70%, #0a0003 100%)', sh: '0 0 25px rgba(255,51,102,0.6)', an: 'voidPulse 1.5s ease-in-out infinite' },
-    ob_eclipsar:    { bg: 'radial-gradient(circle, #ffd700 0%, #664400 30%, #0d1133 60%, #000 100%)', sh: '0 0 25px rgba(255,215,0,0.4)', an: 'galaxyShimmer 3s ease-in-out infinite' },
-    ob_phantomking: { bg: 'radial-gradient(circle, #bb88ff 0%, #6633aa 35%, #220055 70%, #0a0018 100%)', sh: '0 0 25px rgba(187,136,255,0.5)', an: 'voidPulse 2s ease-in-out infinite' },
-    ob_abyssal:     { bg: 'radial-gradient(circle, #2244aa 0%, #0d1133 40%, #020208 100%)', sh: '0 0 30px rgba(34,68,170,0.5)', an: 'voidPulse 3s ease-in-out infinite' },
-    ob_eventide:    { bg: 'conic-gradient(from 0deg, #1a0a2e, #2a1a4e, #3a2a6e, #2a1a4e, #1a0a2e)', sh: '0 0 30px rgba(100,60,160,0.4)', an: 'quantumSpin 5s linear infinite' },
-    ob_worldeater:  { bg: 'radial-gradient(circle, #ff0000 0%, #660000 30%, #1a0000 60%, #000 100%)', sh: '0 0 35px rgba(255,0,0,0.7)', an: 'voidPulse 0.8s ease-in-out infinite' },
-    ob_eternium:    { bg: 'conic-gradient(from 0deg, #ff2060, #8a2be2, #00ccff, #39ff14, #ffd700, #ff2060)', sh: '0 0 35px rgba(138,43,226,0.6)', an: 'quantumSpin 1.2s linear infinite' },
-  };
-  return S[skinId] || null;
+  return getSkinPreview(skinId);
 }
 
-// Renders a rich skin preview circle matching the look of the crates/skins tabs.
-// mutation: optional mutation key (e.g. 'corrupted') to apply mutation visual effects.
+// Delegates to buildSkinPreviewHTML in skin-previews.js
 function buildSkinPreview(skinInfo, rarity, className, mutation) {
-  const skinId  = skinInfo?.id || '';
-  const special = getSkinPreviewStyle(skinId);
-
-  let bg, sh, an = '', fi = '';
-
-  if (special) {
-    bg = special.bg;
-    sh = special.sh || 'none';
-    if (special.an) an = `animation:${special.an};`;
-    if (special.fi) fi = `filter:${special.fi};`;
-  } else if (skinInfo?.color) {
-    // Convert flat color to a radial gradient orb
-    const c = skinInfo.color;
-    bg = `radial-gradient(circle at 35% 35%, ${c}ee 0%, ${c} 55%, ${c}88 100%)`;
-    sh = `0 0 16px ${c}80, 0 0 30px ${c}40`;
-  } else {
-    bg = rarity.color;
-    sh = rarity.color + '60';
-  }
-
-  let extraClass = '';
-  if (mutation && typeof MUTATION_CONFIG !== 'undefined' && MUTATION_CONFIG[mutation]) {
-    const mc = MUTATION_CONFIG[mutation];
-    extraClass = ` ${mc.cssClass}`;
-    if (mc.cssFilter) fi = `filter:${mc.cssFilter};`;
-    sh = (sh && sh !== 'none' ? sh + ', ' : '') + `0 0 20px ${mc.glowColor}`;
-  }
-
-  return `<div class="${className}${extraClass}" style="background:${bg};box-shadow:${sh};${an}${fi}"></div>`;
+  const skinId = skinInfo?.id || '';
+  return buildSkinPreviewHTML(skinId, className, {
+    mutation: mutation,
+    skinInfo: skinInfo,
+    rarityColor: rarity?.color
+  });
 }
 
 // ════════════════════════════════════════════════════════════
