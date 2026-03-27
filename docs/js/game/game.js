@@ -7693,7 +7693,6 @@ function loop(time) {
     return;
   }
 
-  if (player) window.__gameDebug = { player, enemies, score, coins, wave, bullets, particles, powerups };
 
   _frameNow = Date.now();
   const dt = Math.min((time - lastTime) / 1000, 0.1) * (typeof devTimeScale !== 'undefined' ? devTimeScale : 1);
