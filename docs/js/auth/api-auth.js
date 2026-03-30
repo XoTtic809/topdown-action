@@ -104,8 +104,15 @@ function loadBattlePassLocally(uid) {
 // ─────────────────────────────────────────────────────────────
 async function handleLogin(email, password) {
   try {
-    const data = await apiPost('/auth/login', { email, password });
-    if (data.error) return { success: false, error: data.error };
+    const res = await fetch(`${API_BASE}/auth/login`, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ email, password }),
+    });
+    const data = await res.json();
+    if (!res.ok || data.error) {
+      return { success: false, error: data.error || 'Login failed. Please try again.' };
+    }
 
     setToken(data.token);
     _applyUserData(data);
@@ -186,7 +193,21 @@ function _applyUserData(data) {
       Object.assign(battlePassData, saved);
     }
     // XP/level from server takes priority
-    if (data.currentXp != null) battlePassData.currentXP = data.currentXp;
+    if (data.currentXp != null) {
+      battlePassData.currentXP = data.currentXp;
+      // Recalculate tier from server XP so a stale localStorage tier
+      // (e.g. from a previous user on the same device) never causes
+      // negative XP display or a broken battle pass.
+      if (typeof getCumulativeXP === 'function') {
+        const cumXP = getCumulativeXP();
+        let tier = 0;
+        for (let i = 0; i < 50; i++) {
+          if (battlePassData.currentXP >= cumXP[i]) tier = i + 1;
+          else break;
+        }
+        battlePassData.currentTier = tier;
+      }
+    }
   }
 
   lastSubmittedData.highScore = high;

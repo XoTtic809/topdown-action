@@ -45,6 +45,10 @@ const io = new Server(server, {
 });
 
 app.set('io', io); // make io accessible from route handlers
+// Trust Railway's reverse proxy so req.ip is the real client IP.
+// Without this, all requests appear to come from the same proxy IP,
+// which causes rate limiters to share one bucket across ALL users.
+app.set('trust proxy', 1);
 
 const PORT = process.env.PORT || 3001;
 
