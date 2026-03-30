@@ -107,6 +107,8 @@ router.post('/update', requireAuth, requireAdmin, async (req, res) => {
       )
       ON CONFLICT (crate_id) DO UPDATE SET
         active                       = COALESCE($2, crate_rotation.active),
+        -- Activating a case automatically un-retires it
+        retired                      = CASE WHEN $2 = true THEN false ELSE crate_rotation.retired END,
         price_override               = CASE WHEN $3::integer IS NOT NULL THEN $3::integer ELSE crate_rotation.price_override END,
         stock_limit                  = CASE WHEN $4::integer IS NOT NULL THEN $4::integer ELSE crate_rotation.stock_limit END,
         stock_remaining              = CASE WHEN $5::integer IS NOT NULL THEN $5::integer ELSE crate_rotation.stock_remaining END,

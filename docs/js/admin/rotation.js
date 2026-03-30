@@ -121,41 +121,35 @@ function buildCaseCard(row) {
             padding:2px 8px;border-radius:4px;border:1px solid ${statusColor}44;white-space:nowrap;">${statusText}</span>
     </div>
 
-    ${!row.retired ? `
-      <button onclick="rcToggleActive('${row.crate_id}', ${!row.active})"
-        style="width:100%;padding:8px;margin-bottom:10px;border-radius:6px;border:none;cursor:pointer;
-               font-size:12px;font-weight:bold;letter-spacing:.5px;
-               background:${row.active ? '#3a1515' : '#152a15'};
-               color:${row.active ? '#f77' : '#4c8'};
-               border:1px solid ${row.active ? '#f7743a' : '#4c8a3a'};">
-        ${row.active ? '⛔  Turn OFF' : '✅  Turn ON'}
-      </button>
+    <button onclick="rcToggleActive('${row.crate_id}', ${!row.active})"
+      style="width:100%;padding:8px;margin-bottom:10px;border-radius:6px;border:none;cursor:pointer;
+             font-size:12px;font-weight:bold;letter-spacing:.5px;
+             background:${row.active ? '#3a1515' : '#152a15'};
+             color:${row.active ? '#f77' : '#4c8'};
+             border:1px solid ${row.active ? '#f7743a' : '#4c8a3a'};">
+      ${row.active ? '⛔  Turn OFF' : '✅  Turn ON'}
+    </button>
 
-      <div style="display:grid;grid-template-columns:1fr 70px;gap:8px;margin-bottom:8px;">
-        <div>
-          <label style="font-size:10px;color:var(--muted);">Label (banner on case card)</label>
-          <select id="rc-label-${row.crate_id}" class="auth-input"
-            style="margin:3px 0 0;padding:5px 6px;font-size:11px;width:100%;">${labelOptions}</select>
-        </div>
-        <div>
-          <label style="font-size:10px;color:var(--muted);">Discount %</label>
-          <input id="rc-disc-${row.crate_id}" type="number" min="0" max="100"
-            value="${row.discount_percent || 0}" class="auth-input"
-            style="margin:3px 0 0;padding:5px 6px;font-size:11px;">
-        </div>
+    <div style="display:grid;grid-template-columns:1fr 70px;gap:8px;margin-bottom:8px;">
+      <div>
+        <label style="font-size:10px;color:var(--muted);">Label (banner on case card)</label>
+        <select id="rc-label-${row.crate_id}" class="auth-input"
+          style="margin:3px 0 0;padding:5px 6px;font-size:11px;width:100%;">${labelOptions}</select>
       </div>
+      <div>
+        <label style="font-size:10px;color:var(--muted);">Discount %</label>
+        <input id="rc-disc-${row.crate_id}" type="number" min="0" max="100"
+          value="${row.discount_percent || 0}" class="auth-input"
+          style="margin:3px 0 0;padding:5px 6px;font-size:11px;">
+      </div>
+    </div>
 
-      <div style="display:flex;gap:6px;">
-        <button class="admin-action-btn" onclick="rcSave('${row.crate_id}')"
-          style="flex:1;font-size:11px;padding:5px;">💾 Save</button>
-        <button class="admin-action-btn reset" onclick="rcRestock('${row.crate_id}')"
-          style="font-size:11px;padding:5px;white-space:nowrap;">+ Stock</button>
-      </div>
-    ` : `
-      <div style="font-size:11px;color:#555;text-align:center;padding:6px 0;">
-        Retired — cannot be reactivated
-      </div>
-    `}
+    <div style="display:flex;gap:6px;">
+      <button class="admin-action-btn" onclick="rcSave('${row.crate_id}')"
+        style="flex:1;font-size:11px;padding:5px;">💾 Save</button>
+      <button class="admin-action-btn reset" onclick="rcRestock('${row.crate_id}')"
+        style="font-size:11px;padding:5px;white-space:nowrap;">+ Stock</button>
+    </div>
   `;
 
   return card;
@@ -212,7 +206,8 @@ async function rcActivateAll() {
   if (!confirm('Turn ALL cases ON in the shop?')) return;
   try {
     for (const row of _rotationData) {
-      if (!row.retired && !row.active) {
+      if (!row.active) {
+        // Passing active:true also un-retires the case on the backend
         await apiPost('/admin/rotation/update', { crateId: row.crate_id, active: true });
       }
     }
