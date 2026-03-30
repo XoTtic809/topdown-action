@@ -7693,7 +7693,6 @@ function loop(time) {
     return;
   }
 
-
   _frameNow = Date.now();
   const dt = Math.min((time - lastTime) / 1000, 0.1) * (typeof devTimeScale !== 'undefined' ? devTimeScale : 1);
   lastTime = time;
@@ -9761,9 +9760,8 @@ console.log('🎬 Starting animation loop...');
 requestAnimationFrame(loop);
 console.log('✅ Game initialized!');
 
-// ============================================
+
 // DEV CONSOLE (admin only)
-// ============================================
 
 let devGodMode = false;
 let devDifficultyMultiplier = 1.0;

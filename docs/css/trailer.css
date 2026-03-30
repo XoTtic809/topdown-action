@@ -1,0 +1,42 @@
+/* ── Trailer overlay — scoped under #trailerOverlay ── */
+
+#trailerOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: #0a0e1a;
+  font-family: 'Orbitron', monospace;
+  overflow: hidden;
+  width: 100vw;
+  height: 100vh;
+  user-select: none;
+  cursor: default;
+  color: #fff;
+}
+
+#trailerOverlay #trBgCanvas  { position: absolute; inset: 0; z-index: 0;   pointer-events: none; }
+#trailerOverlay #trVignette  { position: absolute; inset: 0; z-index: 1;   pointer-events: none;
+                                background: radial-gradient(ellipse at center, transparent 42%, rgba(0,0,0,.9) 100%);
+                                animation: tr-vigPulse 4s ease-in-out infinite; }
+#trailerOverlay #trScene     { position: absolute; inset: 0; z-index: 10;  display: flex; align-items: center; justify-content: center; }
+#trailerOverlay #trTxCanvas  { position: absolute; inset: 0; z-index: 900; pointer-events: none; opacity: 0; }
+#trailerOverlay #trFlash     { position: absolute; inset: 0; z-index: 999; opacity: 0; pointer-events: none; background: #fff; }
+
+/* ── Keyframes (tr- prefix to avoid colliding with game styles) ── */
+@keyframes tr-vigPulse  { 0%,100%{ opacity:.85 } 50%{ opacity:1 } }
+@keyframes tr-breathe   { 0%,100%{ opacity:.3 }  50%{ opacity:1 } }
+@keyframes tr-slam      { 0%  { transform:scale(2.4) rotate(-3deg); opacity:0 }
+                          55% { transform:scale(.95) rotate(.3deg);  opacity:1 }
+                          100%{ transform:scale(1)   rotate(0);      opacity:1 } }
+@keyframes tr-bounceIn  { 0%  { transform:scale(0);    opacity:0 }
+                          60% { transform:scale(1.22);  opacity:1 }
+                          80% { transform:scale(.96) }
+                          100%{ transform:scale(1);    opacity:1 } }
+@keyframes tr-floatUD   { 0%,100%{ transform:translateY(0) }    50%{ transform:translateY(-8px) } }
+@keyframes tr-pulseGlow { 0%,100%{ filter:brightness(1) }       50%{ filter:brightness(1.6) } }
+@keyframes tr-fadeIn    { from{ opacity:0 } to{ opacity:1 } }
+@keyframes tr-slideInL  { from{ transform:translateX(-60px); opacity:0 } to{ transform:translateX(0); opacity:1 } }
+@keyframes tr-slideInR  { from{ transform:translateX(60px);  opacity:0 } to{ transform:translateX(0); opacity:1 } }
+@keyframes tr-slideInUp { from{ transform:translateY(24px);  opacity:0 } to{ transform:translateY(0); opacity:1 } }
+@keyframes tr-shimmer   { 0%{ left:-60% } 100%{ left:160% } }
+@keyframes tr-chartLine { from{ stroke-dashoffset:950 } to{ stroke-dashoffset:0 } }
