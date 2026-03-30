@@ -252,7 +252,7 @@
 
         <!-- Sub-tab bars -->
         <div class="shop-sub-tabs" data-for="shop">
-          <button class="shop-sub-tab active" data-tab="crates">📦 Crates</button>
+          <button class="shop-sub-tab active" data-tab="crates">📦 Cases</button>
           <button class="shop-sub-tab" data-tab="battlepass">🎫 Battle Pass</button>
           <button class="shop-sub-tab" data-tab="tradeup">⬆️ Trade Up</button>
         </div>
@@ -265,7 +265,7 @@
         <div id="shopTab-crates" class="shop-tab-content">
           <div id="crateInventorySection"></div>
           <div class="crates-info">
-            <p>🎁 Each crate gives you 1 item • Duplicates stack in your inventory</p>
+            <p>🎁 Each case gives you 1 item • Duplicates stack in your inventory</p>
           </div>
           <div id="cratesGrid" class="crates-grid"></div>
         </div>
@@ -334,7 +334,7 @@
             </div>
             <div class="mp-controls">
               <button class="mp-filter-btn active" data-rarity="all">All</button>
-              <button class="mp-filter-btn" data-rarity="crate" style="border-color: rgba(255,167,38,0.3)">Crates</button>
+              <button class="mp-filter-btn" data-rarity="crate" style="border-color: rgba(255,167,38,0.3)">Cases</button>
               <button class="mp-filter-btn" data-rarity="icon" style="border-color: rgba(0,229,255,0.3)">Icon</button>
               <button class="mp-filter-btn" data-rarity="mythic" style="border-color: rgba(255,105,255,0.3)">Mythic</button>
               <button class="mp-filter-btn" data-rarity="legendary" style="border-color: rgba(255,215,0,0.3)">Legendary</button>
@@ -475,7 +475,7 @@
           <div id="invGrid" class="inv-grid"></div>
           <div id="invEmpty" class="inv-empty hidden">
             <div>No skins match this filter.</div>
-            <div style="margin-top:8px;font-size:11px;opacity:0.5">Open crates or buy from the Marketplace to get more!</div>
+            <div style="margin-top:8px;font-size:11px;opacity:0.5">Open cases or buy from the Marketplace to get more!</div>
           </div>
           <div id="trySkinBanner" class="try-skin-banner hidden">
             <div class="try-skin-info">
@@ -1023,7 +1023,7 @@
   <div id="crateIndexModal" class="hidden crate-modal-overlay" onclick="if(event.target===this)closeCrateIndex()">
     <div class="crate-modal-box crate-index-box">
       <div class="crate-index-header">
-        <h2 id="crateIndexTitle" class="crate-index-title">CRATE CONTENTS</h2>
+        <h2 id="crateIndexTitle" class="crate-index-title">CASE CONTENTS</h2>
         <button class="crate-index-close" onclick="closeCrateIndex()">&times;</button>
       </div>
       <div id="crateIndexBody" class="crate-index-body"></div>
@@ -1545,15 +1545,15 @@
 
         <!-- ── Crate Price Editor ── -->
         <div class="admin-section">
-          <h3 class="admin-subtitle">📦 Crate Price Editor</h3>
+          <h3 class="admin-subtitle">📦 Case Price Editor</h3>
           <div style="margin-bottom:8px;">
-            <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px;">Select Crate</label>
+            <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px;">Select Case</label>
             <select id="cratePriceEditSelect" class="auth-input" style="padding:8px 12px;font-size:12px;width:100%;"
                     onclick="adminInitCratePriceDropdown()" onchange="adminCratePriceSelectChange()">
-              <option value="">-- Select a crate --</option>
+              <option value="">-- Select a case --</option>
             </select>
           </div>
-          <div id="cratePriceCurrentVal" style="font-size:11px;color:var(--muted);margin-bottom:6px;">Select a crate to see its current price</div>
+          <div id="cratePriceCurrentVal" style="font-size:11px;color:var(--muted);margin-bottom:6px;">Select a case to see its current price</div>
           <div style="display:flex;gap:6px;align-items:center;">
             <input type="number" id="cratePriceEditValue" placeholder="New price" class="auth-input"
                    style="flex:1;padding:8px 10px;font-size:12px;" min="100" max="100000">
@@ -1844,11 +1844,11 @@
 
           <!-- Force Next Crate = THE CREATOR -->
           <div class="dev-card">
-            <div class="dev-card-label">🎯 Force Next Crate</div>
+            <div class="dev-card-label">🎯 Force Next Case</div>
             <div class="dev-row">
               <button class="dev-btn" style="background: linear-gradient(135deg, #ffd700, #ff69b4); font-weight: bold; box-shadow: 0 0 15px rgba(255,215,0,0.5);" onclick="devForceCreatorNext()">NEXT = CREATOR</button>
             </div>
-            <div style="font-size: 10px; color: rgba(255,255,255,0.6); margin-top: 4px;">Next Icon Crate will give THE CREATOR</div>
+            <div style="font-size: 10px; color: rgba(255,255,255,0.6); margin-top: 4px;">Next Icon Case will give THE CREATOR</div>
           </div>
 
           <!-- Instant Unlock THE CREATOR -->

@@ -90,7 +90,7 @@ const REWARD_TYPES = {
   death: { icon: '💥', name: 'Death Effect' },
   title: { icon: '🏷️', name: 'Title' },
   badge: { icon: '🏅', name: 'Badge' },
-  crate: { icon: '🎁', name: 'Crate' }
+  crate: { icon: '🎁', name: 'Case' }
 };
 
 const TRAIL_EFFECTS = {
@@ -429,7 +429,7 @@ function showRewardNotification(reward) {
       rewardText = PROFILE_BADGES[reward.badgeId]?.name || 'Badge';
       break;
     case 'crate':
-      rewardText = `${reward.quantity}× Crate`;
+      rewardText = `${reward.quantity}× Case`;
       break;
   }
 
@@ -1075,7 +1075,7 @@ function getRewardDisplayName(reward) {
     case 'badge':
       return PROFILE_BADGES[reward.badgeId]?.name || reward.badgeId;
     case 'crate':
-      return `${reward.quantity}× Crate`;
+      return `${reward.quantity}× Case`;
     default:
       return REWARD_TYPES[reward.type].name;
   }

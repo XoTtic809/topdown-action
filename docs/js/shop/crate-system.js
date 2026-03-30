@@ -63,7 +63,7 @@ function cratePlaySound(type) {
 const CRATES = [
   {
     id: 'common-crate',
-    name: 'Common Crate',
+    name: 'Common Case',
     price: 300,
     color: '#78b7ff',
     desc: 'Contains 1 random skin from the common pool',
@@ -76,7 +76,7 @@ const CRATES = [
   },
   {
     id: 'rare-crate',
-    name: 'Rare Crate',
+    name: 'Rare Case',
     price: 750,
     color: '#9d7aff',
     desc: 'Better odds! Contains 1 skin with higher rarity chances',
@@ -90,10 +90,10 @@ const CRATES = [
   },
   {
     id: 'epic-crate',
-    name: 'Epic Crate',
+    name: 'Epic Case',
     price: 1500,
     color: '#ff78b7',
-    desc: 'Premium crate with guaranteed epic or better!',
+    desc: 'Premium case with guaranteed epic or better!',
     icon: '🎭',
     rarityWeights: {
       uncommon: 0.30,  // 30% chance
@@ -104,10 +104,10 @@ const CRATES = [
   },
   {
     id: 'legendary-crate',
-    name: 'Legendary Crate',
+    name: 'Legendary Case',
     price: 4000,
     color: '#ffd700',
-    desc: 'Ultimate crate! Guaranteed legendary or mythic skin!',
+    desc: 'Ultimate case! Guaranteed legendary or mythic skin!',
     icon: '⭐',
     rarityWeights: {
       rare: 0.20,      // 20% chance
@@ -118,7 +118,7 @@ const CRATES = [
   },
   {
     id: 'icon-crate',
-    name: 'Icon Skins Crate',
+    name: 'Icon Skins Case',
     price: 750,
     color: '#00ff9d',
     desc: 'Exclusive friend skins! 8 regular + 1 ultra-rare secret!',
@@ -130,11 +130,11 @@ const CRATES = [
   },
   {
     id: 'oblivion-crate',
-    name: 'Oblivion Crate',
+    name: 'Oblivion Case',
     price: 10000,
     color: '#1a0a2e',
     glowColor: '#8a2be2',
-    desc: 'The darkest crate. Only high-tier skins. Two ultra-rare exclusives.',
+    desc: 'The darkest case. Only high-tier skins. Two ultra-rare exclusives.',
     icon: '🌑',
     rarityWeights: {
       ob_epic: 0.50,      // 50% — Oblivion Epics
@@ -145,7 +145,7 @@ const CRATES = [
   },
   {
     id: 'neon-crate',
-    name: 'Neon Crate',
+    name: 'Neon Case',
     price: 2000,
     color: '#00e5ff',
     glowColor: '#00e5ff',
@@ -160,7 +160,7 @@ const CRATES = [
   },
   {
     id: 'frost-crate',
-    name: 'Frost Crate',
+    name: 'Frost Case',
     price: 2500,
     color: '#a8d8ea',
     glowColor: '#7fdbff',
@@ -175,7 +175,7 @@ const CRATES = [
   },
   {
     id: 'infernal-crate',
-    name: 'Infernal Crate',
+    name: 'Infernal Case',
     price: 2500,
     color: '#ff4500',
     glowColor: '#ff6600',
@@ -190,7 +190,7 @@ const CRATES = [
   },
   {
     id: 'void-crate',
-    name: 'Void Crate',
+    name: 'Void Case',
     price: 6000,
     color: '#1a0040',
     glowColor: '#6600cc',
@@ -397,7 +397,7 @@ async function openCrate(crateId) {
       });
       if (!resp.ok) {
         const err = await resp.json().catch(() => ({}));
-        showCrateMessage(err.error || 'Failed to open crate', true);
+        showCrateMessage(err.error || 'Failed to open case', true);
         return null;
       }
       const data = await resp.json();
@@ -423,7 +423,7 @@ async function openCrate(crateId) {
         }],
       };
     } catch (e) {
-      showCrateMessage('Network error opening crate', true);
+      showCrateMessage('Network error opening case', true);
       return null;
     }
   }
@@ -1107,12 +1107,12 @@ const CRATE_DROP_ICONS = {
   'oblivion-crate':  '🌑',
 };
 const CRATE_DROP_NAMES = {
-  'common-crate':    'Common Crate',
-  'rare-crate':      'Rare Crate',
-  'epic-crate':      'Epic Crate',
-  'legendary-crate': 'Legendary Crate',
-  'icon-crate':      'Icon Crate',
-  'oblivion-crate':  'Oblivion Crate',
+  'common-crate':    'Common Case',
+  'rare-crate':      'Rare Case',
+  'epic-crate':      'Epic Case',
+  'legendary-crate': 'Legendary Case',
+  'icon-crate':      'Icon Case',
+  'oblivion-crate':  'Oblivion Case',
 };
 
 async function _triggerPostGameDrop(mode, tier) {
@@ -1146,7 +1146,7 @@ function _showCrateDropNotification(crateId, weekCount) {
   `;
   banner.innerHTML = `
     <div style="font-size:2rem;margin-bottom:6px;">${icon}</div>
-    <div style="font-size:1rem;font-weight:700;color:#f39c12;">🎁 Crate Drop!</div>
+    <div style="font-size:1rem;font-weight:700;color:#f39c12;">🎁 Case Drop!</div>
     <div style="font-size:.85rem;margin-top:4px;">${name}</div>
     <div style="font-size:.75rem;color:#aaa;margin-top:4px;">${weekCount}/${5} drops this week</div>
   `;
@@ -1254,7 +1254,7 @@ async function buyCrateToInventory(crate) {
   const isLoggedIn = typeof currentUser !== 'undefined' && currentUser
     && !(typeof isGuest !== 'undefined' && isGuest);
   if (!isLoggedIn) {
-    showCrateMessage('Log in to buy crates to inventory', true);
+    showCrateMessage('Log in to buy cases to inventory', true);
     return;
   }
   if (playerCoins < crate.price) {
@@ -1276,7 +1276,7 @@ async function buyCrateToInventory(crate) {
         });
         if (!resp.ok) {
           const err = await resp.json().catch(() => ({}));
-          showCrateMessage(err.error || 'Failed to buy crate', true);
+          showCrateMessage(err.error || 'Failed to buy case', true);
           return;
         }
         const data = await resp.json();
@@ -1290,7 +1290,7 @@ async function buyCrateToInventory(crate) {
 
         showCrateMessage(`${crate.name} added to inventory!`);
       } catch (e) {
-        showCrateMessage('Network error buying crate', true);
+        showCrateMessage('Network error buying case', true);
       }
     }
   );
@@ -1313,7 +1313,7 @@ async function openOwnedCrate(crateId) {
     });
     if (!resp.ok) {
       const err = await resp.json().catch(() => ({}));
-      showCrateMessage(err.error || 'Failed to open crate', true);
+      showCrateMessage(err.error || 'Failed to open case', true);
       return null;
     }
     const data = await resp.json();
@@ -1339,7 +1339,7 @@ async function openOwnedCrate(crateId) {
       }],
     };
   } catch (e) {
-    showCrateMessage('Network error opening crate', true);
+    showCrateMessage('Network error opening case', true);
     return null;
   }
 }
@@ -1582,13 +1582,13 @@ async function initCratesTab() {
     btn.className = 'crate-btn';
 
     if (freeCount > 0) {
-      btn.textContent = 'OPEN FREE CRATE';
+      btn.textContent = 'OPEN FREE CASE';
       btn.disabled = false;
       btn.style.background = 'linear-gradient(135deg, #6bff7b, #48bb78)';
       btn.style.color = '#000';
       btn.style.fontWeight = '600';
     } else {
-      btn.textContent = 'OPEN CRATE';
+      btn.textContent = 'OPEN CASE';
       btn.disabled = playerCoins < crate.price;
     }
 

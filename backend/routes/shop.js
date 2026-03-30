@@ -13,6 +13,10 @@ const CRATE_TEMPLATE_PRICES = {
   'legendary-crate': 4000,
   'icon-crate':      750,
   'oblivion-crate':  10000,
+  'neon-crate':      2000,
+  'frost-crate':     2500,
+  'infernal-crate':  2500,
+  'void-crate':      6000,
 };
 
 // ── GET /api/shop/crates ──────────────────────────────────────────────────────

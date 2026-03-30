@@ -1,24 +1,25 @@
-// js/admin/rotation.js — Admin rotation manager UI
+// js/admin/rotation.js — Case rotation manager (simplified)
 'use strict';
 
 var _rotationInited = false;
 var _rotationData   = [];
 
-// Crate display info (must stay in sync with crate-system.js CRATES)
-var ROTATION_CRATE_META = {
-  'common-crate':    { name: 'Common Crate',    icon: '📦', price: 300 },
-  'rare-crate':      { name: 'Rare Crate',       icon: '💠', price: 750 },
-  'epic-crate':      { name: 'Epic Crate',        icon: '🔮', price: 1500 },
-  'legendary-crate': { name: 'Legendary Crate',   icon: '👑', price: 4000 },
-  'icon-crate':      { name: 'Icon Crate',         icon: '⭐', price: 750 },
-  'oblivion-crate':  { name: 'Oblivion Crate',    icon: '🌑', price: 10000 },
-  'neon-crate':      { name: 'Neon Crate',         icon: '💡', price: 2000 },
-  'frost-crate':     { name: 'Frost Crate',        icon: '❄️', price: 2500 },
-  'infernal-crate':  { name: 'Infernal Crate',     icon: '🔥', price: 2500 },
-  'void-crate':      { name: 'Void Crate',         icon: '🕳️', price: 6000 },
+var ROTATION_CASE_META = {
+  'common-crate':    { name: 'Common Case',    icon: '📦', price: 300 },
+  'rare-crate':      { name: 'Rare Case',       icon: '🎁', price: 750 },
+  'epic-crate':      { name: 'Epic Case',        icon: '🔮', price: 1500 },
+  'legendary-crate': { name: 'Legendary Case',   icon: '👑', price: 4000 },
+  'icon-crate':      { name: 'Icon Case',         icon: '⭐', price: 750 },
+  'oblivion-crate':  { name: 'Oblivion Case',    icon: '🌑', price: 10000 },
+  'neon-crate':      { name: 'Neon Case',         icon: '💡', price: 2000 },
+  'frost-crate':     { name: 'Frost Case',        icon: '❄️', price: 2500 },
+  'infernal-crate':  { name: 'Infernal Case',     icon: '🔥', price: 2500 },
+  'void-crate':      { name: 'Void Case',         icon: '🌀', price: 6000 },
 };
 
-// ── Public entry point ────────────────────────────────────────────────────────
+const CASE_LABELS = ['', 'DAILY', 'WEEKLY', 'FLASH SALE', 'LIMITED TIME', 'NEW', 'WEEKEND ONLY'];
+
+// ── Entry point ───────────────────────────────────────────────────────────────
 
 function initRotationManager() {
   if (_rotationInited) { loadRotationData(); return; }
@@ -29,167 +30,144 @@ function initRotationManager() {
 // ── Data loading ──────────────────────────────────────────────────────────────
 
 async function loadRotationData() {
-  const cardsEl = document.getElementById('rotationManagerCards');
+  const el = document.getElementById('rotationManagerCards');
+  if (!el) return;
+  el.innerHTML = '<div style="color:var(--muted);padding:16px;">Loading cases...</div>';
   const schedEl = document.getElementById('schedulePanel');
-  if (!cardsEl || !schedEl) return;
-
-  cardsEl.innerHTML = '<div style="color:var(--muted);padding:12px;">Loading...</div>';
-  schedEl.innerHTML = '';
+  if (schedEl) schedEl.innerHTML = '';
 
   try {
     const data = await apiGet('/admin/rotation');
     _rotationData = data.rotation || [];
-    renderRotationCards(_rotationData);
-    renderSchedulePanel();
+    renderRotationPanel(_rotationData);
   } catch (err) {
-    cardsEl.innerHTML = `<div style="color:#f44;padding:12px;">Failed to load rotation data: ${err.message}</div>`;
+    el.innerHTML = `<div style="color:#f44;padding:16px;">Failed to load: ${err.message}</div>`;
   }
 }
 
-// ── Rotation Cards ────────────────────────────────────────────────────────────
+// ── Main panel ────────────────────────────────────────────────────────────────
 
-function renderRotationCards(rows) {
+function renderRotationPanel(rows) {
   const el = document.getElementById('rotationManagerCards');
   if (!el) return;
 
-  el.innerHTML = '<h3 style="margin:0 0 12px;font-size:13px;color:var(--gold);letter-spacing:1px;">CRATE ROTATION</h3>';
-
-  const grid = document.createElement('div');
-  grid.style.cssText = 'display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px;';
-
-  for (const row of rows) {
-    grid.appendChild(buildCrateCard(row));
-  }
-
-  el.appendChild(grid);
-}
-
-function buildCrateCard(row) {
-  const meta     = ROTATION_CRATE_META[row.crate_id] || { name: row.crate_id, icon: '📦', price: 0 };
-  const card     = document.createElement('div');
-  card.className = 'admin-section';
-  card.style.cssText = 'padding:12px;position:relative;';
-
-  // Status badge
-  let statusText = 'INACTIVE', statusColor = '#888';
-  if (row.retired)              { statusText = 'RETIRED';     statusColor = '#555'; }
-  else if (row.stock_remaining === 0) { statusText = 'SOLD OUT';  statusColor = '#f90'; }
-  else if (row.active)          { statusText = row.weekend_only ? 'WEEKEND ONLY' : 'LIVE'; statusColor = row.weekend_only ? '#a78' : '#4c8'; }
-  else if (row.weekend_only)    { statusText = 'WEEKEND ONLY (INACTIVE)'; statusColor = '#a78'; }
-  else if ((row.pending_schedules || []).length > 0) { statusText = 'SCHEDULED'; statusColor = '#88f'; }
-
-  card.innerHTML = `
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
-      <span style="font-size:20px;">${meta.icon}</span>
-      <div style="flex:1;">
-        <div style="font-weight:bold;font-size:12px;">${meta.name}</div>
-        <span style="font-size:10px;color:${statusColor};font-weight:bold;">${statusText}</span>
-      </div>
-      <label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:11px;">
-        <input type="checkbox" id="rc-active-${row.crate_id}" ${row.active ? 'checked' : ''} ${row.retired ? 'disabled' : ''}>
-        Active
-      </label>
-    </div>
-
-    ${buildStockBar(row)}
-
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px;">
-      <div>
-        <label style="font-size:10px;color:var(--muted);" title="Override the default price players pay. Leave blank to use the default price.">Custom Price</label>
-        <input id="rc-price-${row.crate_id}" type="number" min="1" value="${row.price_override || ''}"
-          placeholder="${meta.price} (default)" class="auth-input" style="margin:2px 0 0;padding:4px 6px;font-size:11px;">
-      </div>
-      <div>
-        <label style="font-size:10px;color:var(--muted);" title="Percentage discount applied on top of the price. 25 = 25% off.">Discount %</label>
-        <input id="rc-disc-${row.crate_id}" type="number" min="0" max="100" value="${row.discount_percent || 0}"
-          class="auth-input" style="margin:2px 0 0;padding:4px 6px;font-size:11px;">
-      </div>
-      <div>
-        <label style="font-size:10px;color:var(--muted);" title="Stock cap — maximum units available. Leave blank for unlimited.">Stock Limit</label>
-        <input id="rc-stocklimit-${row.crate_id}" type="number" min="1" value="${row.stock_limit || ''}"
-          placeholder="unlimited" class="auth-input" style="margin:2px 0 0;padding:4px 6px;font-size:11px;">
-      </div>
-      <div>
-        <label style="font-size:10px;color:var(--muted);" title="Auto-deactivate this crate at this date/time.">Auto-Expire (local time)</label>
-        <input id="rc-endsat-${row.crate_id}" type="datetime-local" value="${row.ends_at ? toLocalDatetimeInput(row.ends_at) : ''}"
-          class="auth-input" style="margin:2px 0 0;padding:4px 6px;font-size:11px;">
-      </div>
-      <div>
-        <label style="font-size:10px;color:var(--muted);" title="Lowest price players can list this crate for on the marketplace.">Min Marketplace Price</label>
-        <input id="rc-floor-${row.crate_id}" type="number" min="1" value="${row.marketplace_floor_override || ''}"
-          placeholder="—" class="auth-input" style="margin:2px 0 0;padding:4px 6px;font-size:11px;">
-      </div>
-      <div>
-        <label style="font-size:10px;color:var(--muted);" title="Highest price players can list this crate for on the marketplace.">Max Marketplace Price</label>
-        <input id="rc-ceil-${row.crate_id}" type="number" min="1" value="${row.marketplace_ceiling_override || ''}"
-          placeholder="—" class="auth-input" style="margin:2px 0 0;padding:4px 6px;font-size:11px;">
+  el.innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px;">
+      <h3 style="margin:0;font-size:14px;color:var(--gold);letter-spacing:1px;">🗃️ CASE SHOP MANAGER</h3>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;">
+        <button class="admin-action-btn reset" onclick="rcActivateAll()" style="font-size:11px;padding:5px 10px;">✅ All ON</button>
+        <button class="admin-action-btn danger" onclick="rcDeactivateAll()" style="font-size:11px;padding:5px 10px;">⛔ All OFF</button>
+        <button class="admin-action-btn" onclick="loadRotationData()" style="font-size:11px;padding:5px 10px;">🔄 Refresh</button>
       </div>
     </div>
 
-    <div style="margin-bottom:8px;">
-      <label style="display:flex;align-items:center;gap:6px;font-size:11px;cursor:pointer;" title="Show a countdown timer on the crate card in the shop.">
-        <input type="checkbox" id="rc-timer-${row.crate_id}" ${row.timer_visible ? 'checked' : ''}>
-        Show countdown timer in shop
-      </label>
+    <div style="font-size:11px;color:#aaa;margin-bottom:14px;background:#0d1117;border:1px solid #2a2a3e;border-radius:6px;padding:10px;line-height:1.7;">
+      <strong style="color:#fff;">How to use:</strong>
+      Click <strong style="color:#4c8;">Turn ON</strong> to make a case appear in the shop for players to buy.
+      Click <strong style="color:#f77;">Turn OFF</strong> to hide it.
+      Use the <em>Label</em> dropdown to show a banner like <em>DAILY</em> or <em>WEEKLY</em> on the case.
+      Set a <em>Discount %</em> to show a sale price. Hit <strong>Save</strong> after changing the label or discount.
     </div>
 
-    <div style="margin-bottom:8px;">
-      <label style="font-size:10px;color:var(--muted);" title="Text shown on the crate card in the shop, e.g. LIMITED TIME or FLASH SALE.">Shop Banner Text</label>
-      <input id="rc-label-${row.crate_id}" type="text" value="${row.rotation_label || ''}"
-        placeholder="e.g. LIMITED TIME · FLASH SALE" class="auth-input" style="margin:2px 0 0;padding:4px 6px;font-size:11px;">
-    </div>
+    <div id="rcGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:10px;margin-bottom:16px;"></div>
 
-    <div style="display:flex;gap:6px;flex-wrap:wrap;">
-      <button class="admin-action-btn" onclick="rcSave('${row.crate_id}')" style="font-size:10px;padding:4px 8px;">💾 Save</button>
-      <button class="admin-action-btn reset" onclick="rcRestock('${row.crate_id}')" style="font-size:10px;padding:4px 8px;">+ Restock</button>
-      <button class="admin-action-btn danger" onclick="rcSellOut('${row.crate_id}')" style="font-size:10px;padding:4px 8px;">Sell Out</button>
-      ${!row.retired ? `<button class="admin-action-btn danger" onclick="rcRetire('${row.crate_id}')" style="font-size:10px;padding:4px 8px;">Retire</button>` : ''}
+    <div style="background:#0d1117;border:1px solid #2a2a3e;border-radius:8px;padding:14px;">
+      <div style="font-size:12px;color:var(--gold);letter-spacing:1px;margin-bottom:10px;">⚡ QUICK ACTIONS</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="admin-action-btn" onclick="presetResetDefaults()" style="font-size:11px;padding:6px 12px;" title="Activate the standard set of cases and clear all labels/discounts">🔧 Reset to Defaults</button>
+        <button class="admin-action-btn reset" onclick="presetWeekendFlashSale()" style="font-size:11px;padding:6px 12px;" title="Schedule 25% off on a case this weekend (Fri 18:00 UTC – Mon 06:00 UTC)">⚡ Weekend Flash Sale</button>
+        <button class="admin-action-btn" onclick="presetLimitedDrop()" style="font-size:11px;padding:6px 12px;" title="Activate a case with a limited stock count right now">📦 Limited Drop</button>
+      </div>
     </div>
   `;
 
-  // Wire up active toggle
-  const activeChk = card.querySelector(`#rc-active-${row.crate_id}`);
-  if (activeChk && !row.retired) {
-    activeChk.addEventListener('change', () => rcToggleActive(row.crate_id, activeChk.checked));
+  const grid = document.getElementById('rcGrid');
+  for (const row of rows) {
+    grid.appendChild(buildCaseCard(row));
   }
+}
+
+// ── Case card ─────────────────────────────────────────────────────────────────
+
+function buildCaseCard(row) {
+  const meta = ROTATION_CASE_META[row.crate_id] || { name: row.crate_id, icon: '📦', price: 0 };
+
+  let statusText = 'OFF', statusColor = '#888', statusBg = '#222';
+  if (row.retired)                      { statusText = 'RETIRED';     statusColor = '#555'; statusBg = '#111'; }
+  else if (row.stock_remaining === 0)   { statusText = 'SOLD OUT';    statusColor = '#f90'; statusBg = '#2a1500'; }
+  else if (row.active && row.weekend_only) { statusText = 'WEEKEND';  statusColor = '#a78'; statusBg = '#1a0a2a'; }
+  else if (row.active)                  { statusText = 'LIVE';        statusColor = '#4c8'; statusBg = '#0a2010'; }
+
+  const stockLine = row.stock_remaining != null
+    ? ` · Stock: ${row.stock_remaining}${row.stock_limit ? '/' + row.stock_limit : ''}`
+    : '';
+
+  const labelOptions = CASE_LABELS.map(l =>
+    `<option value="${l}" ${(row.rotation_label || '') === l ? 'selected' : ''}>${l || '— no label —'}</option>`
+  ).join('');
+
+  const card = document.createElement('div');
+  card.className = 'admin-section';
+  card.style.cssText = 'padding:12px;';
+
+  card.innerHTML = `
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+      <span style="font-size:22px;">${meta.icon}</span>
+      <div style="flex:1;min-width:0;">
+        <div style="font-weight:bold;font-size:12px;">${meta.name}</div>
+        <div style="font-size:10px;color:var(--muted);">🪙 ${meta.price.toLocaleString()}${stockLine}</div>
+      </div>
+      <span style="font-size:10px;font-weight:bold;color:${statusColor};background:${statusBg};
+            padding:2px 8px;border-radius:4px;border:1px solid ${statusColor}44;white-space:nowrap;">${statusText}</span>
+    </div>
+
+    ${!row.retired ? `
+      <button onclick="rcToggleActive('${row.crate_id}', ${!row.active})"
+        style="width:100%;padding:8px;margin-bottom:10px;border-radius:6px;border:none;cursor:pointer;
+               font-size:12px;font-weight:bold;letter-spacing:.5px;
+               background:${row.active ? '#3a1515' : '#152a15'};
+               color:${row.active ? '#f77' : '#4c8'};
+               border:1px solid ${row.active ? '#f7743a' : '#4c8a3a'};">
+        ${row.active ? '⛔  Turn OFF' : '✅  Turn ON'}
+      </button>
+
+      <div style="display:grid;grid-template-columns:1fr 70px;gap:8px;margin-bottom:8px;">
+        <div>
+          <label style="font-size:10px;color:var(--muted);">Label (banner on case card)</label>
+          <select id="rc-label-${row.crate_id}" class="auth-input"
+            style="margin:3px 0 0;padding:5px 6px;font-size:11px;width:100%;">${labelOptions}</select>
+        </div>
+        <div>
+          <label style="font-size:10px;color:var(--muted);">Discount %</label>
+          <input id="rc-disc-${row.crate_id}" type="number" min="0" max="100"
+            value="${row.discount_percent || 0}" class="auth-input"
+            style="margin:3px 0 0;padding:5px 6px;font-size:11px;">
+        </div>
+      </div>
+
+      <div style="display:flex;gap:6px;">
+        <button class="admin-action-btn" onclick="rcSave('${row.crate_id}')"
+          style="flex:1;font-size:11px;padding:5px;">💾 Save</button>
+        <button class="admin-action-btn reset" onclick="rcRestock('${row.crate_id}')"
+          style="font-size:11px;padding:5px;white-space:nowrap;">+ Stock</button>
+      </div>
+    ` : `
+      <div style="font-size:11px;color:#555;text-align:center;padding:6px 0;">
+        Retired — cannot be reactivated
+      </div>
+    `}
+  `;
 
   return card;
 }
 
-function buildStockBar(row) {
-  if (row.stock_limit == null && row.stock_remaining == null) {
-    return '<div style="font-size:10px;color:var(--muted);margin-bottom:8px;">Stock: Unlimited</div>';
-  }
-  const remaining = row.stock_remaining ?? 0;
-  const limit     = row.stock_limit || remaining || 1;
-  const pct       = Math.max(0, Math.min(100, (remaining / limit) * 100));
-  const color     = pct > 50 ? '#4c8' : pct > 20 ? '#fa0' : '#f44';
-  return `
-    <div style="margin-bottom:8px;">
-      <div style="font-size:10px;color:var(--muted);margin-bottom:3px;">
-        Stock: <strong>${remaining}</strong>${row.stock_limit ? ` / ${row.stock_limit}` : ''} remaining
-      </div>
-      <div style="background:#333;border-radius:3px;height:4px;overflow:hidden;">
-        <div style="background:${color};width:${pct}%;height:100%;transition:width 0.3s;"></div>
-      </div>
-    </div>
-  `;
-}
-
-function toLocalDatetimeInput(isoStr) {
-  if (!isoStr) return '';
-  // datetime-local input expects 'YYYY-MM-DDTHH:MM' in local time
-  const d = new Date(isoStr);
-  const pad = n => String(n).padStart(2, '0');
-  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
-}
-
-// ── Card action handlers ──────────────────────────────────────────────────────
+// ── Card actions ──────────────────────────────────────────────────────────────
 
 async function rcToggleActive(crateId, newActive) {
   try {
     await apiPost('/admin/rotation/update', { crateId, active: newActive });
-    showAdminMessage(`${crateId}: ${newActive ? 'activated' : 'deactivated'}`);
+    const name = ROTATION_CASE_META[crateId]?.name || crateId;
+    showAdminMessage(`${name}: ${newActive ? 'turned ON ✅' : 'turned OFF ⛔'}`);
     loadRotationData();
   } catch (err) {
     showAdminMessage('Failed: ' + err.message, true);
@@ -197,28 +175,16 @@ async function rcToggleActive(crateId, newActive) {
 }
 
 async function rcSave(crateId) {
-  const priceEl      = document.getElementById(`rc-price-${crateId}`);
-  const discEl       = document.getElementById(`rc-disc-${crateId}`);
-  const stockLimEl   = document.getElementById(`rc-stocklimit-${crateId}`);
-  const floorEl      = document.getElementById(`rc-floor-${crateId}`);
-  const ceilEl       = document.getElementById(`rc-ceil-${crateId}`);
-  const endsEl       = document.getElementById(`rc-endsat-${crateId}`);
-  const timerEl      = document.getElementById(`rc-timer-${crateId}`);
-  const labelEl      = document.getElementById(`rc-label-${crateId}`);
-
-  const body = { crateId };
-  if (priceEl?.value)    body.priceOverride = parseInt(priceEl.value, 10);
-  if (discEl)            body.discountPercent = parseInt(discEl.value || '0', 10);
-  if (stockLimEl?.value) body.stockLimit = parseInt(stockLimEl.value, 10);
-  if (floorEl?.value)    body.marketplaceFloorOverride = parseInt(floorEl.value, 10);
-  if (ceilEl?.value)     body.marketplaceCeilingOverride = parseInt(ceilEl.value, 10);
-  if (endsEl?.value)     body.endsAt = new Date(endsEl.value).toISOString();
-  if (timerEl)           body.timerVisible = timerEl.checked;
-  if (labelEl)           body.rotationLabel = labelEl.value.trim() || null;
-
+  const discEl  = document.getElementById(`rc-disc-${crateId}`);
+  const labelEl = document.getElementById(`rc-label-${crateId}`);
   try {
-    await apiPost('/admin/rotation/update', body);
-    showAdminMessage(`${crateId} saved`);
+    await apiPost('/admin/rotation/update', {
+      crateId,
+      discountPercent: parseInt(discEl?.value || '0', 10),
+      rotationLabel:   labelEl?.value || null,
+    });
+    const name = ROTATION_CASE_META[crateId]?.name || crateId;
+    showAdminMessage(`${name} saved ✅`);
     loadRotationData();
   } catch (err) {
     showAdminMessage('Failed: ' + err.message, true);
@@ -226,254 +192,102 @@ async function rcSave(crateId) {
 }
 
 async function rcRestock(crateId) {
-  const input = prompt(`Restock ${crateId}:\nEnter amount to add:`);
+  const name = ROTATION_CASE_META[crateId]?.name || crateId;
+  const input = prompt(`Add stock to ${name}:\nHow many units to add?`);
   if (!input) return;
   const amount = parseInt(input, 10);
   if (!amount || amount <= 0) { showAdminMessage('Invalid amount', true); return; }
   try {
     await apiPost('/admin/rotation/restock', { crateId, amount });
-    showAdminMessage(`${crateId}: added ${amount} stock`);
+    showAdminMessage(`${name}: +${amount} stock added ✅`);
     loadRotationData();
   } catch (err) {
     showAdminMessage('Failed: ' + err.message, true);
   }
 }
 
-async function rcSellOut(crateId) {
-  if (!confirm(`Sell out ${crateId}? This will set stock_remaining to 0.`)) return;
+// ── Bulk actions ──────────────────────────────────────────────────────────────
+
+async function rcActivateAll() {
+  if (!confirm('Turn ALL cases ON in the shop?')) return;
   try {
-    await apiPost('/admin/rotation/sellout', { crateId });
-    showAdminMessage(`${crateId}: sold out`);
-    loadRotationData();
-  } catch (err) {
-    showAdminMessage('Failed: ' + err.message, true);
-  }
-}
-
-async function rcRetire(crateId) {
-  if (!confirm(`Retire ${crateId}?\n\nThis permanently disables purchases. The crate will remain listable on the marketplace.`)) return;
-  try {
-    await apiPost('/admin/rotation/retire', { crateId });
-    showAdminMessage(`${crateId}: retired`);
-    loadRotationData();
-  } catch (err) {
-    showAdminMessage('Failed: ' + err.message, true);
-  }
-}
-
-// ── Schedule Panel ────────────────────────────────────────────────────────────
-
-function renderSchedulePanel() {
-  const el = document.getElementById('schedulePanel');
-  if (!el) return;
-
-  // Collect all pending schedules from loaded rotation data
-  const allPending = [];
-  for (const row of _rotationData) {
-    if (row.pending_schedules && row.pending_schedules.length) {
-      allPending.push(...row.pending_schedules);
+    for (const row of _rotationData) {
+      if (!row.retired && !row.active) {
+        await apiPost('/admin/rotation/update', { crateId: row.crate_id, active: true });
+      }
     }
-  }
-  allPending.sort((a, b) => new Date(a.scheduled_at) - new Date(b.scheduled_at));
-
-  el.innerHTML = `
-    <div class="admin-section" style="margin-top:16px;">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
-        <h3 style="margin:0;font-size:13px;color:var(--gold);letter-spacing:1px;">SCHEDULE MANAGER</h3>
-        <button class="admin-action-btn" id="scheduleFormToggle" onclick="toggleScheduleForm()" style="font-size:10px;padding:4px 10px;">+ Schedule Action</button>
-      </div>
-
-      <div style="background:#0d1117;border:1px solid #2a2a3e;border-radius:6px;padding:10px;margin-bottom:12px;font-size:11px;color:#aaa;line-height:1.6;">
-        <strong style="color:#fff;">How this works:</strong> Scheduled actions run automatically at the time you set.
-        The server checks every 60 seconds and executes anything due.<br>
-        <strong style="color:#88f;">Activate</strong> = turn crate on in the shop &nbsp;|&nbsp;
-        <strong style="color:#f88;">Deactivate</strong> = hide it from the shop &nbsp;|&nbsp;
-        <strong style="color:#8f8;">Restock</strong> = add stock to a limited crate &nbsp;|&nbsp;
-        <strong style="color:#fa8;">Price Change</strong> = set a new price or discount at that time &nbsp;|&nbsp;
-        <strong style="color:#f44;">Retire</strong> = permanently remove from shop (can't undo)<br>
-        <span style="color:#888;">Tip: "Weekend Flash Sale" auto-schedules a 25% discount starting next Friday 18:00 UTC, ending Monday 06:00 UTC.</span>
-      </div>
-
-      <div id="scheduleFormPanel" style="display:none;background:#1a1a2e;border-radius:6px;padding:12px;margin-bottom:12px;">
-        ${buildScheduleForm()}
-      </div>
-
-      <div id="schedulePresets" style="margin-bottom:12px;">
-        <div style="font-size:11px;color:var(--muted);margin-bottom:6px;">QUICK PRESETS</div>
-        <div style="display:flex;gap:6px;flex-wrap:wrap;">
-          <button class="admin-action-btn reset" onclick="presetWeekendFlashSale()" style="font-size:10px;padding:4px 10px;" title="Schedule a 25% discount starting next Friday 18:00 UTC, auto-removed Monday 06:00 UTC">⚡ Weekend Flash Sale</button>
-          <button class="admin-action-btn" onclick="presetLimitedDrop()" style="font-size:10px;padding:4px 10px;" title="Immediately activate a crate with a limited stock count">📦 Limited Drop</button>
-        </div>
-      </div>
-
-      <div style="font-size:11px;color:var(--muted);margin-bottom:6px;">UPCOMING ACTIONS (${allPending.length})</div>
-      <div id="pendingSchedulesList">
-        ${allPending.length === 0
-          ? '<div style="font-size:11px;color:var(--muted);">No scheduled actions yet.</div>'
-          : allPending.map(s => buildScheduleRow(s)).join('')
-        }
-      </div>
-    </div>
-  `;
-}
-
-function buildScheduleForm() {
-  const crateOptions = Object.entries(ROTATION_CRATE_META)
-    .map(([id, m]) => `<option value="${id}">${m.icon} ${m.name}</option>`).join('');
-  const actionOptions = [
-    ['activate',     'Activate'],
-    ['deactivate',   'Deactivate'],
-    ['restock',      'Restock'],
-    ['price_change', 'Price Change'],
-    ['retire',       'Retire'],
-  ].map(([v, l]) => `<option value="${v}">${l}</option>`).join('');
-
-  return `
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
-      <div>
-        <label style="font-size:10px;color:var(--muted);">Crate</label>
-        <select id="sf-crate" class="auth-input" style="margin:2px 0 0;padding:4px 6px;font-size:11px;">${crateOptions}</select>
-      </div>
-      <div>
-        <label style="font-size:10px;color:var(--muted);">Action</label>
-        <select id="sf-action" class="auth-input" onchange="updateSchedulePayloadFields()" style="margin:2px 0 0;padding:4px 6px;font-size:11px;">${actionOptions}</select>
-      </div>
-    </div>
-    <div style="margin-bottom:8px;">
-      <label style="font-size:10px;color:var(--muted);">Scheduled At (your local time)</label>
-      <input id="sf-when" type="datetime-local" class="auth-input" style="margin:2px 0 0;padding:4px 6px;font-size:11px;">
-    </div>
-    <div id="sf-payload-fields" style="margin-bottom:8px;"></div>
-    <button class="admin-action-btn" onclick="submitScheduleAction()" style="font-size:11px;">Schedule</button>
-  `;
-}
-
-function toggleScheduleForm() {
-  const p = document.getElementById('scheduleFormPanel');
-  if (!p) return;
-  const shown = p.style.display !== 'none';
-  p.style.display = shown ? 'none' : 'block';
-  if (!shown) updateSchedulePayloadFields();
-}
-
-function updateSchedulePayloadFields() {
-  const action = document.getElementById('sf-action')?.value;
-  const el     = document.getElementById('sf-payload-fields');
-  if (!el) return;
-
-  let html = '';
-  if (action === 'activate' || action === 'restock') {
-    const req = action === 'restock' ? 'required' : '';
-    html = `
-      <label style="font-size:10px;color:var(--muted);">Stock Amount ${action === 'activate' ? '(optional)' : ''}</label>
-      <input id="sf-stock" type="number" min="1" placeholder="${action === 'activate' ? 'leave blank = keep current' : 'required'}"
-        class="auth-input" ${req} style="margin:2px 0 0;padding:4px 6px;font-size:11px;">
-    `;
-  } else if (action === 'price_change') {
-    html = `
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-        <div>
-          <label style="font-size:10px;color:var(--muted);">New Price</label>
-          <input id="sf-price" type="number" min="1" class="auth-input" style="margin:2px 0 0;padding:4px 6px;font-size:11px;">
-        </div>
-        <div>
-          <label style="font-size:10px;color:var(--muted);">Discount %</label>
-          <input id="sf-disc" type="number" min="0" max="100" value="0" class="auth-input" style="margin:2px 0 0;padding:4px 6px;font-size:11px;">
-        </div>
-      </div>
-    `;
-  }
-  el.innerHTML = html;
-}
-
-async function submitScheduleAction() {
-  const crateId    = document.getElementById('sf-crate')?.value;
-  const action     = document.getElementById('sf-action')?.value;
-  const whenVal    = document.getElementById('sf-when')?.value;
-  if (!crateId || !action || !whenVal) { showAdminMessage('Fill all required fields', true); return; }
-
-  const scheduledAt = new Date(whenVal).toISOString();
-  const payload     = {};
-
-  if (action === 'activate' || action === 'restock') {
-    const stockEl = document.getElementById('sf-stock');
-    if (stockEl?.value) payload.stock = parseInt(stockEl.value, 10);
-    if (action === 'restock' && !payload.stock) { showAdminMessage('Stock amount required for restock', true); return; }
-  } else if (action === 'price_change') {
-    const priceEl = document.getElementById('sf-price');
-    const discEl  = document.getElementById('sf-disc');
-    if (!priceEl?.value) { showAdminMessage('Price required for price_change', true); return; }
-    payload.price = parseInt(priceEl.value, 10);
-    payload.discount_percent = parseInt(discEl?.value || '0', 10);
-  }
-
-  try {
-    await apiPost('/admin/rotation/schedule/add', { crateId, action, scheduledAt, payload });
-    showAdminMessage('Schedule added');
-    document.getElementById('scheduleFormPanel').style.display = 'none';
+    showAdminMessage('All cases activated ✅');
     loadRotationData();
   } catch (err) {
     showAdminMessage('Failed: ' + err.message, true);
   }
 }
 
-function buildScheduleRow(s) {
-  const meta    = ROTATION_CRATE_META[s.crate_id] || { name: s.crate_id, icon: '📦' };
-  const when    = new Date(s.scheduled_at).toLocaleString();
-  const payload = s.payload ? JSON.stringify(s.payload) : '—';
-  return `
-    <div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #2a2a3e;font-size:11px;">
-      <span>${meta.icon}</span>
-      <div style="flex:1;">
-        <span style="font-weight:bold;">${meta.name}</span>
-        <span style="color:var(--muted);margin:0 4px;">→</span>
-        <span style="color:#88f;">${s.action}</span>
-        <span style="color:var(--muted);margin-left:4px;">${payload}</span>
-      </div>
-      <span style="color:var(--muted);white-space:nowrap;">${when}</span>
-      <button class="admin-action-btn danger" onclick="cancelSchedule(${s.id})" style="font-size:9px;padding:2px 6px;">✕</button>
-    </div>
-  `;
-}
-
-async function cancelSchedule(scheduleId) {
-  if (!confirm('Cancel this scheduled action?')) return;
+async function rcDeactivateAll() {
+  if (!confirm('Turn ALL cases OFF in the shop?')) return;
   try {
-    await apiPost('/admin/rotation/schedule/cancel', { scheduleId });
-    showAdminMessage('Schedule cancelled');
+    for (const row of _rotationData) {
+      if (!row.retired && row.active) {
+        await apiPost('/admin/rotation/update', { crateId: row.crate_id, active: false });
+      }
+    }
+    showAdminMessage('All cases deactivated ⛔');
     loadRotationData();
   } catch (err) {
     showAdminMessage('Failed: ' + err.message, true);
   }
 }
 
-// ── Quick Presets ─────────────────────────────────────────────────────────────
+// ── Quick presets ─────────────────────────────────────────────────────────────
 
-// Shows a small inline crate-picker dialog. Returns a promise resolving to
-// the selected crateId, or null if cancelled.
-function _pickCrateDialog(title) {
+async function presetResetDefaults() {
+  if (!confirm('Reset to default case rotation?\n\nON: Common, Rare, Epic, Legendary, Icon, Neon, Frost, Infernal\nOFF: Oblivion (weekend-only), Void\n\nThis will clear all labels and discounts.')) return;
+  const plan = [
+    { id: 'common-crate',    active: true  },
+    { id: 'rare-crate',      active: true  },
+    { id: 'epic-crate',      active: true  },
+    { id: 'legendary-crate', active: true  },
+    { id: 'icon-crate',      active: true  },
+    { id: 'neon-crate',      active: true  },
+    { id: 'frost-crate',     active: true  },
+    { id: 'infernal-crate',  active: true  },
+    { id: 'oblivion-crate',  active: false },
+    { id: 'void-crate',      active: false },
+  ];
+  try {
+    for (const { id, active } of plan) {
+      await apiPost('/admin/rotation/update', { crateId: id, active, discountPercent: 0, rotationLabel: null });
+    }
+    showAdminMessage('Reset to defaults ✅');
+    loadRotationData();
+  } catch (err) {
+    showAdminMessage('Failed: ' + err.message, true);
+  }
+}
+
+function _pickCaseDialog(title) {
   return new Promise(resolve => {
     const overlay = document.createElement('div');
-    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:9999;display:flex;align-items:center;justify-content:center;';
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:9999;display:flex;align-items:center;justify-content:center;';
     const box = document.createElement('div');
     box.style.cssText = 'background:#1a1a2e;border:1px solid #3a3a5e;border-radius:10px;padding:20px;min-width:280px;max-width:360px;';
     box.innerHTML = `
       <div style="font-size:13px;font-weight:bold;color:#fff;margin-bottom:12px;">${title}</div>
-      <select id="_pickCrateSelect" class="auth-input" style="width:100%;padding:6px 8px;font-size:12px;margin-bottom:12px;">
-        ${Object.entries(ROTATION_CRATE_META).map(([id, m]) =>
+      <select id="_pickCaseSelect" class="auth-input" style="width:100%;padding:6px 8px;font-size:12px;margin-bottom:14px;">
+        ${Object.entries(ROTATION_CASE_META).map(([id, m]) =>
           `<option value="${id}">${m.icon} ${m.name} — 🪙 ${m.price.toLocaleString()}</option>`
         ).join('')}
       </select>
       <div style="display:flex;gap:8px;justify-content:flex-end;">
-        <button class="admin-action-btn" id="_pickCrateCancel" style="font-size:11px;">Cancel</button>
-        <button class="admin-action-btn reset" id="_pickCrateOk" style="font-size:11px;">Select</button>
+        <button class="admin-action-btn" id="_pickCaseCancel" style="font-size:11px;">Cancel</button>
+        <button class="admin-action-btn reset" id="_pickCaseOk" style="font-size:11px;">Select</button>
       </div>
     `;
     overlay.appendChild(box);
     document.body.appendChild(overlay);
-    overlay.querySelector('#_pickCrateCancel').onclick = () => { overlay.remove(); resolve(null); };
-    overlay.querySelector('#_pickCrateOk').onclick = () => {
-      const val = overlay.querySelector('#_pickCrateSelect').value;
+    box.querySelector('#_pickCaseCancel').onclick = () => { overlay.remove(); resolve(null); };
+    box.querySelector('#_pickCaseOk').onclick = () => {
+      const val = box.querySelector('#_pickCaseSelect').value;
       overlay.remove();
       resolve(val || null);
     };
@@ -481,32 +295,28 @@ function _pickCrateDialog(title) {
 }
 
 async function presetWeekendFlashSale() {
-  const crateId = await _pickCrateDialog('Weekend Flash Sale — pick a crate to discount 25% this weekend:');
+  const crateId = await _pickCaseDialog('Weekend Flash Sale — pick a case to put on 25% off:');
   if (!crateId) return;
 
-  // Next Friday 18:00 UTC
-  const now   = new Date();
-  const day   = now.getUTCDay(); // 0=Sun
-  const daysToFriday = (5 - day + 7) % 7 || 7; // days until next Friday (minimum 1)
+  const now  = new Date();
+  const day  = now.getUTCDay();
+  const daysToFriday = (5 - day + 7) % 7 || 7;
   const friday = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + daysToFriday, 18, 0, 0));
-
-  // Following Monday 06:00 UTC
   const monday = new Date(Date.UTC(friday.getUTCFullYear(), friday.getUTCMonth(), friday.getUTCDate() + 3, 6, 0, 0));
 
+  const name = ROTATION_CASE_META[crateId]?.name || crateId;
   try {
     await apiPost('/admin/rotation/schedule/add', {
-      crateId,
-      action: 'price_change',
+      crateId, action: 'price_change',
       scheduledAt: friday.toISOString(),
       payload: { price: null, discount_percent: 25 },
     });
     await apiPost('/admin/rotation/schedule/add', {
-      crateId,
-      action: 'price_change',
+      crateId, action: 'price_change',
       scheduledAt: monday.toISOString(),
       payload: { discount_percent: 0 },
     });
-    showAdminMessage(`Weekend Flash Sale scheduled for ${crateId} (Fri ${friday.toUTCString().slice(0,16)} – Mon ${monday.toUTCString().slice(0,16)})`);
+    showAdminMessage(`Weekend Flash Sale scheduled for ${name} ✅\nFri ${friday.toUTCString().slice(0,16)} → Mon ${monday.toUTCString().slice(0,16)}`);
     loadRotationData();
   } catch (err) {
     showAdminMessage('Failed: ' + err.message, true);
@@ -514,17 +324,18 @@ async function presetWeekendFlashSale() {
 }
 
 async function presetLimitedDrop() {
-  const crateId = await _pickCrateDialog('Limited Drop — pick a crate to activate with limited stock:');
+  const crateId = await _pickCaseDialog('Limited Drop — pick a case to activate with limited stock:');
   if (!crateId) return;
 
-  const stockStr = prompt(`How many units to drop?\n(The crate will be activated immediately with this many in stock)`);
+  const name = ROTATION_CASE_META[crateId]?.name || crateId;
+  const stockStr = prompt(`Limited Drop: ${name}\nHow many units to put in stock?`);
   if (!stockStr) return;
   const stock = parseInt(stockStr, 10);
   if (!stock || stock <= 0) { showAdminMessage('Invalid stock amount', true); return; }
 
   try {
     await apiPost('/admin/rotation/update', { crateId, active: true, stockRemaining: stock, stockLimit: stock });
-    showAdminMessage(`Limited Drop: ${crateId} activated with ${stock} units`);
+    showAdminMessage(`${name}: activated with ${stock} units ✅`);
     loadRotationData();
   } catch (err) {
     showAdminMessage('Failed: ' + err.message, true);
