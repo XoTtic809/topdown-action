@@ -281,12 +281,12 @@ router.post('/progress', requireAuth, async (req, res) => {
     const skinToTrack = activeSkin || (currentRows[0]?.active_skin) || null;
     if (skinToTrack && typeof skinToTrack === 'string' && skinToTrack.length <= 120) {
       query(`
-        INSERT INTO player_stats (uid, skin_play_counts) VALUES ($1, jsonb_build_object($2, 1))
+        INSERT INTO player_stats (uid, skin_play_counts) VALUES ($1, jsonb_build_object($2::text, 1))
         ON CONFLICT (uid) DO UPDATE SET
           skin_play_counts = jsonb_set(
             player_stats.skin_play_counts,
             ARRAY[$2::text],
-            (COALESCE((player_stats.skin_play_counts->>$2)::int, 0) + 1)::text::jsonb
+            (COALESCE((player_stats.skin_play_counts->>$2::text)::int, 0) + 1)::text::jsonb
           )
       `, [uid, skinToTrack]).catch(err =>
         console.error('[Stats] skin_play_counts error:', err.message)

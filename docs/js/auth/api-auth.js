@@ -109,7 +109,11 @@ async function handleLogin(email, password) {
       headers: { 'Content-Type': 'application/json' },
       body:    JSON.stringify({ email, password }),
     });
-    const data = await res.json();
+
+    let data;
+    try { data = await res.json(); }
+    catch { return { success: false, error: `Server error (${res.status}). Please try again later.` }; }
+
     if (!res.ok || data.error) {
       return { success: false, error: data.error || 'Login failed. Please try again.' };
     }
@@ -130,8 +134,19 @@ async function handleSignup(email, password, username) {
     if (!check.ok) return { success: false, error: check.reason };
   }
   try {
-    const data = await apiPost('/auth/signup', { email, password, username });
-    if (data.error) return { success: false, error: data.error };
+    const res = await fetch(`${API_BASE}/auth/signup`, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ email, password, username }),
+    });
+
+    let data;
+    try { data = await res.json(); }
+    catch { return { success: false, error: `Server error (${res.status}). Please try again later.` }; }
+
+    if (!res.ok || data.error) {
+      return { success: false, error: data.error || 'Signup failed. Please try again.' };
+    }
 
     setToken(data.token);
     _applyUserData(data);
