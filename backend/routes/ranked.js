@@ -7,15 +7,15 @@ const { checkUnlocks } = require('../utils/unlock-checker');
 
 const TIER_ORDER = ['bronze','silver','gold','platinum','diamond','master','grandmaster','apex','sovereign'];
 const TIER_CONFIG = {
-  bronze:      { rpPerDiv: 25,   hasDivisions: true,  rpGain: 25, rpLoss: 5  },
-  silver:      { rpPerDiv: 30,   hasDivisions: true,  rpGain: 24, rpLoss: 6  },
-  gold:        { rpPerDiv: 40,   hasDivisions: true,  rpGain: 22, rpLoss: 8  },
-  platinum:    { rpPerDiv: 50,   hasDivisions: true,  rpGain: 22, rpLoss: 10 },
-  diamond:     { rpPerDiv: 75,   hasDivisions: true,  rpGain: 30, rpLoss: 18 },
-  master:      { rpPerDiv: 150,  hasDivisions: false, rpGain: 45, rpLoss: 25 },
-  grandmaster: { rpPerDiv: 200,  hasDivisions: false, rpGain: 55, rpLoss: 30 },
-  apex:        { rpPerDiv: null,  hasDivisions: false, rpGain: 78, rpLoss: 40 },
-  sovereign:   { rpPerDiv: null,  hasDivisions: false, rpGain: 90, rpLoss: 45 },
+  bronze:      { rpPerDiv: 25,   hasDivisions: true,  rpGain: 25, rpLoss: 5,  rpPerWave: 4, streakCap: 0.15 },
+  silver:      { rpPerDiv: 30,   hasDivisions: true,  rpGain: 24, rpLoss: 6,  rpPerWave: 4, streakCap: 0.20 },
+  gold:        { rpPerDiv: 40,   hasDivisions: true,  rpGain: 22, rpLoss: 8,  rpPerWave: 4, streakCap: 0.25 },
+  platinum:    { rpPerDiv: 50,   hasDivisions: true,  rpGain: 22, rpLoss: 10, rpPerWave: 4, streakCap: 0.30 },
+  diamond:     { rpPerDiv: 75,   hasDivisions: true,  rpGain: 28, rpLoss: 18, rpPerWave: 3, streakCap: 0.35 },
+  master:      { rpPerDiv: 150,  hasDivisions: false, rpGain: 40, rpLoss: 25, rpPerWave: 3, streakCap: 0.40 },
+  grandmaster: { rpPerDiv: 200,  hasDivisions: false, rpGain: 48, rpLoss: 30, rpPerWave: 3, streakCap: 0.45 },
+  apex:        { rpPerDiv: null,  hasDivisions: false, rpGain: 55, rpLoss: 35, rpPerWave: 3, streakCap: 0.50 },
+  sovereign:   { rpPerDiv: null,  hasDivisions: false, rpGain: 65, rpLoss: 40, rpPerWave: 3, streakCap: 0.50 },
 };
 
 // GET /api/ranked/profile
@@ -64,8 +64,8 @@ router.post('/submit', requireAuth, async (req, res) => {
       // ── Server-side RP calculation ─────────────────────────────
       let rpDelta;
       if (won) {
-        const base = tierCfg.rpGain + (Math.max(wavesCleared, 1) - 1) * 4;
-        const streakMult = 1 + Math.min(streak * 0.1, 0.5); // up to +50% at 5-streak
+        const base = tierCfg.rpGain + (Math.max(wavesCleared, 1) - 1) * tierCfg.rpPerWave;
+        const streakMult = 1 + Math.min(streak * 0.08, tierCfg.streakCap);
         rpDelta = Math.round(base * streakMult);
       } else {
         rpDelta = -tierCfg.rpLoss;

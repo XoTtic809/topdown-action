@@ -9,7 +9,7 @@ const RANKED_CONFIG = {
     hasDivisions:true, rpPerDiv:25,
     targetWaves:7, waveOffset:0,
     hpMult:0.6, speedMult:0.75,
-    rpGainBase:25, rpLoss:5,
+    rpGainBase:25, rpLoss:5, rpPerWave:4, streakCap:0.15,
     enemyTypes:['normal'],
     miniBossInterval:0, bigBossInterval:0,
     desc:'Easy waves, weak enemies. Just getting started.',
@@ -19,7 +19,7 @@ const RANKED_CONFIG = {
     hasDivisions:true, rpPerDiv:30,
     targetWaves:10, waveOffset:3,
     hpMult:0.7, speedMult:0.8,
-    rpGainBase:24, rpLoss:6,
+    rpGainBase:24, rpLoss:6, rpPerWave:4, streakCap:0.20,
     enemyTypes:['normal','fast'],
     miniBossInterval:0, bigBossInterval:0, lastWaveBoss:1,
     desc:'Faster enemies show up. Boss on the last wave.',
@@ -29,7 +29,7 @@ const RANKED_CONFIG = {
     hasDivisions:true, rpPerDiv:40,
     targetWaves:12, waveOffset:6,
     hpMult:0.85, speedMult:0.9,
-    rpGainBase:22, rpLoss:8,
+    rpGainBase:22, rpLoss:8, rpPerWave:4, streakCap:0.25,
     enemyTypes:['normal','fast','tank'],
     miniBossInterval:6, bigBossInterval:0,
     desc:'Tanks show up. Mini-boss every 6 waves.',
@@ -39,7 +39,7 @@ const RANKED_CONFIG = {
     hasDivisions:true, rpPerDiv:50,
     targetWaves:15, waveOffset:10,
     hpMult:1.0, speedMult:1.0,
-    rpGainBase:22, rpLoss:10,
+    rpGainBase:22, rpLoss:10, rpPerWave:4, streakCap:0.30,
     enemyTypes:['normal','fast','tank','shooter'],
     miniBossInterval:5, bigBossInterval:0,
     desc:'Shooters join. Mini-boss every 5 waves.',
@@ -47,9 +47,9 @@ const RANKED_CONFIG = {
   diamond: {
     label:'Diamond', icon:'💎', color:'#4488FF',
     hasDivisions:true, rpPerDiv:75,
-    targetWaves:20, waveOffset:15,
+    targetWaves:18, waveOffset:15,
     hpMult:1.15, speedMult:1.05,
-    rpGainBase:30, rpLoss:18,
+    rpGainBase:28, rpLoss:18, rpPerWave:3, streakCap:0.35,
     enemyTypes:['fast','tank','shooter','enforcer'],
     miniBossInterval:5, bigBossInterval:10,
     desc:'Enforcers + big boss at wave 10. Things get real.',
@@ -57,9 +57,9 @@ const RANKED_CONFIG = {
   master: {
     label:'Master', icon:'👑', color:'#AA33FF',
     hasDivisions:false, rpPerDiv:150,
-    targetWaves:25, waveOffset:20,
+    targetWaves:20, waveOffset:20,
     hpMult:1.35, speedMult:1.12,
-    rpGainBase:45, rpLoss:25,
+    rpGainBase:40, rpLoss:25, rpPerWave:3, streakCap:0.40,
     enemyTypes:['fast','tank','shooter','enforcer'],
     miniBossInterval:4, bigBossInterval:8,
     desc:'No divisions. Bosses everywhere.',
@@ -67,9 +67,9 @@ const RANKED_CONFIG = {
   grandmaster: {
     label:'Grandmaster', icon:'🔱', color:'#ef5350',
     hasDivisions:false, rpPerDiv:200,
-    targetWaves:30, waveOffset:25,
+    targetWaves:22, waveOffset:25,
     hpMult:1.6, speedMult:1.2,
-    rpGainBase:55, rpLoss:30,
+    rpGainBase:48, rpLoss:30, rpPerWave:3, streakCap:0.45,
     enemyTypes:['tank','shooter','enforcer'],
     miniBossInterval:3, bigBossInterval:6,
     desc:'Only elites. Big boss every 6 waves. 200 RP to hit Apex.',
@@ -77,19 +77,19 @@ const RANKED_CONFIG = {
   apex: {
     label:'Apex', icon:'⚡', color:'#ff9800',
     hasDivisions:false, rpPerDiv:null,
-    targetWaves:9999, waveOffset:30,
+    targetWaves:25, waveOffset:30,
     hpMult:1.9, speedMult:1.3,
-    rpGainBase:78, rpLoss:40,
+    rpGainBase:55, rpLoss:35, rpPerWave:3, streakCap:0.50,
     enemyTypes:['shooter','enforcer'],
     miniBossInterval:0, bigBossInterval:5,
-    desc:'Top players. Boss every 5 waves. Pure survival.',
+    desc:'Top players. 25 brutal waves. Boss every 5.',
   },
   sovereign: {
     label:'Sovereign', icon:'♛', color:'#ffffff',
     hasDivisions:false, rpPerDiv:null,
-    targetWaves:9999, waveOffset:30,
+    targetWaves:25, waveOffset:30,
     hpMult:2.2, speedMult:1.4,
-    rpGainBase:90, rpLoss:45,
+    rpGainBase:65, rpLoss:40, rpPerWave:3, streakCap:0.50,
     enemyTypes:['shooter','enforcer'],
     miniBossInterval:0, bigBossInterval:4,
     desc:'The #1 player. You own this leaderboard.',
@@ -525,8 +525,8 @@ function rankedSpawnType(runWave) {
 /* ── RP calculation ──────────────────────────────────────────── */
 function _calcRpGain(wavesCleared) {
   const cfg  = getRankedConfig();
-  const base = cfg.rpGainBase + (wavesCleared - 1) * 4;
-  const mult = 1 + Math.min(_rankedStreak * 0.1, 0.5); // up to +50% at 5-streak
+  const base = cfg.rpGainBase + (wavesCleared - 1) * (cfg.rpPerWave || 4);
+  const mult = 1 + Math.min(_rankedStreak * 0.08, cfg.streakCap || 0.50);
   return Math.round(base * mult);
 }
 
