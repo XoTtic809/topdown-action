@@ -9074,7 +9074,11 @@ function switchLobbyTab(tabName) {
   document.querySelector(`.lnav-tab[data-tab="${tabName}"]`)?.classList.add('active');
 
   // Lazy-init per tab
-  if (tabName === 'shop') initShopUI();
+  if (tabName === 'shop') {
+    initShopUI();
+    const activeCat = document.querySelector('.shop-category.active')?.dataset.category || 'shop';
+    _activateShopCategory(activeCat);
+  }
   if (tabName === 'locker') _initLockerTab();
   if (tabName === 'compete') _initCompeteTab();
   if (tabName === 'settings') initSettingsUI(false);
@@ -9180,14 +9184,20 @@ function _initCompeteTab() {
         document.getElementById(`competeTab-${btn.dataset.competetab}`)?.classList.remove('hidden');
         _activeCompeteTab = btn.dataset.competetab;
 
-        if (btn.dataset.competetab === 'leaderboard') displayLeaderboard('allTime');
+        if (btn.dataset.competetab === 'leaderboard') {
+          const activeFilter = document.querySelector('.filter-btn.active')?.dataset.filter || 'allTime';
+          displayLeaderboard(activeFilter);
+        }
         if (btn.dataset.competetab === 'achievements' && typeof renderAchievementsPanel === 'function') renderAchievementsPanel();
         if (btn.dataset.competetab === 'ranks' && typeof renderRankIndex === 'function') renderRankIndex('competeRankIndexGrid');
       });
     });
     _competeInited = true;
   }
-  if (_activeCompeteTab === 'leaderboard') displayLeaderboard('allTime');
+  if (_activeCompeteTab === 'leaderboard') {
+    const activeFilter = document.querySelector('.filter-btn.active')?.dataset.filter || 'allTime';
+    displayLeaderboard(activeFilter);
+  }
   if (_activeCompeteTab === 'achievements' && typeof renderAchievementsPanel === 'function') renderAchievementsPanel();
 }
 
