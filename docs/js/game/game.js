@@ -7697,6 +7697,8 @@ function loop(time) {
   const dt = Math.min((time - lastTime) / 1000, 0.1) * (typeof devTimeScale !== 'undefined' ? devTimeScale : 1);
   lastTime = time;
 
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
   // Capture shake state ONCE so save/restore are always paired
   const shaking = screenShakeAmt > 0;
   if (shaking) {
@@ -7708,8 +7710,6 @@ function loop(time) {
     );
     screenShakeAmt = Math.max(0, screenShakeAmt - dt * 2.5);
   }
-
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
 
   if (running && !paused) {
  // FPS calculation
