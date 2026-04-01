@@ -145,9 +145,96 @@ async function runTick() {
       console.log(`[Scheduler] starts_at: activated ${startedCount} crate(s)`);
     }
 
+    // ── Step 5: Weekly auto-rotation ─────────────────────────────────────────
+    const { rows: [wrc] } = await query(
+      `SELECT * FROM weekly_rotation_config WHERE id = 1`
+    );
+    if (wrc && wrc.enabled) {
+      const now = new Date();
+      if (wrc.next_rotation_at && now >= new Date(wrc.next_rotation_at)) {
+        await performWeeklyRotation(wrc);
+      } else if (!wrc.next_rotation_at) {
+        // First enable — seed next_rotation_at
+        const next = computeNextRotation(wrc.rotation_day, wrc.rotation_hour);
+        await query(
+          `UPDATE weekly_rotation_config SET next_rotation_at = $1, updated_at = NOW() WHERE id = 1`,
+          [next.toISOString()]
+        );
+        console.log(`[Scheduler] Weekly rotation: seeded next_rotation_at = ${next.toISOString()}`);
+      }
+    }
+
   } catch (err) {
     console.error('[Scheduler] Tick error:', err.message);
   }
+}
+
+/**
+ * Compute the next occurrence of the given weekday + UTC hour from now.
+ */
+function computeNextRotation(day, hour) {
+  const now = new Date();
+  const target = new Date(Date.UTC(
+    now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), hour, 0, 0
+  ));
+  const diff = (day - target.getUTCDay() + 7) % 7;
+  target.setUTCDate(target.getUTCDate() + diff);
+  // If target is in the past (or right now), push to next week
+  if (target <= now) {
+    target.setUTCDate(target.getUTCDate() + 7);
+  }
+  return target;
+}
+
+/**
+ * Perform a weekly rotation: deactivate old auto-rotated cases,
+ * pick new ones from the pool, activate them, update config.
+ * @param {object} config - weekly_rotation_config row
+ * @param {string[]} [manualSelection] - optional hand-picked crate IDs
+ */
+async function performWeeklyRotation(config, manualSelection) {
+  // 1. Deactivate previous auto-rotated cases
+  const { rowCount: deactivated } = await query(`
+    UPDATE crate_rotation
+       SET active = false, auto_rotated = false, rotation_label = NULL, updated_at = NOW()
+     WHERE auto_rotated = true
+  `);
+
+  // 2. Pick new cases
+  let selection;
+  if (manualSelection && manualSelection.length > 0) {
+    selection = manualSelection;
+  } else {
+    const { rows: picked } = await query(`
+      SELECT crate_id FROM crate_rotation
+       WHERE auto_rotation_pool = true AND retired = false
+       ORDER BY RANDOM()
+       LIMIT $1
+    `, [config.pool_size]);
+    selection = picked.map(r => r.crate_id);
+  }
+
+  // 3. Activate new selection
+  if (selection.length > 0) {
+    await query(`
+      UPDATE crate_rotation
+         SET active = true, auto_rotated = true, rotation_label = 'WEEKLY', updated_at = NOW()
+       WHERE crate_id = ANY($1::text[])
+    `, [selection]);
+  }
+
+  // 4. Compute next rotation + update config
+  const next = computeNextRotation(config.rotation_day, config.rotation_hour);
+  await query(`
+    UPDATE weekly_rotation_config
+       SET current_selection = $1,
+           last_rotated_at = NOW(),
+           next_rotation_at = $2,
+           updated_at = NOW()
+     WHERE id = 1
+  `, [selection, next.toISOString()]);
+
+  console.log(`[Scheduler] Weekly rotation: deactivated ${deactivated}, activated [${selection.join(', ')}], next at ${next.toISOString()}`);
 }
 
 function startRotationScheduler() {
@@ -157,4 +244,4 @@ function startRotationScheduler() {
   setInterval(runTick, INTERVAL_MS);
 }
 
-module.exports = { startRotationScheduler };
+module.exports = { startRotationScheduler, performWeeklyRotation, computeNextRotation };

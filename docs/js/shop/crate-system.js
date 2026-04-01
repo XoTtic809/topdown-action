@@ -1183,6 +1183,8 @@ async function fetchCrateShopStatus() {
 
 // ── New shop API (rotation-driven) ───────────────────────────────────────────
 var shopCratesData = [];
+var shopWeeklyRotation = null;
+var _weeklyShopTimer = null;
 
 async function fetchShopCrates() {
   try {
@@ -1190,6 +1192,7 @@ async function fetchShopCrates() {
     if (!resp.ok) return shopCratesData;
     const data = await resp.json();
     shopCratesData = data.crates || [];
+    shopWeeklyRotation = data.weeklyRotation || null;
     return shopCratesData;
   } catch (_) { return shopCratesData; }
 }
@@ -1496,6 +1499,34 @@ async function initCratesTab() {
   ]);
 
   grid.innerHTML = '';
+
+  // Weekly rotation countdown banner
+  const timerEl = document.getElementById('weeklyRotationTimer');
+  if (timerEl) {
+    if (_weeklyShopTimer) { clearInterval(_weeklyShopTimer); _weeklyShopTimer = null; }
+    if (shopWeeklyRotation && shopWeeklyRotation.enabled && shopWeeklyRotation.nextRotationAt) {
+      const targetMs = new Date(shopWeeklyRotation.nextRotationAt).getTime();
+      const updateTimer = () => {
+        const ms = targetMs - Date.now();
+        if (ms <= 0) { timerEl.textContent = '🔄 Shop is refreshing...'; clearInterval(_weeklyShopTimer); return; }
+        const d = Math.floor(ms / 86400000);
+        const h = Math.floor((ms % 86400000) / 3600000);
+        const m = Math.floor((ms % 3600000) / 60000);
+        const parts = [];
+        if (d > 0) parts.push(`${d}d`);
+        if (h > 0) parts.push(`${h}h`);
+        parts.push(`${m}m`);
+        timerEl.innerHTML = `<div style="text-align:center;padding:8px 12px;margin-bottom:10px;border-radius:8px;
+          background:linear-gradient(135deg,#1a1a2e,#0d1117);border:1px solid #ffd93d33;font-size:12px;">
+          <span style="color:#ffd93d;">🔄 Shop refreshes in: <strong>${parts.join(' ')}</strong></span>
+        </div>`;
+      };
+      updateTimer();
+      _weeklyShopTimer = setInterval(updateTimer, 30000);
+    } else {
+      timerEl.innerHTML = '';
+    }
+  }
 
   shopEntries.forEach(entry => {
     // Merge API entry with static crate display data

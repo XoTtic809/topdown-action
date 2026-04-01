@@ -5,6 +5,7 @@ const express = require('express');
 const router  = express.Router();
 const { requireAuth, requireAdmin } = require('../middleware/auth');
 const { query } = require('../config/db');
+const { performWeeklyRotation, computeNextRotation } = require('../jobs/rotation-scheduler');
 
 // Template prices (must stay in sync with CRATES array in crates.js)
 const CRATE_TEMPLATE_PRICES = {
@@ -72,6 +73,7 @@ router.post('/update', requireAuth, requireAdmin, async (req, res) => {
     weekendOnly,
     timerVisible,
     rotationLabel,
+    autoRotated,
   } = req.body;
 
   if (!crateId || typeof crateId !== 'string') {
@@ -94,7 +96,7 @@ router.post('/update', requireAuth, requireAdmin, async (req, res) => {
     await query(`
       INSERT INTO crate_rotation (crate_id, active, price_override, stock_limit, stock_remaining,
         marketplace_floor_override, marketplace_ceiling_override, discount_percent,
-        starts_at, ends_at, weekend_only, timer_visible, rotation_label, updated_at)
+        starts_at, ends_at, weekend_only, timer_visible, rotation_label, auto_rotated, updated_at)
       VALUES ($1,
         COALESCE($2, false),
         $3, $4, $5, $6, $7,
@@ -103,6 +105,7 @@ router.post('/update', requireAuth, requireAdmin, async (req, res) => {
         COALESCE($11, false),
         COALESCE($12, false),
         $13,
+        COALESCE($14, false),
         NOW()
       )
       ON CONFLICT (crate_id) DO UPDATE SET
@@ -120,6 +123,7 @@ router.post('/update', requireAuth, requireAdmin, async (req, res) => {
         weekend_only                 = COALESCE($11, crate_rotation.weekend_only),
         timer_visible                = COALESCE($12, crate_rotation.timer_visible),
         rotation_label               = CASE WHEN $13::text IS NOT NULL THEN NULLIF($13::text, '') ELSE crate_rotation.rotation_label END,
+        auto_rotated                 = COALESCE($14, crate_rotation.auto_rotated),
         updated_at                   = NOW()
     `, [
       crateId,
@@ -135,6 +139,7 @@ router.post('/update', requireAuth, requireAdmin, async (req, res) => {
       weekendOnly ?? null,
       timerVisible ?? null,
       rotationLabel !== undefined ? rotationLabel : null,
+      autoRotated ?? null,
     ]);
 
     return res.json({ success: true });
@@ -266,6 +271,92 @@ router.post('/schedule/cancel', requireAuth, requireAdmin, async (req, res) => {
   } catch (err) {
     console.error('[AdminRotation] POST /schedule/cancel error:', err.message);
     return res.status(500).json({ error: 'Failed to cancel schedule' });
+  }
+});
+
+// ── GET /api/admin/rotation/weekly-config ────────────────────────────────────
+// Returns the weekly auto-rotation config + per-case pool status.
+router.get('/weekly-config', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const { rows: [config] } = await query(
+      `SELECT * FROM weekly_rotation_config WHERE id = 1`
+    );
+    const { rows: pool } = await query(
+      `SELECT crate_id, auto_rotation_pool, active, auto_rotated FROM crate_rotation ORDER BY crate_id`
+    );
+    return res.json({ config: config || null, pool });
+  } catch (err) {
+    console.error('[AdminRotation] GET /weekly-config error:', err.message);
+    return res.status(500).json({ error: 'Failed to fetch weekly config' });
+  }
+});
+
+// ── POST /api/admin/rotation/weekly-config ──────────────────────────────────
+// Update the weekly auto-rotation config. Supports partial updates.
+// Body: { enabled?, poolSize?, rotationDay?, rotationHour?, pool? }
+// pool is { "common-crate": true, "void-crate": false, ... }
+router.post('/weekly-config', requireAuth, requireAdmin, async (req, res) => {
+  const { enabled, poolSize, rotationDay, rotationHour, pool } = req.body;
+
+  try {
+    // Update config fields
+    const setClause = [];
+    const params = [];
+    let i = 1;
+
+    if (enabled !== undefined)     { setClause.push(`enabled = $${i++}`);       params.push(!!enabled); }
+    if (poolSize !== undefined)    { setClause.push(`pool_size = $${i++}`);     params.push(Math.max(1, Math.min(10, parseInt(poolSize) || 4))); }
+    if (rotationDay !== undefined) { setClause.push(`rotation_day = $${i++}`);  params.push(Math.max(0, Math.min(6, parseInt(rotationDay) || 0))); }
+    if (rotationHour !== undefined){ setClause.push(`rotation_hour = $${i++}`); params.push(Math.max(0, Math.min(23, parseInt(rotationHour) || 0))); }
+
+    if (setClause.length > 0) {
+      setClause.push('updated_at = NOW()');
+      await query(`UPDATE weekly_rotation_config SET ${setClause.join(', ')} WHERE id = 1`, params);
+    }
+
+    // Recompute next_rotation_at when schedule changes
+    if (rotationDay !== undefined || rotationHour !== undefined || enabled !== undefined) {
+      const { rows: [cfg] } = await query(`SELECT * FROM weekly_rotation_config WHERE id = 1`);
+      if (cfg && cfg.enabled) {
+        const next = computeNextRotation(cfg.rotation_day, cfg.rotation_hour);
+        await query(`UPDATE weekly_rotation_config SET next_rotation_at = $1, updated_at = NOW() WHERE id = 1`, [next.toISOString()]);
+      }
+    }
+
+    // Update per-case pool membership
+    if (pool && typeof pool === 'object') {
+      for (const [crateId, inPool] of Object.entries(pool)) {
+        await query(
+          `UPDATE crate_rotation SET auto_rotation_pool = $2, updated_at = NOW() WHERE crate_id = $1`,
+          [crateId, !!inPool]
+        );
+      }
+    }
+
+    return res.json({ success: true });
+  } catch (err) {
+    console.error('[AdminRotation] POST /weekly-config error:', err.message);
+    return res.status(500).json({ error: 'Failed to update weekly config' });
+  }
+});
+
+// ── POST /api/admin/rotation/weekly-refresh ─────────────────────────────────
+// Manual trigger: immediately performs a weekly rotation.
+// Optional body: { selection: ["frost-crate", "void-crate"] } to hand-pick.
+router.post('/weekly-refresh', requireAuth, requireAdmin, async (req, res) => {
+  const { selection } = req.body;
+
+  try {
+    const { rows: [config] } = await query(`SELECT * FROM weekly_rotation_config WHERE id = 1`);
+    if (!config) return res.status(500).json({ error: 'Weekly config not found' });
+
+    await performWeeklyRotation(config, Array.isArray(selection) ? selection : undefined);
+
+    const { rows: [updated] } = await query(`SELECT * FROM weekly_rotation_config WHERE id = 1`);
+    return res.json({ success: true, config: updated });
+  } catch (err) {
+    console.error('[AdminRotation] POST /weekly-refresh error:', err.message);
+    return res.status(500).json({ error: 'Failed to refresh weekly rotation' });
   }
 });
 

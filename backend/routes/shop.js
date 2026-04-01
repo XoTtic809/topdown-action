@@ -52,7 +52,18 @@ router.get('/crates', async (req, res) => {
       return entry;
     });
 
-    return res.json({ crates });
+    // Weekly rotation countdown info
+    let weeklyRotation = null;
+    try {
+      const { rows: [wrc] } = await query(
+        `SELECT enabled, next_rotation_at FROM weekly_rotation_config WHERE id = 1`
+      );
+      if (wrc && wrc.enabled && wrc.next_rotation_at) {
+        weeklyRotation = { enabled: true, nextRotationAt: wrc.next_rotation_at.toISOString() };
+      }
+    } catch (_) { /* table may not exist yet */ }
+
+    return res.json({ crates, weeklyRotation });
   } catch (err) {
     console.error('[Shop] GET /crates error:', err.message);
     return res.status(500).json({ error: 'Failed to load shop' });

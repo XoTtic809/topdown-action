@@ -162,6 +162,9 @@ async function initSchema() {
       ALTER TABLE users ADD COLUMN IF NOT EXISTS weekly_crate_drops    INT NOT NULL DEFAULT 0;
       ALTER TABLE users ADD COLUMN IF NOT EXISTS crate_drops_week_start TIMESTAMPTZ;
 
+      ALTER TABLE crate_rotation ADD COLUMN IF NOT EXISTS auto_rotation_pool BOOLEAN NOT NULL DEFAULT false;
+      ALTER TABLE crate_rotation ADD COLUMN IF NOT EXISTS auto_rotated       BOOLEAN NOT NULL DEFAULT false;
+
       CREATE TABLE IF NOT EXISTS reports (
         id           TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
         user_id      TEXT NOT NULL REFERENCES users(uid) ON DELETE CASCADE,
@@ -323,6 +326,22 @@ async function initSchema() {
         ('infernal-crate',  true,  false),
         ('void-crate',      false, false)
       ON CONFLICT (crate_id) DO NOTHING;
+
+      -- ── Weekly Auto-Rotation Config (single-row) ──────────────────────────
+
+      CREATE TABLE IF NOT EXISTS weekly_rotation_config (
+        id               INTEGER PRIMARY KEY DEFAULT 1 CHECK (id = 1),
+        enabled          BOOLEAN     NOT NULL DEFAULT false,
+        pool_size        INTEGER     NOT NULL DEFAULT 4,
+        rotation_day     INTEGER     NOT NULL DEFAULT 1,
+        rotation_hour    INTEGER     NOT NULL DEFAULT 12,
+        last_rotated_at  TIMESTAMPTZ,
+        next_rotation_at TIMESTAMPTZ,
+        current_selection TEXT[]     NOT NULL DEFAULT ARRAY[]::TEXT[],
+        updated_at       TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+
+      INSERT INTO weekly_rotation_config (id) VALUES (1) ON CONFLICT (id) DO NOTHING;
 
       -- ── Player Profile Cards ───────────────────────────────────────────────
 
