@@ -46,52 +46,52 @@ const RANKED_CONFIG = {
   },
   diamond: {
     label:'Diamond', icon:'💎', color:'#4488FF',
-    hasDivisions:true, rpPerDiv:75,
-    targetWaves:18, waveOffset:15,
-    hpMult:1.15, speedMult:1.05,
-    rpGainBase:28, rpLoss:18, rpPerWave:3, streakCap:0.35,
-    enemyTypes:['fast','tank','shooter','enforcer'],
-    miniBossInterval:5, bigBossInterval:10,
-    desc:'Enforcers + big boss at wave 10. Things get real.',
+    hasDivisions:true, rpPerDiv:100,
+    targetWaves:18, waveOffset:12,
+    hpMult:1.0, speedMult:1.0,
+    rpGainBase:18, rpLoss:16, rpPerWave:3, streakCap:0.35,
+    enemyTypes:['normal','fast','tank','shooter','enforcer'],
+    miniBossInterval:6, bigBossInterval:18,
+    desc:'Slow climb. 100 RP per division. All enemy types.',
   },
   master: {
     label:'Master', icon:'👑', color:'#AA33FF',
-    hasDivisions:false, rpPerDiv:150,
-    targetWaves:20, waveOffset:20,
-    hpMult:1.35, speedMult:1.12,
-    rpGainBase:40, rpLoss:25, rpPerWave:3, streakCap:0.40,
-    enemyTypes:['fast','tank','shooter','enforcer'],
-    miniBossInterval:4, bigBossInterval:8,
-    desc:'No divisions. Bosses everywhere.',
+    hasDivisions:false, rpPerDiv:200,
+    targetWaves:18, waveOffset:14,
+    hpMult:1.0, speedMult:1.0,
+    rpGainBase:20, rpLoss:22, rpPerWave:3, streakCap:0.40,
+    enemyTypes:['normal','fast','tank','shooter','enforcer','splitter','bomber'],
+    miniBossInterval:6, bigBossInterval:18,
+    desc:'No divisions. 200 RP to promote. Splitters and bombers join.',
   },
   grandmaster: {
     label:'Grandmaster', icon:'🔱', color:'#ef5350',
-    hasDivisions:false, rpPerDiv:200,
-    targetWaves:22, waveOffset:25,
-    hpMult:1.6, speedMult:1.2,
-    rpGainBase:48, rpLoss:30, rpPerWave:3, streakCap:0.45,
-    enemyTypes:['tank','shooter','enforcer'],
-    miniBossInterval:3, bigBossInterval:6,
-    desc:'Only elites. Big boss every 6 waves. 200 RP to hit Apex.',
+    hasDivisions:false, rpPerDiv:300,
+    targetWaves:18, waveOffset:16,
+    hpMult:1.0, speedMult:1.0,
+    rpGainBase:22, rpLoss:28, rpPerWave:3, streakCap:0.45,
+    enemyTypes:['normal','fast','tank','shooter','enforcer','splitter','bomber','phantom'],
+    miniBossInterval:6, bigBossInterval:18,
+    desc:'300 RP to hit Apex. Phantoms now in the mix.',
   },
   apex: {
     label:'Apex', icon:'⚡', color:'#ff9800',
     hasDivisions:false, rpPerDiv:null,
-    targetWaves:25, waveOffset:30,
-    hpMult:1.9, speedMult:1.3,
-    rpGainBase:55, rpLoss:35, rpPerWave:3, streakCap:0.50,
-    enemyTypes:['shooter','enforcer'],
-    miniBossInterval:0, bigBossInterval:5,
-    desc:'Top players. 25 brutal waves. Boss every 5.',
+    targetWaves:18, waveOffset:18,
+    hpMult:1.0, speedMult:1.0,
+    rpGainBase:24, rpLoss:32, rpPerWave:3, streakCap:0.50,
+    enemyTypes:['normal','fast','tank','shooter','enforcer','splitter','bomber','phantom'],
+    miniBossInterval:6, bigBossInterval:18,
+    desc:'Top players. 18 waves. Every enemy type. The grind is real.',
   },
   sovereign: {
     label:'Sovereign', icon:'♛', color:'#ffffff',
     hasDivisions:false, rpPerDiv:null,
-    targetWaves:25, waveOffset:30,
-    hpMult:2.2, speedMult:1.4,
-    rpGainBase:65, rpLoss:40, rpPerWave:3, streakCap:0.50,
-    enemyTypes:['shooter','enforcer'],
-    miniBossInterval:0, bigBossInterval:4,
+    targetWaves:18, waveOffset:18,
+    hpMult:1.0, speedMult:1.0,
+    rpGainBase:28, rpLoss:36, rpPerWave:3, streakCap:0.50,
+    enemyTypes:['normal','fast','tank','shooter','enforcer','splitter','bomber','phantom'],
+    miniBossInterval:6, bigBossInterval:18,
     desc:'The #1 player. You own this leaderboard.',
   },
 };
@@ -493,11 +493,6 @@ async function loadRankedProfile() {
 /* ── Boss schedule per tier + wave ───────────────────────────── */
 function rankedBossTypeForWave(completedWave) {
   const cfg  = getRankedConfig();
-  const tier = _rankedProfile.tier;
-
-  if (tier === 'silver' && completedWave === cfg.targetWaves) return 1;  // mini on final
-  if (tier === 'apex'   && completedWave % 5 === 0) return 4;            // legendary every 5
-  if (tier === 'grandmaster' && completedWave % 6 === 0) return 2;
 
   if (cfg.bigBossInterval  > 0 && completedWave % cfg.bigBossInterval  === 0) return 2;
   if (cfg.miniBossInterval > 0 && completedWave % cfg.miniBossInterval === 0) return 1;

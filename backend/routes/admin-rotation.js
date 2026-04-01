@@ -119,7 +119,7 @@ router.post('/update', requireAuth, requireAdmin, async (req, res) => {
         ends_at                      = CASE WHEN $10::timestamptz IS NOT NULL THEN $10::timestamptz ELSE crate_rotation.ends_at END,
         weekend_only                 = COALESCE($11, crate_rotation.weekend_only),
         timer_visible                = COALESCE($12, crate_rotation.timer_visible),
-        rotation_label               = CASE WHEN $13::text IS NOT NULL THEN $13::text ELSE crate_rotation.rotation_label END,
+        rotation_label               = CASE WHEN $13::text IS NOT NULL THEN NULLIF($13::text, '') ELSE crate_rotation.rotation_label END,
         updated_at                   = NOW()
     `, [
       crateId,
@@ -134,7 +134,7 @@ router.post('/update', requireAuth, requireAdmin, async (req, res) => {
       endsAt ?? null,
       weekendOnly ?? null,
       timerVisible ?? null,
-      rotationLabel ?? null,
+      rotationLabel !== undefined ? rotationLabel : null,
     ]);
 
     return res.json({ success: true });

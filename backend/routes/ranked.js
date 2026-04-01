@@ -11,11 +11,11 @@ const TIER_CONFIG = {
   silver:      { rpPerDiv: 30,   hasDivisions: true,  rpGain: 24, rpLoss: 6,  rpPerWave: 4, streakCap: 0.20 },
   gold:        { rpPerDiv: 40,   hasDivisions: true,  rpGain: 22, rpLoss: 8,  rpPerWave: 4, streakCap: 0.25 },
   platinum:    { rpPerDiv: 50,   hasDivisions: true,  rpGain: 22, rpLoss: 10, rpPerWave: 4, streakCap: 0.30 },
-  diamond:     { rpPerDiv: 75,   hasDivisions: true,  rpGain: 28, rpLoss: 18, rpPerWave: 3, streakCap: 0.35 },
-  master:      { rpPerDiv: 150,  hasDivisions: false, rpGain: 40, rpLoss: 25, rpPerWave: 3, streakCap: 0.40 },
-  grandmaster: { rpPerDiv: 200,  hasDivisions: false, rpGain: 48, rpLoss: 30, rpPerWave: 3, streakCap: 0.45 },
-  apex:        { rpPerDiv: null,  hasDivisions: false, rpGain: 55, rpLoss: 35, rpPerWave: 3, streakCap: 0.50 },
-  sovereign:   { rpPerDiv: null,  hasDivisions: false, rpGain: 65, rpLoss: 40, rpPerWave: 3, streakCap: 0.50 },
+  diamond:     { rpPerDiv: 100,  hasDivisions: true,  rpGain: 18, rpLoss: 16, rpPerWave: 3, streakCap: 0.35 },
+  master:      { rpPerDiv: 200,  hasDivisions: false, rpGain: 20, rpLoss: 22, rpPerWave: 3, streakCap: 0.40 },
+  grandmaster: { rpPerDiv: 300,  hasDivisions: false, rpGain: 22, rpLoss: 28, rpPerWave: 3, streakCap: 0.45 },
+  apex:        { rpPerDiv: null,  hasDivisions: false, rpGain: 24, rpLoss: 32, rpPerWave: 3, streakCap: 0.50 },
+  sovereign:   { rpPerDiv: null,  hasDivisions: false, rpGain: 28, rpLoss: 36, rpPerWave: 3, streakCap: 0.50 },
 };
 
 // GET /api/ranked/profile

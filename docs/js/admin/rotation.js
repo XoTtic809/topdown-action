@@ -7,11 +7,11 @@ var _rotationData   = [];
 var ROTATION_CASE_META = {
   'common-crate':    { name: 'Common Case',    icon: '📦', price: 300 },
   'rare-crate':      { name: 'Rare Case',       icon: '🎁', price: 750 },
-  'epic-crate':      { name: 'Epic Case',        icon: '🔮', price: 1500 },
-  'legendary-crate': { name: 'Legendary Case',   icon: '👑', price: 4000 },
-  'icon-crate':      { name: 'Icon Case',         icon: '⭐', price: 750 },
+  'epic-crate':      { name: 'Epic Case',        icon: '🎭', price: 1500 },
+  'legendary-crate': { name: 'Legendary Case',   icon: '⭐', price: 4000 },
+  'icon-crate':      { name: 'Icon Case',         icon: '🎯', price: 750 },
   'oblivion-crate':  { name: 'Oblivion Case',    icon: '🌑', price: 10000 },
-  'neon-crate':      { name: 'Neon Case',         icon: '💡', price: 2000 },
+  'neon-crate':      { name: 'Neon Case',         icon: '⚡', price: 2000 },
   'frost-crate':     { name: 'Frost Case',        icon: '❄️', price: 2500 },
   'infernal-crate':  { name: 'Infernal Case',     icon: '🔥', price: 2500 },
   'void-crate':      { name: 'Void Case',         icon: '🌀', price: 6000 },
@@ -159,7 +159,7 @@ function buildCaseCard(row) {
 
 async function rcToggleActive(crateId, newActive) {
   try {
-    await apiPost('/admin/rotation/update', { crateId, active: newActive });
+    await apiPost('/admin/rotation/update', { crateId, active: newActive, weekendOnly: false });
     const name = ROTATION_CASE_META[crateId]?.name || crateId;
     showAdminMessage(`${name}: ${newActive ? 'turned ON ✅' : 'turned OFF ⛔'}`);
     loadRotationData();
@@ -175,7 +175,7 @@ async function rcSave(crateId) {
     await apiPost('/admin/rotation/update', {
       crateId,
       discountPercent: parseInt(discEl?.value || '0', 10),
-      rotationLabel:   labelEl?.value || null,
+      rotationLabel:   labelEl?.value ?? '',
     });
     const name = ROTATION_CASE_META[crateId]?.name || crateId;
     showAdminMessage(`${name} saved ✅`);
@@ -208,7 +208,7 @@ async function rcActivateAll() {
     for (const row of _rotationData) {
       if (!row.active) {
         // Passing active:true also un-retires the case on the backend
-        await apiPost('/admin/rotation/update', { crateId: row.crate_id, active: true });
+        await apiPost('/admin/rotation/update', { crateId: row.crate_id, active: true, weekendOnly: false });
       }
     }
     showAdminMessage('All cases activated ✅');
