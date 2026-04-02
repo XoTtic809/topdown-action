@@ -61,16 +61,16 @@ function resize() {
   ctx.imageSmoothingEnabled = false;
 
   // Reposition entities so they aren't stranded after a resize
-  if (oldW > 0 && oldH > 0) {
-    const sx = canvas.width / oldW, sy = canvas.height / oldH;
-    if (typeof player !== 'undefined' && player) {
+  // (try-catch because player/enemies are let-declared later in the file
+  //  and accessing them before that declaration throws in the TDZ)
+  try {
+    if (oldW > 0 && oldH > 0 && player) {
+      const sx = canvas.width / oldW, sy = canvas.height / oldH;
       player.x = Math.max(20, Math.min(canvas.width - 20, player.x * sx));
       player.y = Math.max(20, Math.min(canvas.height - 20, player.y * sy));
-    }
-    if (typeof enemies !== 'undefined') {
       for (const e of enemies) { e.x *= sx; e.y *= sy; }
     }
-  }
+  } catch(_) {}
 }
 window.addEventListener('resize', resize);
 resize();
