@@ -53,11 +53,24 @@ let _frameNow = Date.now();
 
 let canvasRect = { left: 0, top: 0 };
 function resize() {
+  const oldW = canvas.width, oldH = canvas.height;
   canvas.width  = window.innerWidth;
   canvas.height = window.innerHeight;
   canvasRect    = canvas.getBoundingClientRect();
   // Resizing resets all context state — re-apply this every time
   ctx.imageSmoothingEnabled = false;
+
+  // Reposition entities so they aren't stranded after a resize
+  if (oldW > 0 && oldH > 0) {
+    const sx = canvas.width / oldW, sy = canvas.height / oldH;
+    if (typeof player !== 'undefined' && player) {
+      player.x = Math.max(20, Math.min(canvas.width - 20, player.x * sx));
+      player.y = Math.max(20, Math.min(canvas.height - 20, player.y * sy));
+    }
+    if (typeof enemies !== 'undefined') {
+      for (const e of enemies) { e.x *= sx; e.y *= sy; }
+    }
+  }
 }
 window.addEventListener('resize', resize);
 resize();
@@ -4215,10 +4228,12 @@ class Enemy {
 
  // Track whether enemy has entered visible screen (prevents off-screen damage)
     this.hasEnteredScreen = false;
+    this.aliveTime = 0; // seconds since spawn (for stale-enemy cull)
   }
 
   update(dt) {
     if (!player) return;
+    this.aliveTime += dt;
     const angle = Math.atan2(player.y - this.y, player.x - this.x);
     
  // Enforcer dash behavior
@@ -4486,14 +4501,18 @@ function cullOffScreenEnemies() {
 
   for (let i = enemies.length - 1; i >= 0; i--) {
     const e = enemies[i];
+    const offScreen = e.x < -cullMargin || e.x > canvas.width + cullMargin ||
+                      e.y < -cullMargin || e.y > canvas.height + cullMargin;
 
- // Only cull if enemy has entered screen first (prevents culling during spawn)
-    if (e.hasEnteredScreen) {
-      if (e.x < -cullMargin || e.x > canvas.width + cullMargin ||
-          e.y < -cullMargin || e.y > canvas.height + cullMargin) {
-        enemies.splice(i, 1);
+    if (e.hasEnteredScreen && offScreen) {
+      enemies.splice(i, 1);
  // Don't count toward wave completion
-      }
+    } else if (!e.hasEnteredScreen && offScreen && e.aliveTime > 10) {
+ // Enemy has been alive 10+ seconds and never reached the screen
+ // (e.g. stranded after a window resize while paused). Remove it
+ // and count the kill so the wave can still complete.
+      enemies.splice(i, 1);
+      enemiesKilledThisWave++;
     }
   }
 }
