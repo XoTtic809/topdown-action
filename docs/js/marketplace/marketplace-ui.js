@@ -692,6 +692,94 @@ function closeSellModal() {
   if (modal) modal.classList.add('hidden');
 }
 
+async function openSellCrateModal() {
+  const eligibility = await checkMarketplaceEligibility();
+  if (!eligibility.eligible) { showMpMessage(eligibility.reason, true); return; }
+
+  if (marketplaceState.myListings.length >= MARKETPLACE_CONFIG.MAX_LISTINGS_PER_PLAYER) {
+    showMpMessage(`Maximum ${MARKETPLACE_CONFIG.MAX_LISTINGS_PER_PLAYER} active listings reached.`, true);
+    return;
+  }
+
+  // Get owned crates
+  const owned = typeof ownedCratesCache !== 'undefined' ? ownedCratesCache : [];
+  if (!owned.length) {
+    showMpMessage('You don\'t own any cases to sell.', true);
+    return;
+  }
+
+  // Count owned crates by type
+  const counts = {};
+  for (const c of owned) counts[c] = (counts[c] || 0) + 1;
+
+  // Build a picker overlay
+  const existing = document.getElementById('crateSellPickerOverlay');
+  if (existing) existing.remove();
+
+  const overlay = document.createElement('div');
+  overlay.id = 'crateSellPickerOverlay';
+  overlay.style.cssText = `
+    position:fixed;inset:0;background:rgba(0,0,0,0.75);
+    display:flex;align-items:center;justify-content:center;
+    z-index:10000;backdrop-filter:blur(4px);
+  `;
+
+  const box = document.createElement('div');
+  box.style.cssText = `
+    background:linear-gradient(135deg,#0d1525 0%,#0a0f1e 100%);
+    border:1px solid rgba(255,167,38,0.4);
+    border-radius:16px;padding:28px 32px;text-align:center;
+    max-width:380px;width:90%;
+    box-shadow:0 0 40px rgba(255,167,38,0.15);
+    font-family:'Orbitron',sans-serif;
+  `;
+
+  const unique = Object.keys(counts);
+  const btns = unique.map(crateId => {
+    const info = typeof CRATE_PRICING_CLIENT !== 'undefined' ? CRATE_PRICING_CLIENT[crateId] : null;
+    const name = info ? info.name : crateId;
+    const cnt = counts[crateId];
+    return `<button class="crate-sell-pick-btn" data-crate="${crateId}" style="
+      display:block;width:100%;background:rgba(255,167,38,0.08);
+      border:1px solid rgba(255,167,38,0.25);color:#ffa726;
+      padding:12px 16px;border-radius:10px;cursor:pointer;
+      font-family:'Orbitron',sans-serif;font-size:12px;font-weight:700;
+      letter-spacing:1px;margin-bottom:8px;text-align:left;
+    ">${name}${cnt > 1 ? ` <span style="color:rgba(219,231,255,0.5)">×${cnt}</span>` : ''}</button>`;
+  }).join('');
+
+  box.innerHTML = `
+    <div style="font-size:14px;font-weight:700;color:#dbe7ff;letter-spacing:1px;margin-bottom:16px">
+      Select a Case to Sell
+    </div>
+    <div style="max-height:300px;overflow-y:auto">${btns}</div>
+    <button id="crateSellPickerClose" style="
+      margin-top:14px;background:rgba(255,255,255,0.04);
+      border:1px solid rgba(255,255,255,0.12);
+      color:rgba(219,231,255,0.55);padding:9px 28px;border-radius:8px;cursor:pointer;
+      font-family:'Orbitron',sans-serif;font-size:11px;font-weight:700;letter-spacing:1px;
+    ">CANCEL</button>
+  `;
+
+  overlay.appendChild(box);
+  document.body.appendChild(overlay);
+
+  const close = () => overlay.remove();
+  document.getElementById('crateSellPickerClose').onclick = close;
+  overlay.addEventListener('click', e => { if (e.target === overlay) close(); });
+
+  // Wire up each crate button
+  box.querySelectorAll('.crate-sell-pick-btn').forEach(btn => {
+    btn.onclick = () => {
+      const crateId = btn.dataset.crate;
+      close();
+      if (typeof openMarketplaceCrateListingFlow === 'function') {
+        openMarketplaceCrateListingFlow(crateId);
+      }
+    };
+  });
+}
+
 // Tracks the market-average suggested price for the currently selected sell skin
 let _sellSuggestedPrice = null;
 
@@ -910,6 +998,8 @@ function setupMarketplaceShopTab() {
   // We just attach the sell button listener here.
   const sellBtn = document.getElementById('mpSellBtn');
   if (sellBtn) sellBtn.addEventListener('click', openSellModal);
+  const sellCrateBtn = document.getElementById('mpSellCrateBtn');
+  if (sellCrateBtn) sellCrateBtn.addEventListener('click', openSellCrateModal);
 }
 
 window.addEventListener('load', setupMarketplaceShopTab);
