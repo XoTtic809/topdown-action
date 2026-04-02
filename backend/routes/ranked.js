@@ -288,7 +288,8 @@ router.get('/admin/leaderboard', requireAuth, requireAdmin, async (req, res) => 
       ORDER BY
         ARRAY_POSITION(ARRAY['bronze','silver','gold','platinum','diamond','master','grandmaster','apex','sovereign']::TEXT[], rp.tier) DESC,
         rp.division ASC,
-        rp.rp DESC
+        rp.rp DESC NULLS LAST,
+        rp.wins DESC NULLS LAST
       LIMIT $1
     `, [limit]);
     return res.json(rows);
@@ -310,7 +311,8 @@ router.get('/leaderboard', async (req, res) => {
       ORDER BY
         ARRAY_POSITION(ARRAY['bronze','silver','gold','platinum','diamond','master','grandmaster','apex','sovereign']::TEXT[], rp.tier) DESC,
         rp.division ASC,
-        rp.rp DESC
+        rp.rp DESC NULLS LAST,
+        rp.wins DESC NULLS LAST
       LIMIT $1
     `, [limit]);
     return res.json(rows);

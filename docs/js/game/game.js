@@ -6343,7 +6343,7 @@ class Turret {
   constructor(x, y) {
     this.x = x;
     this.y = y;
-    this.life = 10;
+    this.life = 20;
     this.shootCooldown = 0;
     this.angle = 0;
   }
@@ -6363,15 +6363,21 @@ class Turret {
     }
 
     if (nearest) {
-      this.angle = Math.atan2(nearest.y - this.y, nearest.x - this.x);
+      // Lead the shot — aim where the enemy will be
+      const bSpd = 500;
+      const dist = nearestDist || 1;
+      const tHit = dist / bSpd; // time for bullet to reach enemy
+      const px = nearest.x + (nearest.speed || 0) * Math.cos(Math.atan2(player.y - nearest.y, player.x - nearest.x)) * tHit;
+      const py = nearest.y + (nearest.speed || 0) * Math.sin(Math.atan2(player.y - nearest.y, player.x - nearest.x)) * tHit;
+      this.angle = Math.atan2(py - this.y, px - this.x);
       if (this.shootCooldown <= 0) {
         bullets.push({
           x: this.x, y: this.y,
-          vx: Math.cos(this.angle) * 340,
-          vy: Math.sin(this.angle) * 340,
-          r: 5
+          vx: Math.cos(this.angle) * bSpd,
+          vy: Math.sin(this.angle) * bSpd,
+          r: 5, dmg: 2
         });
-        this.shootCooldown = 0.65;
+        this.shootCooldown = 0.35;
       }
     }
   }
@@ -8092,7 +8098,7 @@ if (gameSettings.screenShake) screenShakeAmt = 1.2;
         const dx = b.x - e.x, dy = b.y - e.y;
         const rSum = b.r + e.r;
         if (dx * dx + dy * dy < rSum * rSum) {
-          e.hp--;
+          e.hp -= (b.dmg || 1);
 
           if (e.hp <= 0) {
             e._dead = true; // mark before explosion chain runs to prevent double-kill

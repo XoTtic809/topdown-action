@@ -679,6 +679,7 @@ async function displayAllUsers() {
         <div class="admin-user-id">ID: ${user.userId}</div>
       </div>
       <div class="admin-user-actions">
+        <button class="admin-action-btn" onclick="navigator.clipboard.writeText('${user.userId}');this.textContent='✅ Copied';setTimeout(()=>this.textContent='📋 Copy ID',1200)">📋 Copy ID</button>
         <button class="admin-action-btn ban"   onclick="quickBanUser('${user.userId}', '${(user.username||'').replace(/'/g,"\\'")}')">🚫 Ban</button>
         <button class="admin-action-btn reset" onclick="quickResetScore('${user.userId}', '${(user.username||'').replace(/'/g,"\\'")}')">🔄 Reset Score</button>
       </div>
