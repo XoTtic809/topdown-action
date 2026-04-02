@@ -6352,7 +6352,7 @@ class Turret {
     this.life -= dt;
     this.shootCooldown -= dt;
 
-    // Find nearest enemy
+    // Find nearest enemy or boss
     let nearest = null;
     let nearestDist = Infinity;
     for (let i = 0; i < enemies.length; i++) {
@@ -6361,14 +6361,20 @@ class Turret {
       const d = Math.hypot(e.x - this.x, e.y - this.y);
       if (d < nearestDist) { nearestDist = d; nearest = e; }
     }
+    // Also consider the boss as a target
+    if (boss && boss.hp > 0) {
+      const bd = Math.hypot(boss.x - this.x, boss.y - this.y);
+      if (bd < nearestDist) { nearestDist = bd; nearest = boss; }
+    }
 
     if (nearest) {
-      // Lead the shot — aim where the enemy will be
+      // Lead the shot — aim where the target will be
       const bSpd = 500;
       const dist = nearestDist || 1;
-      const tHit = dist / bSpd; // time for bullet to reach enemy
-      const px = nearest.x + (nearest.speed || 0) * Math.cos(Math.atan2(player.y - nearest.y, player.x - nearest.x)) * tHit;
-      const py = nearest.y + (nearest.speed || 0) * Math.sin(Math.atan2(player.y - nearest.y, player.x - nearest.x)) * tHit;
+      const tHit = dist / bSpd;
+      const moveAngle = nearest.speed ? Math.atan2(player.y - nearest.y, player.x - nearest.x) : 0;
+      const px = nearest.x + (nearest.speed || 0) * Math.cos(moveAngle) * tHit;
+      const py = nearest.y + (nearest.speed || 0) * Math.sin(moveAngle) * tHit;
       this.angle = Math.atan2(py - this.y, px - this.x);
       if (this.shootCooldown <= 0) {
         bullets.push({
@@ -6459,7 +6465,14 @@ class PowerUp {
   }
 }
 
-function spawnPowerUp(x, y) {
+function spawnPowerUp(x, y, forceType) {
+  if (forceType) {
+    const padding = 30;
+    const cx = Math.max(padding, Math.min(canvas.width - padding, x));
+    const cy = Math.max(padding, Math.min(canvas.height - padding, y));
+    powerups.push(new PowerUp(cx, cy, forceType));
+    return;
+  }
   const types = ['health', 'rapidfire', 'speed', 'shield'];
 
  // Weapon upgrade (13% chance, max 3 levels)
@@ -7999,8 +8012,8 @@ if (gameSettings.screenShake) screenShakeAmt = 1.2;
             }
             continue;
           }
-          boss.hp--;
-          
+          boss.hp -= (b.dmg || 1);
+
           if (boss.hp <= 0) {
  // Different rewards for each boss type
             const isLegendaryBoss = boss.isLegendaryBoss;
