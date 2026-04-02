@@ -22,12 +22,9 @@ const { checkUnlocks } = require('../utils/unlock-checker');
 const TAX_RATE                = 0.08;
 const LISTING_FEE_RATE        = 0.02;
 const MAX_LISTINGS_PER_PLAYER = 5;
-const MIN_ACCOUNT_AGE_DAYS    = 7;
 const MIN_LEVEL               = 15;
 const SKIN_COOLDOWN_HOURS     = 24;
 
-// Accounts created before the v4.2.0 launch bypass the 7-day wait
-const SHOP_UPDATE_TIMESTAMP_MS = new Date('2026-02-18T12:45:00Z').getTime();
 
 const CHAMPION_SKIN_IDS = new Set(['gold-champion', 'silver-champion', 'bronze-champion']);
 // Skin IDs permanently blocked from the marketplace (server-authoritative)
@@ -130,18 +127,6 @@ function calculateTrueLevel(xp) {
 // ─────────────────────────────────────────────────────────────
 async function checkEligibility(user, userIsAdmin, userIsWhitelisted) {
   if (userIsAdmin || userIsWhitelisted) return { eligible: true };
-
-  const createdMs  = new Date(user.created_at).getTime();
-  const isLegacy   = createdMs < SHOP_UPDATE_TIMESTAMP_MS;
-  const ageDays    = (Date.now() - createdMs) / 86400000;
-
-  if (!isLegacy && ageDays < MIN_ACCOUNT_AGE_DAYS) {
-    const left = Math.ceil(MIN_ACCOUNT_AGE_DAYS - ageDays);
-    return {
-      eligible: false,
-      reason: `Account must be at least 7 days old. ${left} day${left !== 1 ? 's' : ''} remaining.`,
-    };
-  }
 
   const level = calculateTrueLevel(user.current_xp);
   if (level < MIN_LEVEL) {

@@ -18,10 +18,6 @@
 // Hardcoded here as the first line of defence (server transaction is the second).
 const CHAMPION_SKIN_IDS = new Set(['gold-champion', 'silver-champion', 'bronze-champion']);
 
-// Timestamp of the v4.2.0 marketplace 7-day restriction update (Feb 18, 2026).
-// Accounts created BEFORE this date get immediate access (legacy bypass).
-// Accounts created AFTER must wait MIN_ACCOUNT_AGE_DAYS days.
-const SHOP_UPDATE_TIMESTAMP_MS = new Date('2026-02-18T12:45:00Z').getTime();
 
 // ════════════════════════════════════════════════════════════
 //  CONFIGURATION
@@ -32,7 +28,6 @@ const MARKETPLACE_CONFIG = Object.freeze({
   LISTING_FEE_RATE:        0.02,   // 2% non-refundable listing fee (deducted at list time)
   MAX_LISTINGS_PER_PLAYER: 5,
   LISTING_EXPIRY_DAYS:     7,
-  MIN_ACCOUNT_AGE_DAYS:    7,
   MIN_LEVEL:               15,
   SKIN_COOLDOWN_HOURS:     24,     // Must wait 24h after receiving a skin before re-listing
   REFRESH_COOLDOWN_MS:     30000,  // 30s between manual refreshes
@@ -277,24 +272,6 @@ async function checkMarketplaceEligibility() {
 
   if (typeof isAdmin !== 'undefined' && isAdmin) return { eligible: true };
   if (marketplaceState.isWhitelisted)             return { eligible: true };
-
-  // Legacy account bypass: accounts that existed before the Marketplace
-  // launched (before SHOP_UPDATE_TIMESTAMP_MS) skip the age requirement.
-  const isLegacyAccount = marketplaceState.accountCreatedAt &&
-    (() => {
-      const ts = marketplaceState.accountCreatedAt;
-      const created = ts.seconds ? ts.seconds * 1000 : new Date(ts).getTime();
-      return created < SHOP_UPDATE_TIMESTAMP_MS;
-    })();
-
-  const ageDays = getAccountAgeDays();
-  if (!isLegacyAccount && ageDays < MARKETPLACE_CONFIG.MIN_ACCOUNT_AGE_DAYS) {
-    const left = Math.ceil(MARKETPLACE_CONFIG.MIN_ACCOUNT_AGE_DAYS - ageDays);
-    return {
-      eligible: false,
-      reason: `Account must be at least 7 days old. ${left} day${left !== 1 ? 's' : ''} remaining.`,
-    };
-  }
 
   const level = getPlayerLevel();
   if (level < MARKETPLACE_CONFIG.MIN_LEVEL) {

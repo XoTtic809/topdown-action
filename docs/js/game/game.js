@@ -7914,7 +7914,26 @@ if (gameSettings.screenShake) screenShakeAmt = 1.2;
         } else if (pu.type === 'magnet') {
           for (let _mi = powerups.length - 1; _mi >= 0; _mi--) {
             if (_mi === i) continue;
-            createExplosion(powerups[_mi].x, powerups[_mi].y, powerups[_mi].color, 20);
+            const mp = powerups[_mi];
+            // Grant the powerup's reward before removing it
+            if (mp.type === 'health') { player.hp = Math.min(player.maxHp, player.hp + 35); }
+            else if (mp.type === 'rapidfire') { player.rapidFire = 12; }
+            else if (mp.type === 'speed') { player.speedBoost = 12; }
+            else if (mp.type === 'shield') { player.shield = 15; }
+            else if (mp.type === 'weapon') { player.weaponLevel = Math.min(3, player.weaponLevel + 1); score += 150; }
+            else if (mp.type === 'maxhp') {
+              player.maxHpLevel = Math.min(3, player.maxHpLevel + 1);
+              player.maxHp = 100 + (player.maxHpLevel - 1) * 20;
+              player.hp = Math.min(player.maxHp, player.hp + 20);
+              score += 150;
+            } else if (mp.type === 'speedup') { player.speedLevel = Math.min(3, player.speedLevel + 1); score += 150; }
+            else if (mp.type === 'pierce') { player.pierce = 10; }
+            else if (mp.type === 'explosive') { player.explosive = 12; }
+            else if (mp.type === 'freeze') { player.freezeTimer = 5; }
+            else if (mp.type === 'turret') { turrets.push(new Turret(player.x, player.y)); }
+            // nuke + magnet: skip (too chaotic / already collecting)
+            createExplosion(mp.x, mp.y, mp.color, 20);
+            if (typeof achOnPowerupCollect === 'function') achOnPowerupCollect();
             powerups.splice(_mi, 1);
             if (_mi < i) i--;
           }

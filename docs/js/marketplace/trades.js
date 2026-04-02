@@ -129,8 +129,21 @@ function startSessionPoll(sessionId) {
     try {
       const data = await tradeGetSession(tradeState.activeSessionId);
       if (data.session) {
+        // Only re-render if something actually changed (avoids destroying scroll/selection)
+        const prev = tradeState.activeSession;
+        const changed = !prev
+          || prev.status !== data.session.status
+          || prev.initiator_ready !== data.session.initiator_ready
+          || prev.target_ready !== data.session.target_ready
+          || JSON.stringify(prev.initiator_skins) !== JSON.stringify(data.session.initiator_skins)
+          || JSON.stringify(prev.target_skins) !== JSON.stringify(data.session.target_skins)
+          || prev.initiator_coins !== data.session.initiator_coins
+          || prev.target_coins !== data.session.target_coins
+          || JSON.stringify(prev.initiator_crates || []) !== JSON.stringify(data.session.initiator_crates || [])
+          || JSON.stringify(prev.target_crates || []) !== JSON.stringify(data.session.target_crates || []);
+
         tradeState.activeSession = data.session;
-        if (typeof renderLiveSession === 'function') renderLiveSession(data.session);
+        if (changed && typeof renderLiveSession === 'function') renderLiveSession(data.session);
         // Stop polling if session ended
         if (['done','cancelled'].includes(data.session.status)) {
           stopSessionPoll();
