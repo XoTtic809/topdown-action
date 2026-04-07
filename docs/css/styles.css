@@ -4450,6 +4450,158 @@ canvas {
 .mode-card[data-mode="bossrush"].mode-selected .mode-card-name { color: #ff7b47; }
 .mode-card[data-mode="bossrush"] .mode-card-tag { color: #ff6b35; background: rgba(255,90,40,0.12); }
 
+/* 2-Player PvP — magenta/purple */
+.mode-card[data-mode="pvp2p"] { border-color: rgba(200,90,220,0.20); }
+.mode-card[data-mode="pvp2p"]::before { background: radial-gradient(ellipse at top left, rgba(200,90,220,0.12) 0%, transparent 70%); }
+.mode-card[data-mode="pvp2p"]:hover,
+.mode-card[data-mode="pvp2p"].mode-selected,
+.mode-card[data-mode="pvp2p"].selected { border-color: rgba(200,90,220,0.6); box-shadow: 0 4px 22px rgba(200,90,220,0.22), 0 0 0 1px rgba(200,90,220,0.15); }
+.mode-card[data-mode="pvp2p"] .mode-card-name { color: #d160e0; }
+.mode-card[data-mode="pvp2p"]:hover .mode-card-name,
+.mode-card[data-mode="pvp2p"].mode-selected .mode-card-name,
+.mode-card[data-mode="pvp2p"].selected .mode-card-name { color: #f08bff; }
+.mode-card[data-mode="pvp2p"] .pvp-tag { color: #e373f5; background: rgba(200,90,220,0.14); }
+
+/* ══ 2-Player PvP — settings overlay ══════════════════════ */
+.pvp2p-settings-panel {
+  max-width: 720px;
+  width: 92%;
+}
+.pvp-settings-body {
+  padding: 4px 6px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.pvp-settings-section { display: flex; flex-direction: column; gap: 8px; }
+.pvp-settings-label {
+  font: 600 11px var(--font-title, monospace);
+  letter-spacing: 2.5px;
+  color: rgba(200,140,230,0.75);
+  text-transform: uppercase;
+}
+.pvp-presets {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+.pvp-preset {
+  background: rgba(20,14,32,0.65);
+  border: 1px solid rgba(200,90,220,0.20);
+  border-radius: 10px;
+  padding: 12px 8px;
+  cursor: pointer;
+  color: #e8dff5;
+  font-family: inherit;
+  transition: all 0.18s ease;
+  text-align: center;
+}
+.pvp-preset:hover { border-color: rgba(200,90,220,0.55); transform: translateY(-1px); }
+.pvp-preset.active {
+  border-color: rgba(240,140,255,0.85);
+  background: rgba(60,20,80,0.55);
+  box-shadow: 0 4px 18px rgba(200,90,220,0.25), inset 0 0 14px rgba(240,140,255,0.10);
+}
+.pvp-preset-name { font-weight: 700; font-size: 13px; letter-spacing: 1.5px; color: #f0c0ff; }
+.pvp-preset-sub  { font-size: 10px; opacity: 0.7; margin-top: 4px; letter-spacing: 0.5px; }
+
+.pvp-field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.pvp-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: rgba(20,14,32,0.55);
+  border: 1px solid rgba(200,90,220,0.18);
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+.pvp-field-lbl  { font-size: 11px; letter-spacing: 1.5px; color: #c990dc; text-transform: uppercase; }
+.pvp-field-hint { font-size: 9px;  color: rgba(220,180,240,0.5); letter-spacing: 0.5px; }
+.pvp-field input[type="number"] {
+  background: rgba(0,0,0,0.45);
+  border: 1px solid rgba(200,90,220,0.30);
+  color: #fff;
+  border-radius: 6px;
+  padding: 6px 8px;
+  font: 600 16px monospace;
+  width: 100%;
+  outline: none;
+}
+.pvp-field input[type="number"]:focus { border-color: rgba(240,140,255,0.7); }
+
+.pvp-controls-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.pvp-controls-col {
+  background: rgba(20,14,32,0.55);
+  border: 1px solid rgba(200,90,220,0.16);
+  border-radius: 8px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.pvp-controls-p1 { border-left: 3px solid #4dc9f6; }
+.pvp-controls-p2 { border-left: 3px solid #f67280; }
+.pvp-controls-tag { font-size: 10px; letter-spacing: 2px; color: #b078c0; margin-bottom: 4px; }
+.pvp-ctrl { font-size: 12px; color: #ddd; display: flex; align-items: center; gap: 8px; }
+.pvp-ctrl kbd {
+  display: inline-block;
+  min-width: 42px;
+  text-align: center;
+  background: rgba(0,0,0,0.55);
+  border: 1px solid rgba(200,90,220,0.30);
+  border-radius: 4px;
+  padding: 2px 6px;
+  font: 600 10px monospace;
+  color: #f0c0ff;
+}
+
+.pvp-start-btn {
+  margin-top: 4px;
+  background: linear-gradient(135deg, #b545d8 0%, #f06bff 100%);
+  border: none;
+  color: #fff;
+  font: 700 16px var(--font-title, monospace);
+  letter-spacing: 3px;
+  padding: 14px;
+  border-radius: 10px;
+  cursor: pointer;
+  box-shadow: 0 6px 22px rgba(200,90,220,0.35);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.pvp-start-btn:hover { transform: translateY(-1px); box-shadow: 0 8px 28px rgba(240,140,255,0.5); }
+.pvp-start-btn:active { transform: translateY(0); }
+
+/* ══ 2-Player PvP — in-match HUD ══════════════════════════ */
+#pvp2pHud {
+  position: absolute;
+  top: 18px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: none;
+  align-items: center;
+  gap: 24px;
+  background: rgba(8,12,24,0.78);
+  border: 1px solid rgba(200,90,220,0.32);
+  border-radius: 12px;
+  padding: 10px 22px;
+  pointer-events: none;
+  z-index: 30;
+  font-family: var(--font-title, monospace);
+}
+.pvp-hud-side { display: flex; align-items: center; gap: 10px; }
+.pvp-hud-tag {
+  font-size: 12px;
+  letter-spacing: 2px;
+  padding: 3px 8px;
+  border-radius: 4px;
+}
+.pvp-hud-p1 .pvp-hud-tag { color: #4dc9f6; background: rgba(77,201,246,0.15); }
+.pvp-hud-p2 .pvp-hud-tag { color: #f67280; background: rgba(246,114,128,0.15); }
+.pvp-hud-kills { font-size: 28px; font-weight: 700; color: #fff; min-width: 36px; text-align: center; }
+.pvp-hud-mid { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.pvp-hud-target { font-size: 10px; letter-spacing: 1.8px; color: rgba(200,140,230,0.85); }
+.pvp-hud-time   { font-size: 18px; font-weight: 600; color: #f0c0ff; letter-spacing: 1.5px; }
+
 
 
 

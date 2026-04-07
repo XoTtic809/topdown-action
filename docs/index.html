@@ -229,6 +229,88 @@
                   <div class="mode-card-stat">Rank</div>
                 </div>
               </div>
+              <div class="mode-card mode-card-pvp" data-mode="pvp2p">
+                <div class="mode-card-tag pvp-tag">VERSUS · LOCAL</div>
+                <div class="mode-card-icon">🎮</div>
+                <div class="mode-card-name">2-PLAYER</div>
+                <div class="mode-card-desc">Share a keyboard. 1v1 deathmatch with custom rules &amp; presets.</div>
+                <div class="mode-card-footer">
+                  <div class="mode-card-best">Local PvP</div>
+                  <div class="mode-card-stat">Kills</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2-Player PvP match setup overlay -->
+        <div id="pvp2pSettingsOverlay" class="mode-picker-overlay hidden">
+          <div class="mode-picker-backdrop" data-pvp-close></div>
+          <div class="mode-picker-panel pvp2p-settings-panel">
+            <div class="mode-picker-header">
+              <h2 class="mode-picker-title">⚔ 2-PLAYER MATCH SETUP</h2>
+              <button class="mode-picker-close" data-pvp-close>&times;</button>
+            </div>
+            <div class="pvp-settings-body">
+              <div class="pvp-settings-section">
+                <div class="pvp-settings-label">PRESETS</div>
+                <div class="pvp-presets">
+                  <button class="pvp-preset" data-preset="quick">
+                    <div class="pvp-preset-name">QUICK</div>
+                    <div class="pvp-preset-sub">First to 5</div>
+                  </button>
+                  <button class="pvp-preset" data-preset="standard">
+                    <div class="pvp-preset-name">STANDARD</div>
+                    <div class="pvp-preset-sub">10 kills · 3 min</div>
+                  </button>
+                  <button class="pvp-preset" data-preset="long">
+                    <div class="pvp-preset-name">LONG</div>
+                    <div class="pvp-preset-sub">15 kills · 5 min</div>
+                  </button>
+                  <button class="pvp-preset" data-preset="custom">
+                    <div class="pvp-preset-name">CUSTOM</div>
+                    <div class="pvp-preset-sub">Set your own</div>
+                  </button>
+                </div>
+              </div>
+
+              <div class="pvp-settings-section" id="pvpCustomFields">
+                <div class="pvp-settings-label">RULES</div>
+                <div class="pvp-field-row">
+                  <label class="pvp-field">
+                    <span class="pvp-field-lbl">Kill Limit</span>
+                    <input id="pvpKillLimit" type="number" min="0" max="99" value="10">
+                    <span class="pvp-field-hint">0 = no limit</span>
+                  </label>
+                  <label class="pvp-field">
+                    <span class="pvp-field-lbl">Time Limit</span>
+                    <input id="pvpTimeLimit" type="number" min="0" max="900" value="180">
+                    <span class="pvp-field-hint">seconds (0 = none)</span>
+                  </label>
+                </div>
+              </div>
+
+              <div class="pvp-settings-section">
+                <div class="pvp-settings-label">CONTROLS</div>
+                <div class="pvp-controls-grid">
+                  <div class="pvp-controls-col pvp-controls-p1">
+                    <div class="pvp-controls-tag">PLAYER 1</div>
+                    <div class="pvp-ctrl"><kbd>WASD</kbd> Move</div>
+                    <div class="pvp-ctrl"><kbd>TFGH</kbd> Aim</div>
+                    <div class="pvp-ctrl"><kbd>SPACE</kbd> Shoot</div>
+                    <div class="pvp-ctrl"><kbd>Q</kbd> Dash</div>
+                  </div>
+                  <div class="pvp-controls-col pvp-controls-p2">
+                    <div class="pvp-controls-tag">PLAYER 2</div>
+                    <div class="pvp-ctrl"><kbd>↑←↓→</kbd> Move</div>
+                    <div class="pvp-ctrl"><kbd>IJKL</kbd> Aim</div>
+                    <div class="pvp-ctrl"><kbd>ENTER</kbd> Shoot</div>
+                    <div class="pvp-ctrl"><kbd>SHIFT</kbd> Dash</div>
+                  </div>
+                </div>
+              </div>
+
+              <button id="pvpStartMatchBtn" class="pvp-start-btn">▶ START MATCH</button>
             </div>
           </div>
         </div>
@@ -2336,6 +2418,8 @@
 <script src="js/shop/battlepass-system.js"></script>
 <!-- Then game.js which defines variables needed by api-auth -->
 <script src="js/game/game.js"></script>
+<!-- 2-player local PvP mode (depends on game.js globals) -->
+<script src="js/game/pvp2p.js"></script>
 <script src="js/game/achievements.js"></script>
 <!-- Marketplace system (depends on game.js SKINS + crate-system SKIN_RARITIES) -->
 <script src="js/marketplace/marketplace.js"></script>

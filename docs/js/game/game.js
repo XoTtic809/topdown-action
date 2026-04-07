@@ -125,7 +125,9 @@ window.addEventListener('keydown', (e) => {
   keys[e.key.toLowerCase()] = true;
   if (e.key === ' ' && running && !paused) {
     e.preventDefault();
-    player.dash();
+    // In 2-Player PvP, SPACE is P1's shoot key — handled by pvp2p.js,
+    // not by the single-player Player.dash().
+    if (currentGameMode !== 'pvp2p' && player) player.dash();
   }
   if (e.key === 'Escape' && running) {
     e.preventDefault();
@@ -7758,6 +7760,16 @@ function loop(time) {
       fpsDisplay = Math.round(fpsSamples.reduce((a, b) => a + b, 0) / fpsSamples.length);
       fpsTimer = 0;
     }
+    // 2-Player PvP runs its own self-contained update/draw — skip the
+    // standard single-player path entirely so the global `player` and
+    // enemy systems are never touched while in this mode.
+    if (currentGameMode === 'pvp2p' && typeof window.pvp2pUpdate === 'function') {
+      window.pvp2pUpdate(dt);
+      window.pvp2pDraw();
+      if (shaking) ctx.restore();
+      requestAnimationFrame(loop);
+      return;
+    }
     player.update(dt);
 
  // Create trail particles if battle pass trail is active
@@ -9033,6 +9045,11 @@ function startGame() {
   _hasTrailParticle = typeof createTrailParticle === 'function';
   _hasBattlePassXP  = typeof battlePassAddXP === 'function';
   _hasDeathEffect   = typeof createDeathEffect === 'function';
+  // 2-Player PvP branches early — fully self-contained mode
+  if (currentGameMode === 'pvp2p' && typeof window.pvp2pStart === 'function') {
+    window.pvp2pStart();
+    return;
+  }
   initAudio();
   startMusic(currentGameMode);
   document.getElementById('homeScreen').classList.add('hidden');
@@ -9154,7 +9171,7 @@ document.querySelectorAll('.lnav-tab').forEach(btn => {
 });
 
 // ── Mode picker overlay ──────────────────────────────────────────
-const _modeNames = { classic: 'CLASSIC', timeattack: 'TIME ATTACK', bossrush: 'BOSS RUSH', ranked: 'RANKED' };
+const _modeNames = { classic: 'CLASSIC', timeattack: 'TIME ATTACK', bossrush: 'BOSS RUSH', ranked: 'RANKED', pvp2p: '2-PLAYER PVP' };
 
 function _openModePicker() {
   document.getElementById('modePickerOverlay')?.classList.remove('hidden');
@@ -9183,6 +9200,11 @@ document.querySelectorAll('#modePickerOverlay .mode-card').forEach(card => {
     _updateModeDisplay();
     // Auto-close after short delay so user sees their selection
     setTimeout(_closeModePicker, 300);
+    // 2-Player PvP: open the match-setup overlay so the user can pick
+    // a preset and start directly without a separate START GAME click.
+    if (_selectedMode === 'pvp2p' && typeof window.openPvp2pSettings === 'function') {
+      setTimeout(() => window.openPvp2pSettings(), 320);
+    }
   });
 });
 
