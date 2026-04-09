@@ -527,6 +527,15 @@ async function initSchema() {
         ('glow_pink',    'glow', 'Pink Glow',   'Spend 25k coins',  '0 0 22px rgba(255,40,200,0.45)'),
         ('glow_white',   'glow', 'White Glow',  'Play 100 games',   '0 0 22px rgba(255,255,255,0.3)')
       ON CONFLICT (id) DO NOTHING;
+
+      -- Generic feature flag table (kill switches for hidden / experimental modes)
+      CREATE TABLE IF NOT EXISTS feature_flags (
+        key        TEXT PRIMARY KEY,
+        enabled    BOOLEAN NOT NULL DEFAULT FALSE,
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+      INSERT INTO feature_flags (key, enabled) VALUES ('blackjack', FALSE)
+        ON CONFLICT (key) DO NOTHING;
     `);
     console.log('[DB] Schema ready');
   } finally {

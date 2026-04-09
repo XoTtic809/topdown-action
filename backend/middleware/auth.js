@@ -25,7 +25,11 @@ function requireAuth(req, res, next) {
   const token = header.split('Bearer ')[1];
   try {
     const decoded = jwt.verify(token, getSecret());
-    req.user = { uid: decoded.uid, username: decoded.username };
+    req.user = {
+      uid: decoded.uid,
+      username: decoded.username,
+      isAdmin: decoded.isAdmin === true,
+    };
     next();
   } catch (err) {
     return res.status(401).json({ error: 'Invalid or expired token — please log in again' });

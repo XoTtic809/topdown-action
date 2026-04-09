@@ -352,7 +352,7 @@ router.post('/session/:id/ready', requireAuth, async (req, res) => {
 
     // If BOTH are ready, commit the trade atomically
     if (s.initiator_ready && s.target_ready) {
-      return await _commitLiveTrade(req.params.id, s, res);
+      return await _commitLiveTrade(req.params.id, s, res, req);
     }
 
     return res.json({ session: s });
@@ -381,7 +381,7 @@ router.post('/session/:id/cancel', requireAuth, async (req, res) => {
 });
 
 // ── Atomic live trade commit ──────────────────────────────────────────────────
-async function _commitLiveTrade(sessionId, session, res) {
+async function _commitLiveTrade(sessionId, session, res, req) {
   // Pair rate limiting
   const pairErr = _checkPairRateLimit(session.initiator_id, session.target_id);
   if (pairErr) return res.status(429).json({ error: pairErr });
@@ -494,6 +494,17 @@ async function _commitLiveTrade(sessionId, session, res) {
 
     // Re-fetch final session state
     const { rows } = await query(`SELECT * FROM trade_sessions WHERE id = $1`, [sessionId]);
+
+    // Push live balance-updated to both users so the recipient's HUD refreshes
+    // without needing a manual page reload.
+    try {
+      const io = req && req.app && req.app.get('io');
+      if (io) {
+        io.to('user:' + session.initiator_id).emit('user:balance-updated', { reason: 'trade' });
+        io.to('user:' + session.target_id).emit('user:balance-updated', { reason: 'trade' });
+      }
+    } catch (e) { /* non-fatal */ }
+
     return res.json({ session: rows[0], traded: true });
 
   } catch (err) {

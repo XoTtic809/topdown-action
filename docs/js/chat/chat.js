@@ -499,8 +499,27 @@
       return;
     }
 
-    socket.on('connect',    () => { connected = true;  setOnlineCount('●'); });
+    socket.on('connect',    () => {
+      connected = true;
+      setOnlineCount('●');
+      // Identify ourselves so the server can join us to a per-user room and
+      // push targeted events (e.g. balance updates after trades / admin grants).
+      try {
+        const token = getToken();
+        if (token) socket.emit('user:identify', { token });
+      } catch { /* ignore */ }
+    });
     socket.on('disconnect', () => { connected = false; setOnlineCount('○'); });
+
+    // Server push: someone changed our coin balance (trade, admin grant, etc.)
+    // Re-pull authoritative state so the HUD reflects it without a hard refresh.
+    socket.on('user:balance-updated', () => {
+      try {
+        if (typeof window.loadUserDataFromFirebase === 'function') {
+          window.loadUserDataFromFirebase();
+        }
+      } catch { /* non-fatal */ }
+    });
 
     socket.on('chat:settings', (s) => {
       chatEnabled      = s.enabled;

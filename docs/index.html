@@ -316,6 +316,42 @@
         </div>
       </div>
 
+      <!-- ═══ HIDDEN: BLACKJACK OVERLAY (no nav button — entered via #bj or konami) ═══ -->
+      <div id="blackjackOverlay" class="bj-overlay hidden">
+        <div class="bj-backdrop"></div>
+        <div class="bj-panel">
+          <div class="bj-header">
+            <h2 class="bj-title">🂡 BLACKJACK</h2>
+            <button id="bjCloseBtn" class="bj-close" aria-label="Close">&times;</button>
+          </div>
+          <div class="bj-balance" id="bjBalance">🪙 0</div>
+
+          <div class="bj-table">
+            <div class="bj-side">
+              <div class="bj-side-label" id="bjDealerValue">Dealer: ?</div>
+              <div class="bj-cards" id="bjDealerCards"></div>
+            </div>
+            <div class="bj-side">
+              <div class="bj-side-label" id="bjPlayerValue">Player: —</div>
+              <div class="bj-cards" id="bjPlayerCards"></div>
+            </div>
+          </div>
+
+          <div class="bj-status" id="bjStatus">Place your bet and click DEAL.</div>
+
+          <div class="bj-controls">
+            <label class="bj-bet-label">
+              BET
+              <input id="bjBetInput" type="number" min="10" max="50000" value="100">
+            </label>
+            <button id="bjDealBtn" class="bj-btn bj-btn-deal">DEAL</button>
+            <button id="bjHitBtn" class="bj-btn" disabled>HIT</button>
+            <button id="bjStandBtn" class="bj-btn" disabled>STAND</button>
+            <button id="bjDoubleBtn" class="bj-btn" disabled>DOUBLE</button>
+          </div>
+        </div>
+      </div>
+
       <!-- ═══ SHOP TAB ═══ -->
       <div id="lobbyTab-shop" class="ltab-content hidden">
         <h2 class="panel-title">🛒 SHOP</h2>
@@ -1776,6 +1812,16 @@
             </div>
           </div>
 
+          <!-- Hidden: Blackjack feature flag -->
+          <div class="dev-card">
+            <div class="dev-card-label">🂡 Blackjack (Hidden)</div>
+            <div class="dev-row">
+              <span id="bjFlagStatus" class="dev-status off">OFF</span>
+              <button class="dev-btn" onclick="devToggleBlackjack()">TOGGLE</button>
+              <button class="dev-btn" onclick="openBlackjack()">OPEN</button>
+            </div>
+          </div>
+
           <!-- Battle Pass XP -->
           <div class="dev-card">
             <div class="dev-card-label">🎫 Set Battle Pass XP</div>
@@ -2420,6 +2466,8 @@
 <script src="js/game/game.js"></script>
 <!-- 2-player local PvP mode (depends on game.js globals) -->
 <script src="js/game/pvp2p.js"></script>
+<!-- Hidden blackjack mini-game -->
+<script src="js/game/blackjack.js"></script>
 <script src="js/game/achievements.js"></script>
 <!-- Marketplace system (depends on game.js SKINS + crate-system SKIN_RARITIES) -->
 <script src="js/marketplace/marketplace.js"></script>

@@ -143,6 +143,10 @@ router.post('/admin/grant-coins', requireAuth, requireAdmin, async (req, res) =>
       INSERT INTO activity_logs (admin_id, admin_name, action, target_uid, details)
       VALUES ($1, $2, 'GRANT_COINS', $3, $4)
     `, [req.user.uid, req.user.username, targetUid, `+${amount}`]);
+    try {
+      const io = req.app.get('io');
+      if (io) io.to('user:' + targetUid).emit('user:balance-updated', { reason: 'admin-grant' });
+    } catch (e) { /* non-fatal */ }
     return res.json({ success: true, newBalance: rows[0].total_coins });
   } catch (err) {
     return res.status(500).json({ error: 'Failed to grant coins' });

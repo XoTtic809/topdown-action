@@ -911,7 +911,15 @@ let fpsSamples = [];
 
 // fix large dt spikes when tab is hidden/refocused
 document.addEventListener('visibilitychange', () => {
-  if (!document.hidden) skipNextFrame = true;
+  if (!document.hidden) {
+    skipNextFrame = true;
+    // Re-pull authoritative balance/inventory in case anything changed while we were away
+    // (trades, admin grants, etc. that happened in the background)
+    if (typeof currentUser !== 'undefined' && currentUser && !isGuest &&
+        typeof loadUserDataFromFirebase === 'function') {
+      try { loadUserDataFromFirebase(); } catch (e) { /* non-fatal */ }
+    }
+  }
 });
 
 let high = Number(localStorage.getItem('highscore') || 0);
@@ -10300,6 +10308,50 @@ function devSetCoins(fromOverlay = false) {
   }
   console.log(`[DEV] Coins set to ${val}`);
 }
+
+// ── Blackjack feature flag (admin only) ────────────────────────
+async function devLoadBlackjackFlag() {
+  if (!isAdmin) return;
+  try {
+    const res = await fetch(`${API_BASE}/features/blackjack`);
+    if (!res.ok) return;
+    const data = await res.json();
+    const el = document.getElementById('bjFlagStatus');
+    if (el) {
+      el.textContent = data.enabled ? 'ON' : 'OFF';
+      el.className = `dev-status ${data.enabled ? 'on' : 'off'}`;
+    }
+  } catch (e) { /* non-fatal */ }
+}
+
+async function devToggleBlackjack() {
+  if (!isAdmin) return;
+  const el = document.getElementById('bjFlagStatus');
+  const currentlyOn = el && el.textContent === 'ON';
+  try {
+    const res = await fetch(`${API_BASE}/features/blackjack`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${localStorage.getItem('topdown_token')}`,
+      },
+      body: JSON.stringify({ enabled: !currentlyOn }),
+    });
+    if (!res.ok) {
+      console.warn('[Blackjack] toggle failed:', res.status);
+      return;
+    }
+    const data = await res.json();
+    if (el) {
+      el.textContent = data.enabled ? 'ON' : 'OFF';
+      el.className = `dev-status ${data.enabled ? 'on' : 'off'}`;
+    }
+    console.log(`[DEV] Blackjack flag → ${data.enabled}`);
+  } catch (e) {
+    console.warn('[Blackjack] toggle error:', e);
+  }
+}
+window.devToggleBlackjack = devToggleBlackjack;
 
 // Set Battle Pass XP
 function devSetBattlePassXP(fromOverlay = false) {

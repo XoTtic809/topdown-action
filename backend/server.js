@@ -114,6 +114,8 @@ app.use('/api/crates',             require('./routes/crates'));
 app.use('/api/shop',               require('./routes/shop'));
 app.use('/api/admin/rotation',     require('./routes/admin-rotation'));
 app.use('/api/profile',            require('./routes/profile'));
+app.use('/api/features',           require('./routes/features'));
+app.use('/api/blackjack',          require('./routes/blackjack'));
 
 app.post('/api/marketplace/buy',    writeLimiter);
 app.post('/api/marketplace/list',   writeLimiter);
@@ -314,6 +316,15 @@ io.on('connection', (socket) => {
   socket.emit('chat:history', chatHistory);
 
   socket.on('disconnect', () => socketStates.delete(socket.id));
+
+  // ── User identification (for targeted server pushes like balance updates) ──
+  // Client emits this after connecting with their JWT. We verify and join a
+  // per-user room so routes can `io.to('user:'+uid).emit(...)`.
+  socket.on('user:identify', ({ token } = {}) => {
+    const d = verifyToken(token);
+    if (!d?.uid) return;
+    socket.join('user:' + d.uid);
+  });
 
   // ── Regular message ────────────────────────────────────────
   socket.on('chat:send', (payload) => {

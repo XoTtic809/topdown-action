@@ -209,22 +209,23 @@ router.post('/progress', requireAuth, async (req, res) => {
       'SELECT total_coins, current_xp FROM users WHERE uid = $1', [req.user.uid]
     );
     // Compute deltas against authoritative server values
+    const isAdminCaller = req.user.isAdmin === true;
     let safeCoinDelta = 0;
     if (currentRows[0]) {
       const coinDelta = Math.floor(totalCoins) - currentRows[0].total_coins;
-      if (coinDelta > MAX_COIN_DELTA_HARD_REJECT) {
+      if (!isAdminCaller && coinDelta > MAX_COIN_DELTA_HARD_REJECT) {
         console.warn(`[Auth] COIN DELTA REJECT: uid=${req.user.uid} delta=${coinDelta} (max=${MAX_COIN_DELTA_HARD_REJECT})`);
         return res.status(400).json({ error: 'Coin delta too large' });
       }
-      if (coinDelta > MAX_COIN_DELTA_PER_SAVE) {
+      if (!isAdminCaller && coinDelta > MAX_COIN_DELTA_PER_SAVE) {
         console.warn(`[Auth] COIN DELTA FLAG: uid=${req.user.uid} delta=${coinDelta}`);
       }
-      // Only allow positive deltas — marketplace/crate endpoints handle decreases.
-      // This prevents a stale client from overwriting server-side deductions.
-      safeCoinDelta = Math.max(0, coinDelta);
+      // Non-admins: only allow positive deltas — marketplace/crate endpoints handle decreases.
+      // Admins: allow signed deltas so devSetCoins can both increase and decrease balances.
+      safeCoinDelta = isAdminCaller ? coinDelta : Math.max(0, coinDelta);
 
       const xpDelta = Math.floor(currentXp) - (currentRows[0].current_xp || 0);
-      if (xpDelta > MAX_XP_DELTA_PER_SAVE) {
+      if (!isAdminCaller && xpDelta > MAX_XP_DELTA_PER_SAVE) {
         console.warn(`[Auth] XP DELTA REJECT: uid=${req.user.uid} delta=${xpDelta} (max=${MAX_XP_DELTA_PER_SAVE})`);
         return res.status(400).json({ error: 'XP delta too large' });
       }
