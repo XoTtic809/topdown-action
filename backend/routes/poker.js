@@ -160,25 +160,51 @@ function dealerStrategy(hand) {
   if (ev.rank >= 5) return [0, 1, 2, 3, 4];
 
   const vals = hand.map(c => cardValue(c.r));
+  const suits = hand.map(c => c.s);
   const freq = {};
   for (const v of vals) freq[v] = (freq[v] || 0) + 1;
 
-  // Keep cards that contribute to pairs/trips
-  const holdIndices = [];
+  // Keep cards that contribute to pairs/trips/quads
+  const pairHold = [];
   for (let i = 0; i < hand.length; i++) {
-    const v = cardValue(hand[i].r);
-    if (freq[v] >= 2) holdIndices.push(i);
+    if (freq[vals[i]] >= 2) pairHold.push(i);
+  }
+  if (pairHold.length > 0) return pairHold;
+
+  // Check for 4-to-a-flush (4 cards same suit) — hold those 4
+  const suitCount = {};
+  for (const s of suits) suitCount[s] = (suitCount[s] || 0) + 1;
+  for (const s in suitCount) {
+    if (suitCount[s] >= 4) {
+      const flushHold = [];
+      for (let i = 0; i < hand.length; i++) {
+        if (suits[i] === s) flushHold.push(i);
+      }
+      return flushHold; // hold the 4 (or 5) suited cards
+    }
   }
 
-  if (holdIndices.length > 0) return holdIndices;
-
-  // High card only — keep the highest card
-  let bestIdx = 0;
-  let bestVal = vals[0];
-  for (let i = 1; i < vals.length; i++) {
-    if (vals[i] > bestVal) { bestVal = vals[i]; bestIdx = i; }
+  // Check for 4-to-a-straight (4 consecutive values) — hold those 4
+  const sorted = vals.map((v, i) => ({ v, i })).sort((a, b) => a.v - b.v);
+  const unique = [];
+  for (const s of sorted) {
+    if (unique.length === 0 || s.v !== unique[unique.length - 1].v) unique.push(s);
   }
-  return [bestIdx];
+  for (let start = 0; start <= unique.length - 4; start++) {
+    if (unique[start + 3].v - unique[start].v === 3) {
+      const straightVals = new Set();
+      for (let j = start; j < start + 4; j++) straightVals.add(unique[j].v);
+      const straightHold = [];
+      for (let i = 0; i < hand.length; i++) {
+        if (straightVals.has(vals[i]) && straightHold.length < 4) straightHold.push(i);
+      }
+      return straightHold;
+    }
+  }
+
+  // High card only — keep the two highest cards, discard 3
+  const indexed = vals.map((v, i) => ({ v, i })).sort((a, b) => b.v - a.v);
+  return [indexed[0].i, indexed[1].i];
 }
 
 function applyDraw(hand, holdIndices, deck) {

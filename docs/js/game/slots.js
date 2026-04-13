@@ -134,8 +134,9 @@
     strips.forEach(strip => {
       if (!strip) return;
       _populateStrip(strip, REEL_SYMS);
-      strip.className = 'slots-reel-strip blur';
+      strip.className = 'slots-reel-strip blur'; // clears stopped, bouncing, etc.
       strip.style.transition = 'none';
+      strip.style.removeProperty('--stop-y');
       strip.style.transform = 'translateY(0)';
     });
 
@@ -143,13 +144,16 @@
     const spinSpeed = 18; // px per frame
     let spinY = 0;
     let spinRunning = true;
+    const stoppedReels = new Set(); // track which reel indices have stopped
     const totalStripHeight = REEL_SYMS * SYM_HEIGHT;
 
     function animateSpin() {
       if (!spinRunning) return;
       spinY = (spinY + spinSpeed) % totalStripHeight;
-      strips.forEach(strip => {
-        if (strip) strip.style.transform = `translateY(-${spinY}px)`;
+      strips.forEach((strip, idx) => {
+        if (strip && !stoppedReels.has(idx)) {
+          strip.style.transform = `translateY(-${spinY}px)`;
+        }
       });
       requestAnimationFrame(animateSpin);
     }
@@ -175,7 +179,7 @@
       const resultIds = data.symbols.map(s => s.id);
 
       // Stop reels one-by-one with staggered delays
-      await _stopReelsSequentially(strips, resultEmojis, spinSpeed);
+      await _stopReelsSequentially(strips, resultEmojis, stoppedReels);
       spinRunning = false;
 
       // Apply balance
@@ -235,7 +239,7 @@
   }
 
   /** Stop each reel with a stagger, rebuilding the strip with the result symbol and bouncing */
-  function _stopReelsSequentially(strips, emojis, spinSpeed) {
+  function _stopReelsSequentially(strips, emojis, stoppedReels) {
     return new Promise(resolve => {
       const delays = [300, 600, 1000]; // ms stagger for dramatic effect
       let stopped = 0;
@@ -245,14 +249,16 @@
           const strip = strips[i];
           if (!strip) { stopped++; if (stopped === 3) resolve(); return; }
 
+          // Mark this reel as stopped so the RAF loop skips it
+          stoppedReels.add(i);
+
           // Rebuild strip with result at center
           const stopY = _buildResultStrip(strip, emojis[i]);
 
-          // Start from scrolled position, transition to final stop
+          // Start from a position above the stop point to simulate the last scroll
           strip.className = 'slots-reel-strip';
           strip.style.transition = 'none';
-          // Start from a position above the stop point to simulate the last scroll
-          const approachOffset = SYM_HEIGHT * 8; // overshoot then settle
+          const approachOffset = SYM_HEIGHT * 8;
           strip.style.transform = `translateY(${stopY + approachOffset}px)`;
 
           // Force reflow then animate to stop position with bounce
@@ -261,7 +267,7 @@
           strip.style.setProperty('--stop-y', stopY + 'px');
           strip.classList.add('bouncing');
 
-          // After bounce animation completes, mark as stopped
+          // After bounce animation completes, finalize position
           const onEnd = () => {
             strip.removeEventListener('animationend', onEnd);
             strip.classList.remove('bouncing');

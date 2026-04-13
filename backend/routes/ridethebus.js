@@ -11,8 +11,9 @@ const MIN_BET = 10;
 const MAX_BET = 50_000;
 const GAME_TTL_MS = 5 * 60 * 1000;
 
-// Payout only on completing all 4 rounds
-const FINAL_MULTIPLIER = 10;
+// Progressive payout multipliers per round (applied to original bet)
+// Players can cash out after any correct round 1-3, or ride for the big win
+const ROUND_MULTIPLIERS = { 1: 2, 2: 4, 3: 8, 4: 25 };
 
 const GAMES = new Map();
 
@@ -185,8 +186,10 @@ router.post('/guess', requireAuth, async (req, res) => {
   }
 
   if (round < 4) {
-    // Advance to next round
+    // Advance to next round — player can cash out or continue
     game.round = round + 1;
+    const currentMultiplier = ROUND_MULTIPLIERS[round];
+    const nextMultiplier = ROUND_MULTIPLIERS[round + 1];
     return res.json({
       gameId,
       round: game.round,
@@ -194,11 +197,13 @@ router.post('/guess', requireAuth, async (req, res) => {
       previousCards: game.cards,
       correct: true,
       done: false,
+      cashoutValue: game.bet * currentMultiplier,
+      nextMultiplier,
     });
   }
 
   // Round 4 correct — big win!
-  const payout = game.bet * FINAL_MULTIPLIER;
+  const payout = game.bet * ROUND_MULTIPLIERS[4];
   GAMES.delete(gameId);
 
   const { rows } = await query(
@@ -214,6 +219,37 @@ router.post('/guess', requireAuth, async (req, res) => {
     previousCards: game.cards,
     correct: true,
     done: true,
+    payout,
+    newBalance: rows[0]?.total_coins ?? null,
+  });
+});
+
+// ── POST /api/ridethebus/cashout ──────────────────────────────
+// Cash out after a correct round 1-3 instead of continuing
+router.post('/cashout', requireAuth, async (req, res) => {
+  const { gameId } = req.body || {};
+  const game = GAMES.get(gameId);
+  if (!game) return res.status(404).json({ error: 'Game not found' });
+  if (game.uid !== req.user.uid) return res.status(403).json({ error: 'Not your game' });
+
+  // Can only cash out if the current round > 1 (meaning at least round 1 was correct)
+  // game.round is the NEXT round to play, so the last completed round is game.round - 1
+  const completedRound = game.round - 1;
+  if (completedRound < 1) return res.status(409).json({ error: 'No rounds completed yet' });
+
+  const payout = game.bet * ROUND_MULTIPLIERS[completedRound];
+  GAMES.delete(gameId);
+
+  const { rows } = await query(
+    `UPDATE users SET total_coins = total_coins + $2, updated_at = NOW()
+     WHERE uid = $1 RETURNING total_coins`, [game.uid, payout]
+  );
+  emitBalance(req, game.uid);
+
+  return res.json({
+    gameId,
+    cashout: true,
+    round: completedRound,
     payout,
     newBalance: rows[0]?.total_coins ?? null,
   });

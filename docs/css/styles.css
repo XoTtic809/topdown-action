@@ -4794,6 +4794,7 @@ canvas {
 .rtb-guess-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 14px rgba(80,255,150,0.35); }
 .rtb-guess-btn.red { background: linear-gradient(180deg, #c41e3a, #8a1228); border-color: rgba(240,80,100,0.5); }
 .rtb-guess-btn.black { background: linear-gradient(180deg, #2a2a2a, #0e0e0e); border-color: rgba(120,120,120,0.5); }
+.rtb-guess-btn.cashout { background: linear-gradient(180deg, #d8a020, #a07010); border-color: rgba(255,220,120,0.6); color: #1a1000; font-weight: bold; letter-spacing: 1px; width: 100%; margin-bottom: 4px; }
 
 /* ── Slots ── */
 .slots-machine {

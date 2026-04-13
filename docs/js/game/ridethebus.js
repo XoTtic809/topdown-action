@@ -78,10 +78,34 @@
         currentGame = null;
       } else {
         currentGame.round = data.round;
+        currentGame.cashoutValue = data.cashoutValue;
         _setRoundLabel(data.round);
-        _setStatus(`Correct! ${ROUND_LABELS[data.round]}`);
-        _showGuessButtons(data.round);
+        _setStatus(`Correct! Cash out for ${data.cashoutValue} or keep going for ${data.nextMultiplier}x!`);
+        _showGuessButtons(data.round, data.cashoutValue);
       }
+    } catch (e) {
+      _setStatus('Network error.');
+      _enableGuessButtons();
+    }
+  }
+
+  async function cashOut() {
+    if (!currentGame) return;
+    _disableGuessButtons();
+    try {
+      const res = await fetch(`${API}/ridethebus/cashout`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${getToken()}` },
+        body: JSON.stringify({ gameId: currentGame.gameId }),
+      });
+      const data = await res.json();
+      if (!res.ok) { _setStatus(data.error || 'Cashout failed.'); _enableGuessButtons(); return; }
+
+      if (data.newBalance != null) window.casinoApplyBalance(data.newBalance);
+      _setStatus(`Cashed out after round ${data.round}! +${data.payout} coins`);
+      _hideGuessControls();
+      _setBetEnabled(true);
+      currentGame = null;
     } catch (e) {
       _setStatus('Network error.');
       _enableGuessButtons();
@@ -115,11 +139,20 @@
     }
   }
 
-  function _showGuessButtons(round) {
+  function _showGuessButtons(round, cashoutValue) {
     const container = document.getElementById('rtbGuessControls');
     if (!container) return;
     container.innerHTML = '';
     container.classList.remove('hidden');
+
+    // Show cash out button if player has completed at least 1 round
+    if (cashoutValue && round > 1) {
+      const cashBtn = document.createElement('button');
+      cashBtn.className = 'rtb-guess-btn cashout';
+      cashBtn.textContent = `CASH OUT (+${cashoutValue})`;
+      cashBtn.addEventListener('click', () => cashOut());
+      container.appendChild(cashBtn);
+    }
 
     let buttons = [];
     if (round === 1) {
