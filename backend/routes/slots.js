@@ -49,16 +49,12 @@ function computePayout(symbols, bet) {
     return bet * (TRIPLE_PAYOUTS[a] || 3);
   }
 
-  // Two of a kind (any position)
+  // Two of a kind (any position) — pays 1.5x
   if (a === b || b === c || a === c) {
-    return bet * 2;
+    return Math.floor(bet * 1.5);
   }
 
-  // Any cherry present (no other match)
-  if (a === 'cherry' || b === 'cherry' || c === 'cherry') {
-    return bet; // 1x = bet returned
-  }
-
+  // No match — lose bet
   return 0;
 }
 
