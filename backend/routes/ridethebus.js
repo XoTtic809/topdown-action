@@ -13,7 +13,7 @@ const GAME_TTL_MS = 5 * 60 * 1000;
 
 // Progressive payout multipliers per round (applied to original bet)
 // Players can cash out after any correct round 1-3, or ride for the big win
-const ROUND_MULTIPLIERS = { 1: 2, 2: 4, 3: 8, 4: 25 };
+const ROUND_MULTIPLIERS = { 1: 1.5, 2: 3, 3: 5, 4: 15 };
 
 const GAMES = new Map();
 
@@ -146,11 +146,11 @@ router.post('/guess', requireAuth, async (req, res) => {
       correct = guess === 'higher' ? newVal > lastVal : newVal < lastVal;
     }
   } else if (round === 3) {
-    // Inside or Outside the range of previous cards?
+    // Inside or Outside the range of the last two cards?
     if (guess !== 'inside' && guess !== 'outside') return res.status(400).json({ error: 'Guess must be inside or outside' });
-    const vals = game.cards.map(c => cardValue(c.r));
-    const lo = Math.min(...vals);
-    const hi = Math.max(...vals);
+    const last2 = game.cards.slice(-2);
+    const lo = Math.min(cardValue(last2[0].r), cardValue(last2[1].r));
+    const hi = Math.max(cardValue(last2[0].r), cardValue(last2[1].r));
     const nv = cardValue(newCard.r);
     if (nv === lo || nv === hi) {
       correct = false; // on boundary = house wins

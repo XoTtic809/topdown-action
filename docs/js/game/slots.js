@@ -27,6 +27,9 @@
   const REEL_SYMS = 30;   // total symbols in each reel strip during spin
 
   let spinning = false;
+  let winStreak = 0;
+  let autoSpinning = false;
+  let autoSpinCount = 0;
 
   // ── Reel strip building ────────────────────────────────────
   function _randomSym() {
@@ -214,15 +217,39 @@
         _spawnParticles(8);
       }
 
-      // Show win/loss
+      // Streak tracking + near-miss detection
       if (data.payout > 0) {
+        winStreak++;
         _showWin(data.payout, allMatch);
-        _setStatus(`WIN! +${data.payout} coins`);
+        if (winStreak >= 3) {
+          _setStatus(`🔥 ${winStreak}x STREAK! +${data.payout} coins`);
+          _updateStreakDisplay(winStreak);
+        } else {
+          _setStatus(`WIN! +${data.payout} coins`);
+        }
       } else {
-        _setStatus('No luck. Try again!');
+        // Near-miss effect: show "SO CLOSE" occasionally on losses to keep energy up
+        if (Math.random() < 0.2) {
+          _setStatus('SO CLOSE! Try again!');
+          // Flash all reels briefly in near-miss style
+          strips.forEach(s => s?.parentElement?.classList.add('near-miss'));
+          setTimeout(() => strips.forEach(s => s?.parentElement?.classList.remove('near-miss')), 1500);
+        } else {
+          _setStatus('No luck. Try again!');
+        }
+        winStreak = 0;
+        _updateStreakDisplay(0);
       }
 
       _finish();
+
+      // Auto-spin continuation
+      if (autoSpinning && autoSpinCount > 0) {
+        autoSpinCount--;
+        _updateAutoLabel();
+        if (autoSpinCount <= 0) { _stopAutoSpin(); }
+        else { setTimeout(() => { if (autoSpinning) spin(); }, 800); }
+      }
 
     } catch (e) {
       spinRunning = false;
@@ -364,15 +391,70 @@
     if (spinBtn) spinBtn.disabled = false;
     if (betInput) betInput.disabled = false;
     spinning = false;
+    winStreak = 0;
+    _stopAutoSpin();
+    _updateStreakDisplay(0);
     const glow = document.getElementById('slotsGlow');
     if (glow) glow.classList.remove('active', 'jackpot');
     const machine = document.getElementById('slotsMachine');
     if (machine) machine.classList.remove('shaking');
   }
 
+  // ── Streak display ──────────────────────────────────────────
+  function _updateStreakDisplay(count) {
+    let el = document.getElementById('slotsStreak');
+    if (!el) {
+      // Create streak display if it doesn't exist
+      const machine = document.getElementById('slotsMachine');
+      if (!machine) return;
+      el = document.createElement('div');
+      el.id = 'slotsStreak';
+      el.className = 'slots-streak hidden';
+      machine.appendChild(el);
+    }
+    if (count >= 2) {
+      el.textContent = '🔥'.repeat(Math.min(count, 10)) + ' ' + count + 'x STREAK';
+      el.classList.remove('hidden');
+      el.classList.toggle('hot', count >= 5);
+    } else {
+      el.classList.add('hidden');
+    }
+  }
+
+  // ── Auto-spin ──────────────────────────────────────────────
+  function _toggleAutoSpin() {
+    if (autoSpinning) {
+      _stopAutoSpin();
+    } else {
+      autoSpinning = true;
+      autoSpinCount = 10;
+      _updateAutoLabel();
+      if (!spinning) spin();
+    }
+  }
+
+  function _stopAutoSpin() {
+    autoSpinning = false;
+    autoSpinCount = 0;
+    _updateAutoLabel();
+  }
+
+  function _updateAutoLabel() {
+    const btn = document.getElementById('slotsAutoBtn');
+    if (!btn) return;
+    if (autoSpinning) {
+      btn.textContent = `STOP (${autoSpinCount})`;
+      btn.classList.add('active');
+    } else {
+      btn.textContent = 'AUTO x10';
+      btn.classList.remove('active');
+    }
+  }
+
   // ── Wiring ─────────────────────────────────────────────────
   function wire() {
     document.getElementById('slotsSpinBtn')?.addEventListener('click', spin);
+    document.getElementById('slotsAutoBtn')?.addEventListener('click', _toggleAutoSpin);
     _resetStrips(); // Initialize idle state
   }
 

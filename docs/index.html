@@ -331,6 +331,7 @@
             <button class="cas-tab" data-cas-game="ridethebus">Ride the Bus</button>
             <button class="cas-tab" data-cas-game="slots">Slots</button>
             <button class="cas-tab" data-cas-game="poker">Poker</button>
+            <button class="cas-tab" data-cas-game="roulette">Roulette</button>
           </div>
 
           <div class="cas-game-area">
@@ -403,6 +404,7 @@
                 <button id="slotsSpinBtn" class="slots-spin-lever">
                   <span class="slots-spin-text">SPIN</span>
                 </button>
+                <button id="slotsAutoBtn" class="slots-auto-btn">AUTO x10</button>
               </div>
               <div class="slots-paytable">
                 <div class="slots-pt-title">PAYOUTS</div>
@@ -435,6 +437,46 @@
                 <button id="pokerDrawBtn" class="cas-btn hidden" disabled>DRAW</button>
               </div>
             </div>
+
+            <!-- ── Roulette ── -->
+            <div class="cas-game-panel" id="casGame_roulette">
+              <div class="rl-container">
+                <!-- Wheel -->
+                <div class="rl-wheel-wrap">
+                  <div class="rl-wheel" id="rlWheel">
+                    <canvas id="rlCanvas" width="280" height="280"></canvas>
+                    <div class="rl-ball" id="rlBall"></div>
+                    <div class="rl-center-cap"></div>
+                  </div>
+                  <div class="rl-pointer"></div>
+                </div>
+
+                <div class="rl-result hidden" id="rlResult">
+                  <span class="rl-result-number" id="rlResultNumber"></span>
+                </div>
+
+                <!-- Betting board -->
+                <div class="rl-board" id="rlBoard"></div>
+
+                <div class="rl-bet-info">
+                  <span>Total Bet: <strong id="rlTotalBet">0</strong></span>
+                  <span>Chip: <select id="rlChipSize">
+                    <option value="10">10</option>
+                    <option value="50">50</option>
+                    <option value="100" selected>100</option>
+                    <option value="500">500</option>
+                    <option value="1000">1K</option>
+                    <option value="5000">5K</option>
+                  </select></span>
+                </div>
+                <div class="cas-controls">
+                  <button id="rlSpinBtn" class="cas-btn cas-btn-deal">SPIN</button>
+                  <button id="rlClearBtn" class="cas-btn">CLEAR</button>
+                </div>
+                <div class="cas-status" id="rlStatus">Place chips on the board and SPIN.</div>
+              </div>
+            </div>
+
           </div>
         </div>
       </div>
@@ -2559,6 +2601,7 @@
 <script src="js/game/ridethebus.js"></script>
 <script src="js/game/slots.js"></script>
 <script src="js/game/poker.js"></script>
+<script src="js/game/roulette.js"></script>
 <script src="js/game/achievements.js"></script>
 <!-- Marketplace system (depends on game.js SKINS + crate-system SKIN_RARITIES) -->
 <script src="js/marketplace/marketplace.js"></script>

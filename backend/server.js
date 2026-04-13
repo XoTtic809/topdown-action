@@ -119,6 +119,7 @@ app.use('/api/blackjack',          require('./routes/blackjack'));
 app.use('/api/ridethebus',         require('./routes/ridethebus'));
 app.use('/api/slots',              require('./routes/slots'));
 app.use('/api/poker',              require('./routes/poker'));
+app.use('/api/roulette',           require('./routes/roulette'));
 
 app.post('/api/marketplace/buy',    writeLimiter);
 app.post('/api/marketplace/list',   writeLimiter);
