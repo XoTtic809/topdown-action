@@ -5131,29 +5131,28 @@ canvas {
 .rl-wheel-wrap {
   position: relative;
   display: inline-block;
-  margin: 10px auto 8px;
+  margin: 6px auto 4px;
 }
 .rl-wheel {
   position: relative;
-  width: 280px;
-  height: 280px;
+  width: 180px;
+  height: 180px;
   border-radius: 50%;
-  box-shadow: 0 0 30px rgba(0,180,90,0.15), inset 0 0 20px rgba(0,0,0,0.5);
-  transition: transform 4s cubic-bezier(0.17, 0.67, 0.12, 0.99);
-}
-.rl-wheel.spinning {
+  box-shadow: 0 0 20px rgba(0,180,90,0.15), inset 0 0 14px rgba(0,0,0,0.5);
   transition: transform 4s cubic-bezier(0.17, 0.67, 0.12, 0.99);
 }
 #rlCanvas {
   display: block;
+  width: 180px;
+  height: 180px;
   border-radius: 50%;
 }
 .rl-center-cap {
   position: absolute;
   top: 50%;
   left: 50%;
-  width: 36px;
-  height: 36px;
+  width: 24px;
+  height: 24px;
   transform: translate(-50%, -50%);
   border-radius: 50%;
   background: radial-gradient(circle, #3a3a3a 30%, #1a1a1a 100%);
@@ -5179,14 +5178,14 @@ canvas {
 /* Pointer / marker at top */
 .rl-pointer {
   position: absolute;
-  top: -8px;
+  top: -6px;
   left: 50%;
   transform: translateX(-50%);
   width: 0;
   height: 0;
-  border-left: 10px solid transparent;
-  border-right: 10px solid transparent;
-  border-top: 16px solid #ffd866;
+  border-left: 7px solid transparent;
+  border-right: 7px solid transparent;
+  border-top: 12px solid #ffd866;
   filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
   z-index: 5;
 }
@@ -5217,23 +5216,23 @@ canvas {
 /* Betting board */
 .rl-board {
   display: grid;
-  grid-template-columns: repeat(13, 1fr);
+  grid-template-columns: 1.2fr repeat(12, 1fr) 1.2fr;
   gap: 2px;
   margin: 0 auto 8px;
-  max-width: 520px;
+  max-width: 100%;
   user-select: none;
 }
 .rl-cell {
   position: relative;
-  padding: 6px 2px;
-  font-size: 12px;
+  padding: 4px 1px;
+  font-size: 11px;
   font-weight: bold;
   text-align: center;
   border: 1px solid rgba(255,255,255,0.15);
   border-radius: 3px;
   cursor: pointer;
   transition: transform 0.1s, box-shadow 0.1s;
-  min-height: 28px;
+  min-height: 24px;
   display: flex;
   align-items: center;
   justify-content: center;

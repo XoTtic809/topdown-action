@@ -83,7 +83,7 @@
       ctx.translate(cx + Math.cos(midAngle) * textR, cy + Math.sin(midAngle) * textR);
       ctx.rotate(midAngle + Math.PI / 2);
       ctx.fillStyle = '#fff';
-      ctx.font = 'bold 10px Rajdhani, sans-serif';
+      ctx.font = 'bold 7px Rajdhani, sans-serif';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillText(String(num), 0, 0);
@@ -153,8 +153,8 @@
     if (!canvas) return;
     const cx = canvas.width / 2;
     const cy = canvas.height / 2;
-    const startR = 125; // starts near outer edge
-    const endR = 100;   // ends closer to inner
+    const startR = 80;  // starts near outer edge
+    const endR = 62;    // ends closer to inner
     const startTime = performance.now();
 
     function frame(now) {
