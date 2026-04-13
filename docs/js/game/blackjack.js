@@ -1,8 +1,6 @@
 // blackjack.js
-// Hidden blackjack mini-game. No nav button — only reachable by:
-//   1. Visiting index.html#bj
-//   2. Konami sequence on the home screen (↑↑↓↓←→←→BA)
-// Server-authoritative; gated by the `blackjack` feature flag.
+// Blackjack game tab within the casino lobby.
+// Depends on casino-lobby.js for overlay management and shared utilities.
 
 (function () {
   'use strict';
@@ -14,41 +12,7 @@
 
   function getToken() { return localStorage.getItem('topdown_token') || null; }
 
-  let currentHand = null; // { handId, bet, ... }
-
-  // ── Feature flag check ──────────────────────────────────────
-  async function isBlackjackEnabled() {
-    try {
-      const res = await fetch(`${API}/features/blackjack`);
-      if (!res.ok) return false;
-      const data = await res.json();
-      return !!data.enabled;
-    } catch { return false; }
-  }
-
-  // ── Public entry point ──────────────────────────────────────
-  async function openBlackjack() {
-    if (!getToken()) {
-      _toast('You must be signed in.');
-      return;
-    }
-    const enabled = await isBlackjackEnabled();
-    if (!enabled) {
-      // Silent — hidden mode should not advertise its existence to non-admins
-      return;
-    }
-    const overlay = document.getElementById('blackjackOverlay');
-    if (!overlay) return;
-    overlay.classList.remove('hidden');
-    _resetTable('Place your bet and click DEAL.');
-    _syncBalance();
-  }
-
-  function closeBlackjack() {
-    const overlay = document.getElementById('blackjackOverlay');
-    if (overlay) overlay.classList.add('hidden');
-    currentHand = null;
-  }
+  let currentHand = null;
 
   // ── Server actions ──────────────────────────────────────────
   async function startHand() {
@@ -69,12 +33,12 @@
       const data = await res.json();
       if (!res.ok) { _setStatus(data.error || 'Failed to start.'); _setBetEnabled(true); return; }
       currentHand = data;
-      _applyBalance(data.newBalance);
+      window.casinoApplyBalance(data.newBalance);
       _renderHands(data.player, data.dealerUp || data.dealer, data.state === 'done');
       if (data.state === 'done') {
         _showOutcome(data);
       } else {
-        _setStatus(`Bet ${data.bet} • Hit, Stand, or Double`);
+        _setStatus(`Bet ${data.bet} \u2022 Hit, Stand, or Double`);
         _setActionsEnabled(true);
       }
     } catch (e) {
@@ -98,10 +62,10 @@
       const dealerCards = data.state === 'done' ? data.dealer : (data.dealerUp || []);
       _renderHands(data.player, dealerCards, data.state === 'done');
       if (data.state === 'done') {
-        _applyBalance(data.newBalance);
+        window.casinoApplyBalance(data.newBalance);
         _showOutcome(data);
       } else {
-        _setStatus(`Player ${_value(data.player)} • Hit or Stand`);
+        _setStatus(`Player ${_value(data.player)} \u2022 Hit or Stand`);
         _setActionsEnabled(true);
       }
     } catch (e) {
@@ -125,21 +89,16 @@
   function _renderHands(player, dealer, revealAll) {
     const pEl = document.getElementById('bjPlayerCards');
     const dEl = document.getElementById('bjDealerCards');
-    if (pEl) pEl.innerHTML = (player || []).map(_cardHtml).join('');
+    if (pEl) pEl.innerHTML = (player || []).map(window.casinoCardHtml).join('');
     if (dEl) {
-      const cards = (dealer || []).map(_cardHtml);
-      if (!revealAll && cards.length === 1) cards.push('<div class="bj-card bj-card-back">?</div>');
+      const cards = (dealer || []).map(window.casinoCardHtml);
+      if (!revealAll && cards.length === 1) cards.push(window.casinoCardBack());
       dEl.innerHTML = cards.join('');
     }
     const pVal = document.getElementById('bjPlayerValue');
     const dVal = document.getElementById('bjDealerValue');
-    if (pVal) pVal.textContent = player ? `Player: ${_value(player)}` : 'Player: —';
+    if (pVal) pVal.textContent = player ? `Player: ${_value(player)}` : 'Player: \u2014';
     if (dVal) dVal.textContent = dealer && revealAll ? `Dealer: ${_value(dealer)}` : 'Dealer: ?';
-  }
-
-  function _cardHtml(c) {
-    const red = c.s === '♥' || c.s === '♦';
-    return `<div class="bj-card${red ? ' bj-card-red' : ''}"><span class="bj-rank">${c.r}</span><span class="bj-suit">${c.s}</span></div>`;
   }
 
   function _showOutcome(data) {
@@ -159,7 +118,7 @@
 
   function _resetTable(msg) {
     _renderHands([], [], false);
-    _setStatus(msg || '');
+    _setStatus(msg || 'Place your bet and click DEAL.');
     _setActionsEnabled(false);
     _setBetEnabled(true);
   }
@@ -183,66 +142,22 @@
     if (deal) deal.disabled = !on;
   }
 
-  function _applyBalance(newBalance) {
-    if (typeof newBalance !== 'number') return;
-    if (typeof window.playerCoins !== 'undefined') window.playerCoins = newBalance;
-    _syncBalance();
-    // Refresh other coin HUDs in the game (best-effort, no hard dep)
-    const coinsHUD = document.getElementById('coinsHUD');
-    if (coinsHUD) coinsHUD.textContent = `🪙 ${newBalance}`;
-    const homeCoins = document.getElementById('homeCoinsVal');
-    if (homeCoins) homeCoins.textContent = newBalance;
-  }
-
-  function _syncBalance() {
-    const el = document.getElementById('bjBalance');
-    if (el && typeof playerCoins === 'number') el.textContent = `🪙 ${playerCoins}`;
-  }
-
-  function _toast(msg) {
-    console.log('[Blackjack]', msg);
-  }
-
   // ── Wiring ──────────────────────────────────────────────────
   function wire() {
     document.getElementById('bjDealBtn')?.addEventListener('click', startHand);
     document.getElementById('bjHitBtn')?.addEventListener('click', () => sendAction('hit'));
     document.getElementById('bjStandBtn')?.addEventListener('click', () => sendAction('stand'));
     document.getElementById('bjDoubleBtn')?.addEventListener('click', () => sendAction('double'));
-    document.getElementById('bjCloseBtn')?.addEventListener('click', closeBlackjack);
-    document.querySelector('#blackjackOverlay .bj-backdrop')?.addEventListener('click', closeBlackjack);
   }
 
-  // Konami sequence on home screen → ↑↑↓↓←→←→BA
-  const KONAMI = ['ArrowUp','ArrowUp','ArrowDown','ArrowDown','ArrowLeft','ArrowRight','ArrowLeft','ArrowRight','b','a'];
-  let kpos = 0;
-  document.addEventListener('keydown', (e) => {
-    const k = e.key.length === 1 ? e.key.toLowerCase() : e.key;
-    if (k === KONAMI[kpos]) {
-      kpos++;
-      if (kpos === KONAMI.length) { kpos = 0; openBlackjack(); }
-    } else {
-      kpos = (k === KONAMI[0]) ? 1 : 0;
-    }
+  // Reset table when our tab becomes active
+  window.addEventListener('casino:tab-activated', (e) => {
+    if (e.detail === 'blackjack') _resetTable();
   });
 
-  // URL hash trigger — consume #bj immediately so it doesn't linger
-  function checkHash() {
-    if ((window.location.hash || '').toLowerCase() === '#bj') {
-      try { history.replaceState(null, '', window.location.pathname + window.location.search); } catch {}
-      // Defer so the rest of the game has a chance to boot
-      setTimeout(openBlackjack, 600);
-    }
-  }
-
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => { wire(); checkHash(); });
+    document.addEventListener('DOMContentLoaded', wire);
   } else {
     wire();
-    checkHash();
   }
-
-  // Expose for admin panel + manual triggers
-  window.openBlackjack = openBlackjack;
-  window.closeBlackjack = closeBlackjack;
 })();

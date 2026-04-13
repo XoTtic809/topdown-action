@@ -320,7 +320,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (targetTab === 'stats')    displayPlatformStats();
       if (targetTab === 'flags')    displayFlaggedScores();
       if (targetTab === 'devconsole' && typeof devCheckCreatorStatus === 'function') devCheckCreatorStatus();
-      if (targetTab === 'devconsole' && typeof devLoadBlackjackFlag === 'function') devLoadBlackjackFlag();
+      if (targetTab === 'devconsole' && typeof devLoadCasinoFlag === 'function') devLoadCasinoFlag();
       if (targetTab === 'market' && typeof adminMpInitSkinDropdown === 'function') { adminMpInitSkinDropdown(); adminMpLoadWhitelist(); }
       if (targetTab === 'skins'    && typeof adminInitSkinGiveDropdown === 'function') adminInitSkinGiveDropdown();
       if (targetTab === 'reports'  && typeof adminLoadReports === 'function') adminLoadReports('open');

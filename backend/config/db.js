@@ -534,7 +534,9 @@ async function initSchema() {
         enabled    BOOLEAN NOT NULL DEFAULT FALSE,
         updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
       );
-      INSERT INTO feature_flags (key, enabled) VALUES ('blackjack', FALSE)
+      -- Migrate existing 'blackjack' flag to 'casino' for existing databases
+      UPDATE feature_flags SET key = 'casino' WHERE key = 'blackjack';
+      INSERT INTO feature_flags (key, enabled) VALUES ('casino', FALSE)
         ON CONFLICT (key) DO NOTHING;
     `);
     console.log('[DB] Schema ready');

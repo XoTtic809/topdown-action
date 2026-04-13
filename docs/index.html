@@ -316,38 +316,106 @@
         </div>
       </div>
 
-      <!-- ═══ HIDDEN: BLACKJACK OVERLAY (no nav button — entered via #bj or konami) ═══ -->
-      <div id="blackjackOverlay" class="bj-overlay hidden">
-        <div class="bj-backdrop"></div>
-        <div class="bj-panel">
-          <div class="bj-header">
-            <h2 class="bj-title">🂡 BLACKJACK</h2>
-            <button id="bjCloseBtn" class="bj-close" aria-label="Close">&times;</button>
-          </div>
-          <div class="bj-balance" id="bjBalance">🪙 0</div>
-
-          <div class="bj-table">
-            <div class="bj-side">
-              <div class="bj-side-label" id="bjDealerValue">Dealer: ?</div>
-              <div class="bj-cards" id="bjDealerCards"></div>
-            </div>
-            <div class="bj-side">
-              <div class="bj-side-label" id="bjPlayerValue">Player: —</div>
-              <div class="bj-cards" id="bjPlayerCards"></div>
-            </div>
+      <!-- ═══ HIDDEN: CASINO OVERLAY (no nav button — entered via #bj / #casino or konami) ═══ -->
+      <div id="casinoOverlay" class="cas-overlay hidden">
+        <div class="cas-backdrop"></div>
+        <div class="cas-panel">
+          <div class="cas-header">
+            <h2 class="cas-title">CASINO</h2>
+            <div class="cas-balance" id="casBalance">🪙 0</div>
+            <button id="casCloseBtn" class="cas-close" aria-label="Close">&times;</button>
           </div>
 
-          <div class="bj-status" id="bjStatus">Place your bet and click DEAL.</div>
+          <div class="cas-tabs">
+            <button class="cas-tab active" data-cas-game="blackjack">Blackjack</button>
+            <button class="cas-tab" data-cas-game="ridethebus">Ride the Bus</button>
+            <button class="cas-tab" data-cas-game="slots">Slots</button>
+            <button class="cas-tab" data-cas-game="poker">Poker</button>
+          </div>
 
-          <div class="bj-controls">
-            <label class="bj-bet-label">
-              BET
-              <input id="bjBetInput" type="number" min="10" max="50000" value="100">
-            </label>
-            <button id="bjDealBtn" class="bj-btn bj-btn-deal">DEAL</button>
-            <button id="bjHitBtn" class="bj-btn" disabled>HIT</button>
-            <button id="bjStandBtn" class="bj-btn" disabled>STAND</button>
-            <button id="bjDoubleBtn" class="bj-btn" disabled>DOUBLE</button>
+          <div class="cas-game-area">
+            <!-- ── Blackjack ── -->
+            <div class="cas-game-panel active" id="casGame_blackjack">
+              <div class="cas-table">
+                <div class="cas-side">
+                  <div class="cas-side-label" id="bjDealerValue">Dealer: ?</div>
+                  <div class="cas-cards" id="bjDealerCards"></div>
+                </div>
+                <div class="cas-side">
+                  <div class="cas-side-label" id="bjPlayerValue">Player: —</div>
+                  <div class="cas-cards" id="bjPlayerCards"></div>
+                </div>
+              </div>
+              <div class="cas-status" id="bjStatus">Place your bet and click DEAL.</div>
+              <div class="cas-controls">
+                <label class="cas-bet-label">BET <input id="bjBetInput" type="number" min="10" max="50000" value="100"></label>
+                <button id="bjDealBtn" class="cas-btn cas-btn-deal">DEAL</button>
+                <button id="bjHitBtn" class="cas-btn" disabled>HIT</button>
+                <button id="bjStandBtn" class="cas-btn" disabled>STAND</button>
+                <button id="bjDoubleBtn" class="cas-btn" disabled>DOUBLE</button>
+              </div>
+            </div>
+
+            <!-- ── Ride the Bus ── -->
+            <div class="cas-game-panel" id="casGame_ridethebus">
+              <div class="cas-table rtb-table">
+                <div class="cas-side-label" id="rtbRoundLabel">Round 1: Red or Black?</div>
+                <div class="cas-cards" id="rtbCards"></div>
+              </div>
+              <div class="cas-status" id="rtbStatus">Place your bet and click START.</div>
+              <div class="cas-controls">
+                <label class="cas-bet-label">BET <input id="rtbBetInput" type="number" min="10" max="50000" value="100"></label>
+                <button id="rtbStartBtn" class="cas-btn cas-btn-deal">START</button>
+              </div>
+              <div class="cas-controls rtb-guess-controls hidden" id="rtbGuessControls"></div>
+            </div>
+
+            <!-- ── Slots ── -->
+            <div class="cas-game-panel" id="casGame_slots">
+              <div class="slots-machine">
+                <div class="slots-reels">
+                  <div class="slots-reel" id="slotsReel0">-</div>
+                  <div class="slots-reel" id="slotsReel1">-</div>
+                  <div class="slots-reel" id="slotsReel2">-</div>
+                </div>
+              </div>
+              <div class="cas-status" id="slotsStatus">Place your bet and SPIN!</div>
+              <div class="cas-controls">
+                <label class="cas-bet-label">BET <input id="slotsBetInput" type="number" min="10" max="50000" value="100"></label>
+                <button id="slotsSpinBtn" class="cas-btn cas-btn-deal">SPIN</button>
+              </div>
+              <div class="slots-paytable">
+                <div class="slots-pt-title">PAYOUTS</div>
+                <div class="slots-pt-row"><span>💎💎💎</span><span>50x</span></div>
+                <div class="slots-pt-row"><span>7️⃣7️⃣7️⃣</span><span>25x</span></div>
+                <div class="slots-pt-row"><span>⭐⭐⭐</span><span>15x</span></div>
+                <div class="slots-pt-row"><span>🍫🍫🍫</span><span>10x</span></div>
+                <div class="slots-pt-row"><span>🍋🍋🍋</span><span>5x</span></div>
+                <div class="slots-pt-row"><span>🍒🍒🍒</span><span>3x</span></div>
+                <div class="slots-pt-row"><span>Any 2 match</span><span>2x</span></div>
+                <div class="slots-pt-row"><span>1+ 🍒</span><span>1x</span></div>
+              </div>
+            </div>
+
+            <!-- ── Poker ── -->
+            <div class="cas-game-panel" id="casGame_poker">
+              <div class="cas-table">
+                <div class="cas-side">
+                  <div class="cas-side-label" id="pokerDealerLabel">Dealer</div>
+                  <div class="cas-cards" id="pokerDealerCards"></div>
+                </div>
+                <div class="cas-side">
+                  <div class="cas-side-label" id="pokerPlayerLabel">Your Hand</div>
+                  <div class="cas-cards" id="pokerPlayerCards"></div>
+                </div>
+              </div>
+              <div class="cas-status" id="pokerStatus">Ante up and DEAL.</div>
+              <div class="cas-controls">
+                <label class="cas-bet-label">ANTE <input id="pokerBetInput" type="number" min="10" max="50000" value="100"></label>
+                <button id="pokerDealBtn" class="cas-btn cas-btn-deal">DEAL</button>
+                <button id="pokerDrawBtn" class="cas-btn hidden" disabled>DRAW</button>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -1812,13 +1880,13 @@
             </div>
           </div>
 
-          <!-- Hidden: Blackjack feature flag -->
+          <!-- Hidden: Casino feature flag -->
           <div class="dev-card">
-            <div class="dev-card-label">🂡 Blackjack (Hidden)</div>
+            <div class="dev-card-label">🎰 Casino (Hidden)</div>
             <div class="dev-row">
-              <span id="bjFlagStatus" class="dev-status off">OFF</span>
-              <button class="dev-btn" onclick="devToggleBlackjack()">TOGGLE</button>
-              <button class="dev-btn" onclick="openBlackjack()">OPEN</button>
+              <span id="casFlagStatus" class="dev-status off">OFF</span>
+              <button class="dev-btn" onclick="devToggleCasino()">TOGGLE</button>
+              <button class="dev-btn" onclick="openCasino()">OPEN</button>
             </div>
           </div>
 
@@ -2466,8 +2534,12 @@
 <script src="js/game/game.js"></script>
 <!-- 2-player local PvP mode (depends on game.js globals) -->
 <script src="js/game/pvp2p.js"></script>
-<!-- Hidden blackjack mini-game -->
+<!-- Hidden casino (lobby shell must load before individual game IIFEs) -->
+<script src="js/game/casino-lobby.js"></script>
 <script src="js/game/blackjack.js"></script>
+<script src="js/game/ridethebus.js"></script>
+<script src="js/game/slots.js"></script>
+<script src="js/game/poker.js"></script>
 <script src="js/game/achievements.js"></script>
 <!-- Marketplace system (depends on game.js SKINS + crate-system SKIN_RARITIES) -->
 <script src="js/marketplace/marketplace.js"></script>

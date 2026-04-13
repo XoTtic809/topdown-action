@@ -61,7 +61,7 @@ function makeId() {
 }
 
 async function isEnabled() {
-  const { rows } = await query(`SELECT enabled FROM feature_flags WHERE key = 'blackjack'`);
+  const { rows } = await query(`SELECT enabled FROM feature_flags WHERE key = 'casino'`);
   return !!rows[0]?.enabled;
 }
 

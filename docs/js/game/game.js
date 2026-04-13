@@ -10309,14 +10309,14 @@ function devSetCoins(fromOverlay = false) {
   console.log(`[DEV] Coins set to ${val}`);
 }
 
-// ── Blackjack feature flag (admin only) ────────────────────────
-async function devLoadBlackjackFlag() {
+// ── Casino feature flag (admin only) ────────────────────────
+async function devLoadCasinoFlag() {
   if (!isAdmin) return;
   try {
-    const res = await fetch(`${API_BASE}/features/blackjack`);
+    const res = await fetch(`${API_BASE}/features/casino`);
     if (!res.ok) return;
     const data = await res.json();
-    const el = document.getElementById('bjFlagStatus');
+    const el = document.getElementById('casFlagStatus');
     if (el) {
       el.textContent = data.enabled ? 'ON' : 'OFF';
       el.className = `dev-status ${data.enabled ? 'on' : 'off'}`;
@@ -10324,12 +10324,12 @@ async function devLoadBlackjackFlag() {
   } catch (e) { /* non-fatal */ }
 }
 
-async function devToggleBlackjack() {
+async function devToggleCasino() {
   if (!isAdmin) return;
-  const el = document.getElementById('bjFlagStatus');
+  const el = document.getElementById('casFlagStatus');
   const currentlyOn = el && el.textContent === 'ON';
   try {
-    const res = await fetch(`${API_BASE}/features/blackjack`, {
+    const res = await fetch(`${API_BASE}/features/casino`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -10338,7 +10338,7 @@ async function devToggleBlackjack() {
       body: JSON.stringify({ enabled: !currentlyOn }),
     });
     if (!res.ok) {
-      console.warn('[Blackjack] toggle failed:', res.status);
+      console.warn('[Casino] toggle failed:', res.status);
       return;
     }
     const data = await res.json();
@@ -10346,12 +10346,12 @@ async function devToggleBlackjack() {
       el.textContent = data.enabled ? 'ON' : 'OFF';
       el.className = `dev-status ${data.enabled ? 'on' : 'off'}`;
     }
-    console.log(`[DEV] Blackjack flag → ${data.enabled}`);
+    console.log(`[DEV] Casino flag → ${data.enabled}`);
   } catch (e) {
-    console.warn('[Blackjack] toggle error:', e);
+    console.warn('[Casino] toggle error:', e);
   }
 }
-window.devToggleBlackjack = devToggleBlackjack;
+window.devToggleCasino = devToggleCasino;
 
 // Set Battle Pass XP
 function devSetBattlePassXP(fromOverlay = false) {
