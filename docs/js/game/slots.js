@@ -1,6 +1,6 @@
 // slots.js
 // 3-reel slot machine within the casino lobby.
-// Renders into #casGame_slots.
+// Renders into #casGame_slots with vertical-scrolling reel strips.
 
 (function () {
   'use strict';
@@ -12,9 +12,95 @@
 
   function getToken() { return localStorage.getItem('topdown_token') || null; }
 
-  const ALL_EMOJIS = ['🍒','🍋','🍫','⭐','7️⃣','💎'];
+  // Symbol map: id → emoji
+  const SYM_MAP = {
+    cherry:  '🍒',
+    lemon:   '🍋',
+    bar:     '🍫',
+    star:    '⭐',
+    seven:   '7️⃣',
+    diamond: '💎',
+  };
+  const SYM_IDS = Object.keys(SYM_MAP);
+  const SYM_HEIGHT = 66; // px per symbol, matches CSS .slots-sym height
+  const VISIBLE_SYMS = 3; // how many symbols visible in the window (top / center / bottom)
+  const REEL_SYMS = 30;   // total symbols in each reel strip during spin
+
   let spinning = false;
 
+  // ── Reel strip building ────────────────────────────────────
+  function _randomSym() {
+    return SYM_IDS[Math.floor(Math.random() * SYM_IDS.length)];
+  }
+
+  /** Fill a reel strip with random symbol divs */
+  function _populateStrip(strip, count) {
+    strip.innerHTML = '';
+    for (let i = 0; i < count; i++) {
+      const div = document.createElement('div');
+      div.className = 'slots-sym';
+      div.textContent = SYM_MAP[_randomSym()];
+      strip.appendChild(div);
+    }
+  }
+
+  /** Build a strip that ends with the target symbol at the center visible position.
+   *  Returns the translateY needed to show the target at the center. */
+  function _buildResultStrip(strip, targetEmoji) {
+    strip.innerHTML = '';
+    // Fill with random symbols, then place the result at position that aligns with center
+    const totalSyms = REEL_SYMS;
+    // The center of the visible window is at index 1 from bottom of visible area
+    // We place the target at index (totalSyms - 2), so the strip scrolls far down
+    const targetIdx = totalSyms - 2; // second-to-last is center visible
+    for (let i = 0; i < totalSyms; i++) {
+      const div = document.createElement('div');
+      div.className = 'slots-sym';
+      if (i === targetIdx) {
+        div.textContent = targetEmoji;
+        div.classList.add('center');
+      } else if (i === targetIdx - 1 || i === targetIdx + 1) {
+        // Neighbors visible but dimmed
+        div.textContent = SYM_MAP[_randomSym()];
+      } else {
+        div.textContent = SYM_MAP[_randomSym()];
+      }
+      strip.appendChild(div);
+    }
+    // translateY to bring targetIdx to the center of the window
+    // Window height = VISIBLE_SYMS * SYM_HEIGHT = 198 ≈ 200
+    // Center offset from top of window = SYM_HEIGHT (one symbol down)
+    // The targetIdx symbol's top = targetIdx * SYM_HEIGHT
+    // We need: targetIdx * SYM_HEIGHT + translateY = SYM_HEIGHT (to center it)
+    const stopY = -(targetIdx * SYM_HEIGHT - SYM_HEIGHT);
+    return stopY;
+  }
+
+  /** Reset reel strips to idle (show 3 dashes) */
+  function _resetStrips() {
+    for (let i = 0; i < 3; i++) {
+      const strip = document.getElementById('slotsReel' + i);
+      const win = strip?.parentElement;
+      if (!strip) continue;
+      strip.innerHTML = '';
+      strip.className = 'slots-reel-strip';
+      strip.style.transform = '';
+      strip.style.transition = 'none';
+      strip.style.removeProperty('--stop-y');
+      if (win) win.classList.remove('win');
+      // Build 3 idle symbols
+      for (let j = 0; j < 3; j++) {
+        const div = document.createElement('div');
+        div.className = 'slots-sym' + (j === 1 ? ' center' : '');
+        div.textContent = '—';
+        strip.appendChild(div);
+      }
+      // Position so center sym is aligned
+      strip.style.transform = `translateY(-${SYM_HEIGHT}px)`;
+    }
+  }
+
+  // ── Spin animation ─────────────────────────────────────────
   async function spin() {
     if (spinning) return;
     const betInput = document.getElementById('slotsBetInput');
@@ -29,16 +115,47 @@
     if (spinBtn) spinBtn.disabled = true;
     if (betInput) betInput.disabled = true;
 
-    // Start visual spin animation
-    const reels = [0,1,2].map(i => document.getElementById('slotsReel' + i));
-    reels.forEach(r => { if (r) r.classList.add('spinning'); });
-    const spinIntervals = reels.map(r => {
-      if (!r) return null;
-      return setInterval(() => {
-        r.textContent = ALL_EMOJIS[Math.floor(Math.random() * ALL_EMOJIS.length)];
-      }, 80);
+    // Hide previous win display
+    _hideWin();
+    _clearParticles();
+    const machine = document.getElementById('slotsMachine');
+    if (machine) machine.classList.remove('shaking');
+    const glow = document.getElementById('slotsGlow');
+    if (glow) { glow.classList.remove('active', 'jackpot'); }
+
+    // Clear previous win highlights
+    for (let i = 0; i < 3; i++) {
+      const win = document.getElementById('slotsReel' + i)?.parentElement;
+      if (win) win.classList.remove('win');
+    }
+
+    // Start spinning animation — populate strips with lots of random symbols and scroll fast
+    const strips = [0, 1, 2].map(i => document.getElementById('slotsReel' + i));
+    strips.forEach(strip => {
+      if (!strip) return;
+      _populateStrip(strip, REEL_SYMS);
+      strip.className = 'slots-reel-strip blur';
+      strip.style.transition = 'none';
+      strip.style.transform = 'translateY(0)';
     });
 
+    // Animate continuous scrolling with requestAnimationFrame
+    const spinSpeed = 18; // px per frame
+    let spinY = 0;
+    let spinRunning = true;
+    const totalStripHeight = REEL_SYMS * SYM_HEIGHT;
+
+    function animateSpin() {
+      if (!spinRunning) return;
+      spinY = (spinY + spinSpeed) % totalStripHeight;
+      strips.forEach(strip => {
+        if (strip) strip.style.transform = `translateY(-${spinY}px)`;
+      });
+      requestAnimationFrame(animateSpin);
+    }
+    requestAnimationFrame(animateSpin);
+
+    // Fire the API call
     try {
       const res = await fetch(`${API}/slots/spin`, {
         method: 'POST',
@@ -47,90 +164,210 @@
       });
       const data = await res.json();
       if (!res.ok) {
-        _stopReels(reels, spinIntervals, ['-','-','-']);
+        spinRunning = false;
+        _resetStrips();
         _setStatus(data.error || 'Spin failed.');
-        spinning = false;
-        if (spinBtn) spinBtn.disabled = false;
-        if (betInput) betInput.disabled = false;
+        _finish();
         return;
       }
 
       const resultEmojis = data.symbols.map(s => s.emoji);
+      const resultIds = data.symbols.map(s => s.id);
 
-      // Stagger reel stops for drama
-      setTimeout(() => _stopReel(reels[0], spinIntervals[0], resultEmojis[0]), 400);
-      setTimeout(() => _stopReel(reels[1], spinIntervals[1], resultEmojis[1]), 700);
-      setTimeout(() => {
-        _stopReel(reels[2], spinIntervals[2], resultEmojis[2]);
+      // Stop reels one-by-one with staggered delays
+      await _stopReelsSequentially(strips, resultEmojis, spinSpeed);
+      spinRunning = false;
 
-        window.casinoApplyBalance(data.newBalance);
+      // Apply balance
+      window.casinoApplyBalance(data.newBalance);
 
-        // Highlight winning reels
-        const ids = data.symbols.map(s => s.id);
-        const allMatch = ids[0] === ids[1] && ids[1] === ids[2];
-        const anyMatch = ids[0] === ids[1] || ids[1] === ids[2] || ids[0] === ids[2];
-        if (allMatch) {
-          reels.forEach(r => { if (r) r.classList.add('win'); });
-        } else if (anyMatch) {
-          // highlight matching pair
-          if (ids[0] === ids[1]) { reels[0]?.classList.add('win'); reels[1]?.classList.add('win'); }
-          if (ids[1] === ids[2]) { reels[1]?.classList.add('win'); reels[2]?.classList.add('win'); }
-          if (ids[0] === ids[2]) { reels[0]?.classList.add('win'); reels[2]?.classList.add('win'); }
-        }
+      // Determine match type
+      const allMatch = resultIds[0] === resultIds[1] && resultIds[1] === resultIds[2];
+      const pairs = [];
+      if (resultIds[0] === resultIds[1]) { pairs.push(0); pairs.push(1); }
+      if (resultIds[1] === resultIds[2]) { pairs.push(1); pairs.push(2); }
+      if (resultIds[0] === resultIds[2]) { pairs.push(0); pairs.push(2); }
+      const matchedReels = [...new Set(pairs)];
 
-        if (data.payout > 0) {
-          _setStatus(`WIN! +${data.payout} coins`);
-        } else {
-          _setStatus('No match. Try again!');
-        }
+      // Win highlights
+      if (matchedReels.length > 0) {
+        matchedReels.forEach(idx => {
+          strips[idx]?.parentElement?.classList.add('win');
+        });
+      }
 
-        spinning = false;
-        if (spinBtn) spinBtn.disabled = false;
-        if (betInput) betInput.disabled = false;
-      }, 1000);
+      // Glow effects
+      if (glow) {
+        if (allMatch) glow.classList.add('jackpot');
+        else if (data.payout > 0) glow.classList.add('active');
+      }
+
+      // Big win effects
+      if (allMatch && machine) {
+        machine.classList.add('shaking');
+        _spawnParticles(20);
+      } else if (data.payout > 0) {
+        _spawnParticles(8);
+      }
+
+      // Show win/loss
+      if (data.payout > 0) {
+        _showWin(data.payout, allMatch);
+        _setStatus(`WIN! +${data.payout} coins`);
+      } else {
+        _setStatus('No luck. Try again!');
+      }
+
+      _finish();
 
     } catch (e) {
-      _stopReels(reels, spinIntervals, ['-','-','-']);
+      spinRunning = false;
+      _resetStrips();
       _setStatus('Network error.');
+      _finish();
+    }
+
+    function _finish() {
       spinning = false;
       if (spinBtn) spinBtn.disabled = false;
       if (betInput) betInput.disabled = false;
     }
   }
 
-  function _stopReel(reel, interval, emoji) {
-    if (interval) clearInterval(interval);
-    if (reel) {
-      reel.classList.remove('spinning');
-      reel.textContent = emoji;
+  /** Stop each reel with a stagger, rebuilding the strip with the result symbol and bouncing */
+  function _stopReelsSequentially(strips, emojis, spinSpeed) {
+    return new Promise(resolve => {
+      const delays = [300, 600, 1000]; // ms stagger for dramatic effect
+      let stopped = 0;
+
+      delays.forEach((delay, i) => {
+        setTimeout(() => {
+          const strip = strips[i];
+          if (!strip) { stopped++; if (stopped === 3) resolve(); return; }
+
+          // Rebuild strip with result at center
+          const stopY = _buildResultStrip(strip, emojis[i]);
+
+          // Start from scrolled position, transition to final stop
+          strip.className = 'slots-reel-strip';
+          strip.style.transition = 'none';
+          // Start from a position above the stop point to simulate the last scroll
+          const approachOffset = SYM_HEIGHT * 8; // overshoot then settle
+          strip.style.transform = `translateY(${stopY + approachOffset}px)`;
+
+          // Force reflow then animate to stop position with bounce
+          void strip.offsetHeight;
+
+          strip.style.setProperty('--stop-y', stopY + 'px');
+          strip.classList.add('bouncing');
+
+          // After bounce animation completes, mark as stopped
+          const onEnd = () => {
+            strip.removeEventListener('animationend', onEnd);
+            strip.classList.remove('bouncing');
+            strip.classList.add('stopped');
+            strip.style.transition = 'none';
+            strip.style.transform = `translateY(${stopY}px)`;
+            stopped++;
+            if (stopped === 3) resolve();
+          };
+          strip.addEventListener('animationend', onEnd);
+
+          // Fallback in case animationend doesn't fire
+          setTimeout(() => {
+            if (stopped < i + 1) {
+              strip.removeEventListener('animationend', onEnd);
+              strip.classList.remove('bouncing');
+              strip.classList.add('stopped');
+              strip.style.transform = `translateY(${stopY}px)`;
+              stopped++;
+              if (stopped === 3) resolve();
+            }
+          }, 600);
+
+        }, delay);
+      });
+    });
+  }
+
+  // ── Win display ────────────────────────────────────────────
+  function _showWin(amount, isJackpot) {
+    const display = document.getElementById('slotsWinDisplay');
+    const amountEl = document.getElementById('slotsWinAmount');
+    if (!display || !amountEl) return;
+    amountEl.textContent = '+' + amount;
+    amountEl.className = 'slots-win-amount' + (isJackpot ? ' jackpot' : '');
+    display.classList.remove('hidden');
+  }
+
+  function _hideWin() {
+    const display = document.getElementById('slotsWinDisplay');
+    if (display) display.classList.add('hidden');
+  }
+
+  // ── Particles ──────────────────────────────────────────────
+  function _spawnParticles(count) {
+    const container = document.getElementById('slotsParticles');
+    if (!container) return;
+    const colors = ['#ffd866', '#ff9500', '#ff5555', '#55ff88', '#66ccff', '#fff'];
+    const rect = container.getBoundingClientRect();
+    const cx = rect.width / 2;
+    const cy = rect.height / 2;
+
+    for (let i = 0; i < count; i++) {
+      const p = document.createElement('div');
+      p.className = 'slots-particle';
+      const angle = (Math.PI * 2 * i) / count + (Math.random() - 0.5) * 0.5;
+      const dist = 60 + Math.random() * 100;
+      const dx = Math.cos(angle) * dist;
+      const dy = Math.sin(angle) * dist;
+      const dur = 0.6 + Math.random() * 0.6;
+      p.style.left = cx + 'px';
+      p.style.top = cy + 'px';
+      p.style.background = colors[Math.floor(Math.random() * colors.length)];
+      p.style.width = (4 + Math.random() * 4) + 'px';
+      p.style.height = p.style.width;
+      p.style.setProperty('--dx', dx + 'px');
+      p.style.setProperty('--dy', dy + 'px');
+      p.style.setProperty('--dur', dur + 's');
+      container.appendChild(p);
+
+      // Clean up after animation
+      setTimeout(() => p.remove(), dur * 1000 + 50);
     }
   }
 
-  function _stopReels(reels, intervals, emojis) {
-    reels.forEach((r, i) => _stopReel(r, intervals[i], emojis[i]));
+  function _clearParticles() {
+    const container = document.getElementById('slotsParticles');
+    if (container) container.innerHTML = '';
   }
 
+  // ── Status ─────────────────────────────────────────────────
   function _setStatus(text) {
     const el = document.getElementById('slotsStatus');
     if (el) el.textContent = text;
   }
 
   function _resetTable() {
-    const reels = [0,1,2].map(i => document.getElementById('slotsReel' + i));
-    reels.forEach(r => {
-      if (r) { r.textContent = '-'; r.classList.remove('spinning', 'win'); }
-    });
+    _resetStrips();
+    _hideWin();
+    _clearParticles();
     _setStatus('Place your bet and SPIN!');
     const spinBtn = document.getElementById('slotsSpinBtn');
     const betInput = document.getElementById('slotsBetInput');
     if (spinBtn) spinBtn.disabled = false;
     if (betInput) betInput.disabled = false;
     spinning = false;
+    const glow = document.getElementById('slotsGlow');
+    if (glow) glow.classList.remove('active', 'jackpot');
+    const machine = document.getElementById('slotsMachine');
+    if (machine) machine.classList.remove('shaking');
   }
 
-  // ── Wiring ──────────────────────────────────────────────────
+  // ── Wiring ─────────────────────────────────────────────────
   function wire() {
     document.getElementById('slotsSpinBtn')?.addEventListener('click', spin);
+    _resetStrips(); // Initialize idle state
   }
 
   window.addEventListener('casino:tab-activated', (e) => {

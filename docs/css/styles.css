@@ -4796,38 +4796,259 @@ canvas {
 .rtb-guess-btn.black { background: linear-gradient(180deg, #2a2a2a, #0e0e0e); border-color: rgba(120,120,120,0.5); }
 
 /* ── Slots ── */
-.slots-machine { text-align: center; padding: 12px 0; }
+.slots-machine {
+  position: relative;
+  text-align: center;
+  padding: 16px 0 8px;
+}
+.slots-glow {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 320px;
+  height: 180px;
+  transform: translate(-50%, -60%);
+  border-radius: 50%;
+  background: radial-gradient(ellipse, rgba(80,255,150,0.06) 0%, transparent 70%);
+  pointer-events: none;
+  transition: opacity 0.4s;
+}
+.slots-glow.active {
+  background: radial-gradient(ellipse, rgba(255,216,102,0.15) 0%, transparent 70%);
+  animation: slotsGlowPulse 0.8s ease-in-out infinite alternate;
+}
+@keyframes slotsGlowPulse {
+  0% { opacity: 0.6; transform: translate(-50%, -60%) scale(1); }
+  100% { opacity: 1; transform: translate(-50%, -60%) scale(1.15); }
+}
+.slots-glow.jackpot {
+  background: radial-gradient(ellipse, rgba(255,180,40,0.25) 0%, rgba(255,80,80,0.08) 50%, transparent 70%);
+  animation: slotsGlowJackpot 0.4s ease-in-out infinite alternate;
+}
+@keyframes slotsGlowJackpot {
+  0% { opacity: 0.7; transform: translate(-50%, -60%) scale(1); }
+  100% { opacity: 1; transform: translate(-50%, -60%) scale(1.3); }
+}
+
+/* Frame around the reels */
+.slots-frame {
+  position: relative;
+  display: inline-block;
+  background: linear-gradient(180deg, #040e08, #081a10 30%, #081a10 70%, #040e08);
+  border: 2px solid rgba(80,200,130,0.35);
+  border-radius: 12px;
+  padding: 8px 12px;
+  box-shadow: inset 0 0 30px rgba(0,0,0,0.6), 0 8px 32px rgba(0,0,0,0.5);
+}
 .slots-reels {
   display: flex;
   justify-content: center;
-  gap: 12px;
-  margin-bottom: 10px;
+  gap: 8px;
 }
-.slots-reel {
-  width: 80px;
-  height: 90px;
-  background: #0a1a14;
-  border: 2px solid rgba(80,200,130,0.35);
-  border-radius: 8px;
+/* Each reel window clips the scrolling strip */
+.slots-reel-window {
+  width: 90px;
+  height: 200px;
+  overflow: hidden;
+  position: relative;
+  background: linear-gradient(180deg,
+    rgba(0,0,0,0.7) 0%,
+    transparent 20%,
+    transparent 80%,
+    rgba(0,0,0,0.7) 100%
+  );
+  border-radius: 6px;
+}
+/* The strip holds multiple symbols and scrolls vertically */
+.slots-reel-strip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  will-change: transform;
+  transition: none;
+}
+.slots-reel-strip .slots-sym {
+  width: 90px;
+  height: 66px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 42px;
+  font-size: 40px;
+  flex-shrink: 0;
+  filter: brightness(0.6);
+  transition: filter 0.3s;
+}
+/* The center symbol (visible at payline) gets full brightness */
+.slots-reel-strip .slots-sym.center {
+  filter: brightness(1);
+  font-size: 48px;
+}
+.slots-reel-strip.blur {
+  filter: blur(2px);
+}
+.slots-reel-strip.stopped {
+  filter: none;
+}
+
+/* Payline indicator arrow across the middle */
+.slots-payline {
+  position: absolute;
+  top: 50%;
+  left: -4px;
+  right: -4px;
+  height: 2px;
+  transform: translateY(-50%);
+  background: linear-gradient(90deg, rgba(255,216,102,0.8), rgba(255,216,102,0.2) 20%, rgba(255,216,102,0.2) 80%, rgba(255,216,102,0.8));
+  pointer-events: none;
+  z-index: 2;
+}
+.slots-payline::before,
+.slots-payline::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  width: 0;
+  height: 0;
+  border: 6px solid transparent;
+  transform: translateY(-50%);
+}
+.slots-payline::before {
+  left: 0;
+  border-left-color: #ffd866;
+}
+.slots-payline::after {
+  right: 0;
+  border-right-color: #ffd866;
+}
+
+/* Win reel highlight */
+.slots-reel-window.win {
+  box-shadow: 0 0 24px rgba(255,216,102,0.5), inset 0 0 16px rgba(255,216,102,0.15);
+  animation: slotReelWin 0.5s ease-in-out 3;
+}
+@keyframes slotReelWin {
+  0%, 100% { box-shadow: 0 0 24px rgba(255,216,102,0.5), inset 0 0 16px rgba(255,216,102,0.15); }
+  50% { box-shadow: 0 0 40px rgba(255,216,102,0.8), inset 0 0 24px rgba(255,216,102,0.3); }
+}
+
+/* Bounce when reel stops */
+@keyframes slotBounce {
+  0% { transform: translateY(var(--stop-y)); }
+  30% { transform: translateY(calc(var(--stop-y) - 12px)); }
+  55% { transform: translateY(calc(var(--stop-y) + 5px)); }
+  75% { transform: translateY(calc(var(--stop-y) - 2px)); }
+  100% { transform: translateY(var(--stop-y)); }
+}
+.slots-reel-strip.bouncing {
+  animation: slotBounce 0.45s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+/* Win display */
+.slots-win-display {
+  position: relative;
+  margin-top: 8px;
+  height: 36px;
+}
+.slots-win-display.hidden { display: none; }
+.slots-win-amount {
+  font-size: 28px;
+  font-weight: bold;
+  letter-spacing: 3px;
+  background: linear-gradient(180deg, #ffd866, #ff9500);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-shadow: none;
+  animation: slotWinPop 0.6s cubic-bezier(0.17, 0.67, 0.3, 1.3);
+}
+@keyframes slotWinPop {
+  0% { transform: scale(0); opacity: 0; }
+  60% { transform: scale(1.3); opacity: 1; }
+  100% { transform: scale(1); }
+}
+.slots-win-amount.jackpot {
+  font-size: 34px;
+  background: linear-gradient(180deg, #fff, #ffd866, #ff6600, #ffd866, #fff);
+  background-size: 100% 200%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  animation: slotWinPop 0.6s cubic-bezier(0.17, 0.67, 0.3, 1.3), slotJackpotShimmer 1s linear infinite;
+}
+@keyframes slotJackpotShimmer {
+  0% { background-position: 0 0; }
+  100% { background-position: 0 200%; }
+}
+
+/* Particles */
+.slots-particles {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
   overflow: hidden;
-  transition: border-color 0.3s;
 }
-.slots-reel.win { border-color: #ffd866; box-shadow: 0 0 20px rgba(255,216,102,0.4); }
-@keyframes slotSpin {
-  0% { transform: translateY(0); }
-  100% { transform: translateY(-100%); }
+.slots-particle {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  pointer-events: none;
+  animation: slotParticleFly var(--dur, 1s) ease-out forwards;
+  opacity: 0;
 }
-.slots-reel.spinning {
-  animation: slotSpin 0.1s linear infinite;
+@keyframes slotParticleFly {
+  0% { opacity: 1; transform: translate(0, 0) scale(1); }
+  70% { opacity: 0.8; }
+  100% { opacity: 0; transform: translate(var(--dx), var(--dy)) scale(0); }
 }
+
+/* Machine shake on big win */
+@keyframes slotShake {
+  0%, 100% { transform: translateX(0); }
+  10% { transform: translateX(-4px) rotate(-0.5deg); }
+  30% { transform: translateX(4px) rotate(0.5deg); }
+  50% { transform: translateX(-3px) rotate(-0.3deg); }
+  70% { transform: translateX(3px) rotate(0.3deg); }
+  90% { transform: translateX(-1px); }
+}
+.slots-machine.shaking {
+  animation: slotShake 0.5s ease-in-out;
+}
+
+/* Spin button */
+.slots-spin-lever {
+  position: relative;
+  background: linear-gradient(180deg, #ffd866, #d8a020);
+  color: #1a1000;
+  border: 2px solid rgba(255,220,120,0.6);
+  font-family: inherit;
+  font-size: 16px;
+  font-weight: bold;
+  letter-spacing: 3px;
+  padding: 12px 36px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: transform 0.12s, box-shadow 0.12s;
+  box-shadow: 0 4px 16px rgba(255,180,0,0.3);
+}
+.slots-spin-lever:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 24px rgba(255,180,0,0.5);
+}
+.slots-spin-lever:active:not(:disabled) {
+  transform: translateY(1px);
+  box-shadow: 0 2px 8px rgba(255,180,0,0.3);
+}
+.slots-spin-lever:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: linear-gradient(180deg, #998844, #776633);
+}
+
+/* Paytable */
 .slots-paytable {
-  margin-top: 12px;
-  padding: 10px;
-  background: rgba(5,15,10,0.6);
+  margin-top: 14px;
+  padding: 10px 14px;
+  background: rgba(5,15,10,0.7);
   border: 1px solid rgba(80,200,130,0.15);
   border-radius: 8px;
   font-size: 12px;
@@ -4838,11 +5059,16 @@ canvas {
   letter-spacing: 2px;
   color: #9fdcb8;
   margin-bottom: 6px;
+  text-align: center;
 }
 .slots-pt-row {
   display: flex;
   justify-content: space-between;
   padding: 2px 0;
+}
+.slots-pt-mult {
+  color: #ffd866;
+  font-weight: bold;
 }
 
 /* ══ 2-Player PvP — in-match HUD ══════════════════════════ */

@@ -372,28 +372,48 @@
 
             <!-- ── Slots ── -->
             <div class="cas-game-panel" id="casGame_slots">
-              <div class="slots-machine">
-                <div class="slots-reels">
-                  <div class="slots-reel" id="slotsReel0">-</div>
-                  <div class="slots-reel" id="slotsReel1">-</div>
-                  <div class="slots-reel" id="slotsReel2">-</div>
+              <div class="slots-machine" id="slotsMachine">
+                <!-- Ambient glow behind reels -->
+                <div class="slots-glow" id="slotsGlow"></div>
+                <div class="slots-frame">
+                  <div class="slots-reels">
+                    <div class="slots-reel-window">
+                      <div class="slots-reel-strip" id="slotsReel0"></div>
+                    </div>
+                    <div class="slots-reel-window">
+                      <div class="slots-reel-strip" id="slotsReel1"></div>
+                    </div>
+                    <div class="slots-reel-window">
+                      <div class="slots-reel-strip" id="slotsReel2"></div>
+                    </div>
+                  </div>
+                  <!-- Center payline indicator -->
+                  <div class="slots-payline"></div>
                 </div>
+                <!-- Win display -->
+                <div class="slots-win-display hidden" id="slotsWinDisplay">
+                  <span class="slots-win-amount" id="slotsWinAmount"></span>
+                </div>
+                <!-- Particle container for win effects -->
+                <div class="slots-particles" id="slotsParticles"></div>
               </div>
               <div class="cas-status" id="slotsStatus">Place your bet and SPIN!</div>
               <div class="cas-controls">
                 <label class="cas-bet-label">BET <input id="slotsBetInput" type="number" min="10" max="50000" value="100"></label>
-                <button id="slotsSpinBtn" class="cas-btn cas-btn-deal">SPIN</button>
+                <button id="slotsSpinBtn" class="slots-spin-lever">
+                  <span class="slots-spin-text">SPIN</span>
+                </button>
               </div>
               <div class="slots-paytable">
                 <div class="slots-pt-title">PAYOUTS</div>
-                <div class="slots-pt-row"><span>💎💎💎</span><span>50x</span></div>
-                <div class="slots-pt-row"><span>7️⃣7️⃣7️⃣</span><span>25x</span></div>
-                <div class="slots-pt-row"><span>⭐⭐⭐</span><span>15x</span></div>
-                <div class="slots-pt-row"><span>🍫🍫🍫</span><span>10x</span></div>
-                <div class="slots-pt-row"><span>🍋🍋🍋</span><span>5x</span></div>
-                <div class="slots-pt-row"><span>🍒🍒🍒</span><span>3x</span></div>
-                <div class="slots-pt-row"><span>Any 2 match</span><span>2x</span></div>
-                <div class="slots-pt-row"><span>1+ 🍒</span><span>1x</span></div>
+                <div class="slots-pt-row"><span>💎💎💎</span><span class="slots-pt-mult">50x</span></div>
+                <div class="slots-pt-row"><span>7️⃣7️⃣7️⃣</span><span class="slots-pt-mult">25x</span></div>
+                <div class="slots-pt-row"><span>⭐⭐⭐</span><span class="slots-pt-mult">15x</span></div>
+                <div class="slots-pt-row"><span>🍫🍫🍫</span><span class="slots-pt-mult">10x</span></div>
+                <div class="slots-pt-row"><span>🍋🍋🍋</span><span class="slots-pt-mult">5x</span></div>
+                <div class="slots-pt-row"><span>🍒🍒🍒</span><span class="slots-pt-mult">3x</span></div>
+                <div class="slots-pt-row"><span>Any 2 match</span><span class="slots-pt-mult">2x</span></div>
+                <div class="slots-pt-row"><span>1+ 🍒</span><span class="slots-pt-mult">1x</span></div>
               </div>
             </div>
 
